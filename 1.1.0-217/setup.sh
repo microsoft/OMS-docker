@@ -8,7 +8,7 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
-/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-4universal.x86_64.sh --install
+/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-4.universal.x86_64.sh --install
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
 rm -f $TMPDIR/*.deb
