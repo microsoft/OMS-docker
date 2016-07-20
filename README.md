@@ -47,7 +47,7 @@ systemctl restart docker.service
 ```
 DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
--Save the file and then restart the docker service and oms service:
+- Save the file and then restart the docker service and oms service:
 ```
 sudo service docker restart
 sudo service omsagent restart
@@ -66,13 +66,13 @@ sudo service docker restart
 
 - Start the OMS container:
 ```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25224:25224/udp -p 127.0.0.1:25225:25225 --name="omsagent" --log-driver=none microsoft/oms
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25224:25224/udp -p 127.0.0.1:25225:25225 --name="omsagent" --log-driver=none --restart=always microsoft/oms
 ```
 ### To use OMS for specific containers on a host
 
 - Start the OMS container:
 ```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25224:25224/udp -p 127.0.0.1:25225:25225 --name="omsagent" --log-driver=fluentd --log-opt fluentd-address=localhost:25225 microsoft/oms
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25224:25224/udp -p 127.0.0.1:25225:25225 --name="omsagent" --log-driver=fluentd --log-opt fluentd-address=localhost:25225 --restart=always microsoft/oms
 ```
 Then start containers you'd like to be monitored.
 
