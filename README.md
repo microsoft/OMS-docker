@@ -57,6 +57,10 @@ sudo service omsagent restart
 ```
 OPTIONS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
+-Save the file and then restart docker service. 
+```
+sudo service docker restart
+```
 
 ### To use OMS for all containers on a container host
 
