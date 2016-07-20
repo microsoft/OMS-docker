@@ -10,7 +10,13 @@ You must be a member of the private preview to use this feature. To join, drop u
 
 ### Supported Linux Operating Systems and Docker:
 - Docker 1.8 and above
-- An x64 version of Ubuntu, CoreOS(stable), Amazon Linux, SUSE 13.2, CentOS 7, or SLES 12
+- An x64 version of Linux OS
+	- Ubuntu 14.04, 15.04
+	- CoreOS(stable)
+	- Amazon Linux 2016.03
+	- SUSE 13.2
+	- CentOS 7
+	- SLES 12
 
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
