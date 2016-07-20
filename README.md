@@ -42,25 +42,7 @@ ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 ```
 systemctl restart docker.service
 ```
-- Create oms-container.service in /etc/systemd/system
-```
-	[Unit]
-	Description=OMS Container Monitoring
-	Documentation=http://github.com/Microsoft/OMS-docker
-	After=docker.socket
-	Requires=docker.socket
-
-	[Service]
-	ExecStart=/usr/bin/docker start -a omsagent
-
-	[Install]
-	WantedBy=multi-user.target
-```
-- Enable oms-container.service
-```
-systemctl enable oms-container.service
-```
-#### Settings on container host - upstart
+#### Settings on container host - Upstart
 - Edit /etc/default/docker and add this line:
 ```
 DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
@@ -69,6 +51,11 @@ DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
 sudo service docker restart
 sudo service omsagent restart
+```
+#### Settings on container host - Amazon Linux
+- Edit /etc/sysconfig/docker to add the following:
+```
+OPTIONS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
 
 ### To use OMS for all containers on a container host
