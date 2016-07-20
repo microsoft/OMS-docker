@@ -23,7 +23,7 @@ As a pre-requisite, docker must be running prior to this installation. If you ha
 
 You have two choices for how to capture your container information. You can use OMS for all containers on a container host, or designate specific containers to send information to OMS.
 
-#### Settings on container host
+#### Settings on container host - systemd
 - Edit docker.service to add the following:
 ```
 [Service]
@@ -59,6 +59,16 @@ systemctl restart docker.service
 - Enable oms-container.service
 ```
 systemctl enable oms-container.service
+```
+#### Settings on container host - upstart
+- Edit /etc/default/docker and add this line:
+```
+DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
+```
+-Save the file and then restart the docker service and oms service:
+```
+sudo service docker restart
+sudo service omsagent restart
 ```
 
 ### To use OMS for all containers on a container host
