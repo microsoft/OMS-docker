@@ -50,7 +50,6 @@ DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 - Save the file and then restart the docker service and oms service:
 ```
 sudo service docker restart
-sudo service omsagent restart
 ```
 #### Settings on container host - Amazon Linux
 - Edit /etc/sysconfig/docker to add the following:
