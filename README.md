@@ -46,11 +46,7 @@ ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 systemctl restart docker.service
 ```
 #### Settings on container host - Upstart
-<<<<<<< HEAD
-- Edit /etc/default/docker and add this line:
-=======
 - Edit /etc/default/docker and add this line:
->>>>>>> refs/remotes/origin/master
 ```
 DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
