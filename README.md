@@ -9,6 +9,18 @@ This container solution pack will generate a container which will runs OMS agent
 You must be a member of the private preview to use this feature. To join, drop us a line at OMSContainers@microsoft.com.
 
 ### Supported Linux Operating Systems and Docker:
+<<<<<<< HEAD
+- Docker 1.8 thru 1.11.2
+
+- An x64 version of Linux OS
+- Ubuntu 14.04, 15.10
+- CoreOS(stable)
+- Amazon Linux 2016.03
+- openSUSE 13.2
+- CentOS 7
+- SLES 12
+- RHEL 7
+=======
 - Docker 1.8 and above
 - An x64 version of Linux OS
 	- Ubuntu 14.04, 15.04
@@ -17,6 +29,7 @@ You must be a member of the private preview to use this feature. To join, drop u
 	- SUSE 13.2
 	- CentOS 7
 	- SLES 12
+>>>>>>> refs/remotes/origin/master
 
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
@@ -43,7 +56,11 @@ ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 systemctl restart docker.service
 ```
 #### Settings on container host - Upstart
+<<<<<<< HEAD
+- Edit /etc/default/docker and add this line:
+=======
 - Edit /etc/default/docker and add this line:
+>>>>>>> refs/remotes/origin/master
 ```
 DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
