@@ -9,7 +9,7 @@ This container solution pack will generate a container which will runs OMS agent
 You must be a member of the private preview to use this feature. To join, drop us a line at OMSContainers@microsoft.com.
 
 ### Supported Linux Operating Systems and Docker:
-- Docker 1.8 and above
+- Docker 1.8 thru 1.11.2
 
 - An x64 version of Linux OS
 - Ubuntu 14.04, 15.10
