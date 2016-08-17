@@ -19,12 +19,11 @@ You must be a member of the private preview to use this feature. To join, drop u
 	- openSUSE 13.2
 	- CentOS 7
 	- SLES 12
-	- RHEL 7
+	- RHEL 7.2
 
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
 
-You have two choices for how to capture your container information. You can use OMS for all containers on a container host, or designate specific containers to send information to OMS.
 
 #### Settings on container host - systemd
 - Edit docker.service to add the following:
@@ -73,8 +72,8 @@ $>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -
 
 ### If you are switching from the installed agent to the container
 
-If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent first by running the installer with the -purge option.
-
+If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent.
+See [Steps to install the OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux/blob/master/docs/OMS-Agent-for-Linux.md)
 
 ## What now?
 Once you're set up, we'd like you to try the following scenarios and play around with the system.
