@@ -1,9 +1,8 @@
 TMPDIR="/opt"
 cd $TMPDIR
-#wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/v1.1.0-239/omsagent-1.1.0-239.universal.x64.sh
-wget https://atlantapublicint2.blob.core.windows.net:443/resources/omsagent-1.2.0-13.universal.x64.sh 
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_Ignite2016_v1.2.0-75/omsagent-1.2.0-75.universal.x64.sh
 chmod 775 $TMPDIR/*.sh
-$TMPDIR/omsagent-1.2.0-13.universal.x64.sh --extract
+$TMPDIR/omsagent-1.2.0-75.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb

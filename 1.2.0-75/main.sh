@@ -7,7 +7,6 @@ if [ -z $INT ]; then
 else
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
-	echo URL_TLD=int2.microsoftatlanta-int >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 

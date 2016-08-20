@@ -1,19 +1,17 @@
-# Trying the container solution pack for Microsoft Operations Management Suite
+# Trying the container solution for Microsoft Operations Management Suite
 
 The Microsoft Operations Management Suite (OMS) is a software-as-a-service offering from Microsoft that allows Enterprise IT to manage any hybrid cloud. It offers log analytics, automation, backup and recovery, and security and compliance.  Sign up for a free account at [http://mms.microsoft.com](http://mms.microsoft.com) or read more about here: [https://www.microsoft.com/en-us/server-cloud/operations-management-suite/overview.aspx](https://www.microsoft.com/en-us/server-cloud/operations-management-suite/overview.aspx)
 
-This container solution pack will generate a container which will runs OMS agent within. This is for Linux OS which has restriction in installing the Operations Management Suite Agent directly. However, it can also be used with other support Linux OS as well.
+This container solution will generate a container which will runs OMS agent within. This is for Linux OS which has restriction in installing the Operations Management Suite Agent directly. However, it can also be used with other support Linux OS as well.
 
-## Joining the private preview
-
-You must be a member of the private preview to use this feature. To join, drop us a line at OMSContainers@microsoft.com.
+This is a public preview product. 
 
 ### Supported Linux Operating Systems and Docker:
 
-- Docker 1.8 thru 1.11.2
+- Docker 1.8 thru 1.12.1
 
 - An x64 version of Linux OS
-	- Ubuntu 14.04, 15.10
+	- Ubuntu 14.04 LTS, 15.10, 16.04 LTS
 	- CoreOS(stable)
 	- Amazon Linux 2016.03
 	- openSUSE 13.2
@@ -44,6 +42,32 @@ ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
 ```
 systemctl restart docker.service
 ```
+
+#### Settings on container host - systemd drop-in units
+- If you want to use the drop-in units, please modify your conf file in `/etc/systemd/system/docker.service.d`.
+
+Add the following in `[Service]`. 
+```
+Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
+```
+Make sure you add $DOCKER_OPTS in "ExecStart=/usr/bin/docker daemon" within your docker.service file.
+
+example)
+```
+[Service]
+Restart=always
+StartLimitInterval=0
+Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
+RestartSec=15
+ExecStart=
+ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay $DOCKER_OPTS
+```
+- Restart docker service.
+```
+systemctl restart docker.service
+```
+For more information, please go to [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) on Docker website.
+
 #### Settings on container host - Upstart
 - Edit /etc/default/docker and add this line:
 ```
@@ -53,6 +77,7 @@ DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
 ```
 sudo service docker restart
 ```
+
 #### Settings on container host - Amazon Linux
 - Edit /etc/sysconfig/docker to add the following:
 ```
@@ -67,7 +92,7 @@ sudo service docker restart
 
 - Start the OMS container:
 ```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25224:25224/udp -p 127.0.0.1:25225:25225 --name="omsagent" --log-driver=none --restart=always microsoft/oms
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25225:25225 --name="omsagent" --restart=always microsoft/oms
 ```
 
 ### If you are switching from the installed agent to the container
