@@ -8,10 +8,10 @@ This is a public preview product.
 
 ### Supported Linux Operating Systems and Docker:
 
-- Docker 1.8 thru 1.11.2
+- Docker 1.8 thru 1.12.1
 
 - An x64 version of Linux OS
-	- Ubuntu 14.04, 15.10
+	- Ubuntu 14.04, 15.10, 16.04
 	- CoreOS(stable)
 	- Amazon Linux 2016.03
 	- openSUSE 13.2
