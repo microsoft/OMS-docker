@@ -1,4 +1,4 @@
-wget https://github.com/MSFTOSSMgmt/OMS-Agent-for-Linux/releases/download/1.0.0-47/omsagent-1.0.0-47.universal.x64.sh
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/1.0.0-47/omsagent-1.0.0-47.universal.x64.sh
 chmod 775 /root/*.sh
 /root/omsagent-1.0.0-47.universal.x64.sh --extract
 mv /root/omsbundle* /root/omsbundle
