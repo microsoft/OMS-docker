@@ -6,12 +6,12 @@ This container solution will generate a container which will runs OMS agent with
 
 This is a public preview product. 
 
-### Supported Linux Operating Systems and Docker:
+### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
-- Docker 1.8 thru 1.12.1
+- Docker 1.10 thru 1.12.1
 
 - An x64 version of Linux OS
-	- Ubuntu 14.04 LTS, 15.10, 16.04 LTS
+	- Ubuntu 14.04 LTS, 16.04 LTS
 	- CoreOS(stable)
 	- Amazon Linux 2016.03
 	- openSUSE 13.2
@@ -19,86 +19,32 @@ This is a public preview product.
 	- SLES 12
 	- RHEL 7.2
 
+- ACS Mesosphere DC/OS 1.7.3, 1.8.4
+
+### Release Note
+Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
+
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
 
-
-#### Settings on container host - systemd
-- Edit docker.service to add the following:
-```
-[Service]
-...
-Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-...
-```
-Make sure you add $DOCKER_OPTS in "ExecStart=/usr/bin/docker daemon" within your docker.service file.
-example)
-```
-[Service]
-Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-ExecStart=/usr/bin/docker daemon -H fd:// $DOCKER_OPTS
-```
-- Restart docker service.
-```
-systemctl restart docker.service
-```
-
-#### Settings on container host - systemd drop-in units
-- If you want to use the drop-in units, please modify your conf file in `/etc/systemd/system/docker.service.d`.
-
-Add the following in `[Service]`. 
-```
-Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-```
-Make sure you add $DOCKER_OPTS in "ExecStart=/usr/bin/docker daemon" within your docker.service file.
-
-example)
-```
-[Service]
-Restart=always
-StartLimitInterval=0
-Environment="DOCKER_OPTS=--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-RestartSec=15
-ExecStart=
-ExecStart=/usr/bin/docker daemon -H fd:// --storage-driver=overlay $DOCKER_OPTS
-```
-- Restart docker service.
-```
-systemctl restart docker.service
-```
-For more information, please go to [Control and configure Docker with systemd](https://docs.docker.com/engine/admin/systemd/) on Docker website.
-
-#### Settings on container host - Upstart
-- Edit /etc/default/docker and add this line:
-```
-DOCKER_OPTS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-```
-- Save the file and then restart the docker service and oms service:
-```
-sudo service docker restart
-```
-
-#### Settings on container host - Amazon Linux
-- Edit /etc/sysconfig/docker to add the following:
-```
-OPTIONS="--log-driver=fluentd --log-opt fluentd-address=localhost:25225"
-```
--Save the file and then restart docker service. 
-```
-sudo service docker restart
-```
+This set up is not for ACS Mesosphere DC/OS. For more information on Mesosphere DC/OS, please see [here.](https://azure.microsoft.com/en-us/documentation/services/container-service/)
 
 ### To use OMS for all containers on a container host
 
 - Start the OMS container:
 ```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -h=`hostname` -p 127.0.0.1:25225:25225 --name="omsagent" --restart=always microsoft/oms
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 --name="omsagent" -h=`hostname` --restart=always microsoft/oms
 ```
 
 ### If you are switching from the installed agent to the container
 
 If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent.
 See [Steps to install the OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux/blob/master/docs/OMS-Agent-for-Linux.md)
+
+#### If you have an older version of Docker and would want to still use OMS Container Solution to monitor your data go [here.](https://github.com/Microsoft/OMS-docker/blob/master/OlderVersionREADME.md)
+
+### Upgrade
+You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/master/Upgrade.md)
 
 ## What now?
 Once you're set up, we'd like you to try the following scenarios and play around with the system.
@@ -107,3 +53,12 @@ Once you're set up, we'd like you to try the following scenarios and play around
 
 ## Let us know!!!
 What works? What is missing? What else do you need for this to be useful for you? Let us know at OMSContainers@microsoft.com.
+
+## Code of Conduct
+
+This project has adopted the [Microsoft Open Source Code of Conduct]
+(https://opensource.microsoft.com/codeofconduct/).  For more
+information see the [Code of Conduct FAQ]
+(https://opensource.microsoft.com/codeofconduct/faq/) or contact
+[opencode@microsoft.com](mailto:opencode@microsoft.com) with any
+additional questions or comments.
