@@ -44,7 +44,7 @@ See [Steps to install the OMS Agent for Linux](https://github.com/Microsoft/OMS-
 #### If you have an older version of Docker and would want to still use OMS Container Solution to monitor your data go [Here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/OlderVersionREADME.md)
 
 ### Upgrade
-You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/Upgrade.md)
+You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/master/Upgrade.md)
 
 ## What now?
 Once you're set up, we'd like you to try the following scenarios and play around with the system.
