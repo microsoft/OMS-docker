@@ -22,7 +22,7 @@ This is a public preview product.
 - ACS Mesosphere DC/OS 1.7.3, 1.8.4
 
 ### Release Note
-Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/ReleaseNote.md)
+Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
 
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
