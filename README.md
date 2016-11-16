@@ -13,7 +13,7 @@ This is a public preview product.
 - An x64 version of Linux OS
 	- Ubuntu 14.04 LTS, 16.04 LTS
 	- CoreOS(stable)
-	- Amazon Linux 2016.03
+	- Amazon Linux 2016.09.0
 	- openSUSE 13.2
 	- CentOS 7
 	- SLES 12
@@ -22,12 +22,15 @@ This is a public preview product.
 - ACS Mesosphere DC/OS 1.7.3, 1.8.4
 
 ### Release Note
-Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/ReleaseNote.md)
+Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
 
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
 
 This set up is not for ACS Mesosphere DC/OS. For more information on Mesosphere DC/OS, please see [here.](https://azure.microsoft.com/en-us/documentation/services/container-service/)
+
+This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
+
 
 ### To use OMS for all containers on a container host
 
@@ -41,10 +44,10 @@ $>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -
 If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent.
 See [Steps to install the OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux/blob/master/docs/OMS-Agent-for-Linux.md)
 
-#### If you have an older version of Docker and would want to still use OMS Container Solution to monitor your data go [Here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/OlderVersionREADME.md)
+#### If you have an older version of Docker and would want to still use OMS Container Solution to monitor your data go [here.](https://github.com/Microsoft/OMS-docker/blob/master/OlderVersionREADME.md)
 
 ### Upgrade
-You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/keikoacs/Upgrade.md)
+You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/master/Upgrade.md)
 
 ## What now?
 Once you're set up, we'd like you to try the following scenarios and play around with the system.
