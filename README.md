@@ -27,7 +27,7 @@ Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/mast
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
 
-This set up is not for ACS Mesosphere DC/OS. For more information on Mesosphere DC/OS, please see [here.](https://azure.microsoft.com/en-us/documentation/services/container-service/)
+This set up is not for ACS Mesosphere DC/OS. For more information on Mesosphere DC/OS, please see [here.](ACSDCOSHowTo.md)
 
 This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
 
