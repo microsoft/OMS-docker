@@ -8,7 +8,7 @@ This is a public preview product.
 
 ### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
-- Docker 1.10 thru 1.12.1
+- Docker 1.11 thru 1.13
 
 - An x64 version of Linux OS
 	- Ubuntu 14.04 LTS, 16.04 LTS

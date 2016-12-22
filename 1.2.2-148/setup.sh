@@ -1,9 +1,8 @@
 TMPDIR="/opt"
 cd $TMPDIR
-#wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent-201611-v1.2.1-148/omsagent-1.2.1-148.universal.x64.sh
-wget https://scadvisorcontent.blob.core.windows.net/resources/omsagent-1.2.1-148.universal.x64.sh
+wget https://atlantapublicint2.blob.core.windows.net:443/resources/omsagent-1.2.2-148.universal.x64.sh
 chmod 775 $TMPDIR/*.sh
-$TMPDIR/omsagent-1.2.1-148.universal.x64.sh --extract
+$TMPDIR/omsagent-1.2.2-148.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
