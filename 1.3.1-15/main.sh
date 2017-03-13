@@ -3,6 +3,9 @@
 sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
 sed -i -e 's/^exit 101$/exit 0/g' /usr/sbin/policy-rc.d
 
+#Using the get_hostname for hostname instead of the host field in syslog messages  
+sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get_hostname/" /opt/microsoft/omsagent/plugin/filter_syslog.rb 
+
 #service omid start
 /opt/omi/bin/service_control start
 
