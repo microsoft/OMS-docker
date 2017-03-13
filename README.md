@@ -15,9 +15,10 @@ This is a public preview product.
 	- CoreOS(stable)
 	- Amazon Linux 2016.09.0
 	- openSUSE 13.2
-	- CentOS 7
+	- openSUSE LEAP 42.2
+	- CentOS 7.2, 7.3
 	- SLES 12
-	- RHEL 7.2
+	- RHEL 7.2, 7.3
 
 - ACS Mesosphere DC/OS 1.7.3, 1.8.4
 
