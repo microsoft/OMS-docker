@@ -13,8 +13,8 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
 rm -f $TMPDIR/*.deb
-wget https://get.docker.com/builds/Linux/x86_64/docker-17.03.0-ce.tgz
-tar -zxvf docker-17.03.0-ce.tgz
-mv docker docker-17.03.0-ce
-cp docker-17.03.0-ce/docker .
-rm -rf docker-17.03.0-ce*
+#wget https://get.docker.com/builds/Linux/x86_64/docker-17.03.0-ce.tgz
+#tar -zxvf docker-17.03.0-ce.tgz
+#mv docker docker-17.03.0-ce
+#cp docker-17.03.0-ce/docker .
+#rm -rf docker-17.03.0-ce*
