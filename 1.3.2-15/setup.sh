@@ -1,8 +1,8 @@
 TMPDIR="/opt"
 cd $TMPDIR
-wget https://keiko.blob.core.windows.net/container/omsagent-1.3.1-15.universal.x64.sh
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent-201703-v1.3.2-15/omsagent-1.3.2-15.universal.x64.sh
 chmod 775 $TMPDIR/*.sh
-$TMPDIR/omsagent-1.3.1-*.universal.x64.sh --extract
+$TMPDIR/omsagent-1.3.2-*.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
@@ -11,4 +11,5 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
+rm -f $TMPDIR/docker*.sh
 rm -f $TMPDIR/*.deb
