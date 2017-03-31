@@ -22,5 +22,3 @@
 - Capture host syslog
 - Bug fix
 	- segfault error due to libcontainer.so. 
-
-
