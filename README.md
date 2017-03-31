@@ -9,6 +9,7 @@ This is a public preview product.
 ### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
 - Docker 1.11 thru 1.13
+- Docker CE and EE v17.03
 
 - An x64 version of Linux OS
 	- Ubuntu 14.04 LTS, 16.04 LTS
@@ -20,7 +21,8 @@ This is a public preview product.
 	- SLES 12
 	- RHEL 7.2, 7.3
 
-- ACS Mesosphere DC/OS 1.7.3, 1.8.4
+- ACS Mesosphere DC/OS 1.7.3, 1.8.8
+- ACS Kubernetes 1.4.5
 
 ### Release Note
 Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
@@ -28,7 +30,9 @@ Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/mast
 ## Setting up
 As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
 
-This set up is not for ACS Mesosphere DC/OS. For more information on Mesosphere DC/OS, please see [here.](ACSDCOSHowTo.md)
+This set up is not for ACS Mesosphere DC/OS or ACS Kubernetes. 
+- For more information on Mesosphere DC/OS, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-monitoring-oms)
+- For Kubernetes, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-kubernetes-oms) yaml file for the daemon-set is [here.](https://github.com/Microsoft/OMS-docker/tree/master/Kubernetes)
 
 This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
 
@@ -37,7 +41,7 @@ This set up provides a containerized Container Solution Agent (OMS Agent for Lin
 
 - Start the OMS container:
 ```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 --name="omsagent" -h=`hostname` --restart=always microsoft/oms
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -v /var/opt/microsoft/omsagent/state/containerhostname:/etc/hostname -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
 ```
 
 ### If you are switching from the installed agent to the container

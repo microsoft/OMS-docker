@@ -14,8 +14,11 @@
 - Bug fix
 	- Container Hostname provided container SHA ID information instead of the hostname.
 
-##### OMS Agent 1.2.0-148 (03/xx/17) - Docker Provider 1.0.0-19
+##### OMS Agent 1.3.2-15 (03/31/17) - Docker Provider 1.0.0-22
 - Updated the container image to Ubuntu 16.04 LTS
 - Graceful shutdown of OMS process
+- Decrease containerized OMS Linux Agent size for lighter agent experience
+- Increase buffer size
+- Capture host syslog
 - Bug fix
 	- segfault error due to libcontainer.so. 
