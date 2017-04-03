@@ -42,6 +42,7 @@ This set up provides a containerized Container Solution Agent (OMS Agent for Lin
 - Start the OMS container:
 ```
 $>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
+
 ```
 
 ### If you are switching from the installed agent to the container
