@@ -28,19 +28,17 @@
 If this a fresh install, install the agent and onboard later by doing the following steps: 
 1. Download the OMS Agent for Linux. Install the OMS Agent for Linux. 
 	
-	```sudo ./omsagent*.sh --install``` 
+```sudo ./omsagent*.sh --install``` 
 
 2. Onboard your OMS workspace.
 
-	```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -w <wsid> -s <key>``` 
+```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -w <wsid> -s <key>``` 
 
 If you have already installed and onboarded, re-onboard by doing the following steps:
 1. Remove all the onboarded OMS workspace.  
 
-	```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -X```
+```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -X```
 
 2. Re-onboard your OMS workspace. 
 
-	```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -w <wsid> -s <key>```
-
-
+```sudo /opt/microsoft/omsagent/bin/omsadmin.sh -w <wsid> -s <key>```
