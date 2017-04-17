@@ -22,8 +22,8 @@ fi
 #service omsagent start
 /opt/microsoft/omsagent/bin/service_control start
 
-/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
-rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+#rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
 shutdown() {
 	/opt/omi/bin/service_control stop

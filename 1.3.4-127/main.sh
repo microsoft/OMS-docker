@@ -7,12 +7,15 @@ sed -i -e 's/^exit 101$/exit 0/g' /usr/sbin/policy-rc.d
 #Using the get_hostname for hostname instead of the host field in syslog messages
 sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get_hostname/" /opt/microsoft/omsagent/plugin/filter_syslog.rb
 
-
 #service omid start
 /opt/omi/bin/service_control start
 
 if [ -z $INT ]; then
+	if [ -z $DOMAIN ]; then
 	/opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY
+	else
+	/opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
+	fi
 else
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
@@ -22,8 +25,8 @@ fi
 #service omsagent start
 /opt/microsoft/omsagent/bin/service_control start
 
-/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
-rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+#rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
 shutdown() {
 	/opt/omi/bin/service_control stop

@@ -23,6 +23,14 @@
 - Bug fix
 	- segfault error due to libcontainer.so. 
 
+##### OMS Agent 1.3.4-127 (05/10/17) - Docker Provider 1.0.0-23
+- Added Fairfax workspace support to containerized OMS Agent for Linux
+- Added new dataset which provides container node information such as Node Operating System, Docker version, Orchestration type, volume, and network.
+	Type=ContainerNodeInventory
+- Bug fix
+        - segfault error 
+
+
 #### Due to the backend changes, for container monitoring with OMS Agent for Linux and it is a fresh install, you will need to run this workaround. 
 
 If this a fresh install, install the agent and onboard later by doing the following steps: 
