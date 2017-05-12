@@ -44,6 +44,13 @@ This set up provides a containerized Container Solution Agent (OMS Agent for Lin
 $>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
 ```
 
+### To use OMS for all containers on a container host for FairFax OMS Workspace
+
+- Start the OMS container on FairFax OMS workspace:
+```
+$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -e WSID="your workspace id" -e KEY="your key" -e DOMAIN="opinsights.azure.us" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
+```
+
 ### If you are switching from the installed agent to the container
 
 If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent.
