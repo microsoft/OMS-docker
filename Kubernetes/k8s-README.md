@@ -12,7 +12,7 @@ Copy file to your master node and run ``` kubectl create -f omsagent-wo-secrets.
 
    - Convert your WSID and KEY to 64base and replace the <WSID> and <KEY> section of the 'omsagentsecret.yml' file. 
    - Create the secrets pod by running the following: 
-   	``` kubectl -f create omsagentsecret.yml ```
+   	``` kubectl create -f omsagentsecret.yml ```
    - To check, run the following: 
 
    ``` 
