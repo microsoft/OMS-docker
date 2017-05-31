@@ -16,9 +16,15 @@ spec:
        imagePullPolicy: Always
        env:
        - name: WSID
-         value: <WSID>
+         valueFrom:
+          secretKeyRef:
+            name: omsagent-secret
+            key: WSID
        - name: KEY 
-         value: <KEY>
+         valueFrom:
+          secretKeyRef:
+            name: omsagent-secret
+            key: KEY 
        securityContext:
          privileged: true
        ports:
