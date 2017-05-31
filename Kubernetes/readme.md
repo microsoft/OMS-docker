@@ -3,14 +3,14 @@
 In this folder, we have 3 yaml files. 
 - Default OMS Agent Daemon-set which does not have secrets (omsagent-wo-secrets.yaml)
 - OMS Agent secrets yaml file (omsagentsecret.yml) 
-- OMS Agent Daemon-set yaml file which uses secrets (omsagent-ds-secrets.yaml)
+- OMS Agent Daemon-set yaml file which uses secrets (omsagent.yaml)
 
 1. For the Default OMS Agent Daemon-set yaml file, please make sure to replace the <WSID> and <KEY> to your WSID and KEY. 
 Copy file to your master node and run ``` kubectl create -f omsagent-wo-secrets.yaml ```
 
 2. To use OMS Agent Daemon-set using Secrets, create the secrets first. 
 
-   - Convert your WSID and KEY to 64base and replace the <WSID> and <KEY> section of the 'omsagentsecret.yml' file. 
+   - Convert your WSID and KEY to 64base (e.g. `echo -n <WSID> | base64`) and replace the <WSID> and <KEY> section of the 'omsagentsecret.yml' file. 
    - Create the secrets pod by running the following: 
    	``` kubectl -f create omsagentsecret.yml ```
    - To check, run the following: 
@@ -33,7 +33,7 @@ Copy file to your master node and run ``` kubectl create -f omsagent-wo-secrets.
    WSID:   36 bytes
    KEY:    88 bytes 
    ```
-   - Create your omsagent daemon-set by running ``` kubectl create -f omsagent-ds-secrets.yaml ```
+   - Create your omsagent daemon-set by running ``` kubectl create -f omsagent.yaml ```
 
 3. Check to see whether the OMS Agent daemon-set is running fine. 
    ``` 
