@@ -30,6 +30,12 @@
 - Bug fix
         - segfault error 
 
+##### OMS Agent 1.3.4-127 (05/24/17) - Docker Provider 1.0.0-24
+- Bug fix
+	- Memory Leak
+	- Improved Container Log collection
+	- segfault error
+
 #### Due to the backend changes, for container monitoring with OMS Agent for Linux and it is a fresh install, you will need to run this workaround. 
 
 If this a fresh install, install the agent and onboard later by doing the following steps: 
