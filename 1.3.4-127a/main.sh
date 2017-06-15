@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
 sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/syslog.conf
@@ -10,7 +10,10 @@ sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get
 #using /var/opt/microsoft/docker-cimprov/state instead of /var/opt/microsoft/omsagent/state since the latter gets deleted during onboarding
 mkdir -p /var/opt/microsoft/docker-cimprov/state
 curl --unix-socket /var/run/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+#ToDo : Remove once omsagent plugin gets updated
 sed -i.bak "s/\/var\/opt\/microsoft\/omsagent\/state\/containerhostname/\/var\/opt\/microsoft\/docker\-cimprov\/state\/containerhostname/" /opt/microsoft/omsagent/plugin/oms_common.rb
+#check if file was written successfully
+cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #service omid start
 /opt/omi/bin/service_control start
@@ -37,6 +40,9 @@ fi
 
 #service omsagent start
 /opt/microsoft/omsagent/bin/service_control start
+
+#check if agent onboarded successfully
+/opt/microsoft/omsagent/bin/omsadmin.sh -l 
 
 #/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 #rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
