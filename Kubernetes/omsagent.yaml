@@ -8,7 +8,7 @@ spec:
    labels:
     app: omsagent
     agentVersion: 1.3.4-127
-    dockerProviderVersion: 10.0.0-24
+    dockerProviderVersion: 10.0.0-25
   spec:
    containers:
      - name: omsagent 
@@ -41,7 +41,7 @@ spec:
          - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
-volumes:
+   volumes:
     - name: docker-sock 
       hostPath:
        path: /var/run/docker.sock
