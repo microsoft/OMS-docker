@@ -2,15 +2,17 @@
 
 In this folder, we have 3 yaml files. 
 - Default OMS Agent Daemon-set which does not have secrets (omsagent.yaml)
-- OMS Agent Daemon-set yaml file which uses secrets (omsagent-ds-secrets.yaml) with secret generation scripts. 
+- OMS Agent Daemon-set yaml file which uses secrets (omsagent-ds-secrets.yaml) with secret generation scripts which generates the secrets yaml (omsagentsecret.yaml). 
 
 You can select to create omsagent daemonsets with or without secrets. Here are the instructions: 
 
-<Without Secret>
+### Without Secret
 1. For the Default OMS Agent Daemon-set yaml file, please make sure to replace the <WSID> and <KEY> to your WSID and KEY. 
-Copy file to your master node and run ``` kubectl create -f omsagent.yaml ```
+Copy file to your master node and run 
+ ```kubectl create -f omsagent.yaml ```
 
-<With Secret>
+
+### With Secret
 1. To use OMS Agent Daemon-set using Secrets, create the secrets first. 
 
    - Copy the script and secret template file and make sure they are on the same directory. 
