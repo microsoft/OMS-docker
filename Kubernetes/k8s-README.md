@@ -15,11 +15,11 @@ Copy file to your master node and run
 ### With Secret
 1. To use OMS Agent Daemon-set using Secrets, create the secrets first. 
 
-   - Copy the script and secret template file and make sure they are on the same directory. 
+  - Copy the script and secret template file and make sure they are on the same directory. 
 	- secret generating script - secret-gen.sh
 	- secret template - secret-template.yaml
+  - Run the script. The script will ask for the OMS Workspace ID and Primary Key. Please insert that and the script will create a secret yaml file so you can run it.   
 
-   - Run the script. The script will ask for the OMS Workspace ID and Primary Key. Please insert that and the script will create a secret yaml file so you can run it.   
    ```
    #> sudo bash ./secret-gen.sh 
    ```
