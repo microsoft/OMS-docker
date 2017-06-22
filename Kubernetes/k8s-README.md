@@ -19,6 +19,7 @@ Copy file to your master node and run
 	- secret generating script - secret-gen.sh
 	- secret template - secret-template.yaml
   - Run the script. The script will ask for the OMS Workspace ID and Primary Key. Please insert that and the script will create a secret yaml file so you can run it.   
+
    ```
    #> sudo bash ./secret-gen.sh 
    ```
