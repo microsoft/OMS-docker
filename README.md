@@ -23,6 +23,7 @@ This is a public preview product.
 
 - ACS Mesosphere DC/OS 1.7.3, 1.8.8
 - ACS Kubernetes 1.4.5
+- ACS Docker Swarm
 
 ### Release Note
 Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
@@ -33,6 +34,7 @@ As a pre-requisite, docker must be running prior to this installation. If you ha
 This set up is not for ACS Mesosphere DC/OS or ACS Kubernetes. 
 - For more information on Mesosphere DC/OS, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-monitoring-oms)
 - For Kubernetes, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-kubernetes-oms) yaml file for the daemon-set is [here.](https://github.com/Microsoft/OMS-docker/tree/master/Kubernetes)
+- For Docker Swarm, please see [here.](https://github.com/Microsoft/OMS-docker/tree/master/Swarmmode)
 
 This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
 

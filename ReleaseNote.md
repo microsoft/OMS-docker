@@ -36,6 +36,12 @@
 	- Improved Container Log collection
 	- segfault error
 
+##### OMS Agent 1.4.0-12 (06/30/17) - Docker Provider 1.0.0-25
+- Added support for Docker Swarm
+- Added support for journald and json log-drivers
+- Added support for secrets (Docker Swarm and Kubernetes)
+- Added livenessProbe for deploying container
+
 #### Due to the backend changes, for container monitoring with OMS Agent for Linux and it is a fresh install, you will need to run this workaround. 
 
 If this a fresh install, install the agent and onboard later by doing the following steps: 
