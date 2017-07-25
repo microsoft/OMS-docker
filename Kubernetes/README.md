@@ -7,7 +7,7 @@ In this folder, we have 3 yaml files.
 You can select to create omsagent daemonsets with or without secrets. Here are the instructions: 
 
 ### Without Secret
-1. For the Default OMS Agent Daemon-set yaml file, please make sure to replace the <WSID> and <KEY> to your WSID and KEY. 
+1. For the Default OMS Agent Daemon-set yaml file, please make sure to replace the `<WSID>` and `<KEY>` to your WSID and KEY. 
 Copy file to your master node and run 
  ```kubectl create -f omsagent.yaml ```
 
