@@ -1,0 +1,49 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: oms
+spec:
+  selector:
+    matchLabels:
+      name: omsagent
+  template:
+    metadata:
+      labels:
+        name: omsagent
+        agentVersion: 1.4.0-12
+        dockerProviderVersion: 10.0.0-25
+    spec:
+      nodeSelector:
+        zone: default
+      serviceAccount: omsagent
+      containers:
+      - image: "microsoft/oms"
+        imagePullPolicy: Always
+        name: omsagent
+        env:
+        - name: WSID
+          value: <WSID>
+        - name: KEY
+          value: <KEY>
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 25225
+          protocol: TCP
+        - containerPort: 25224
+          protocol: UDP
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+        livenessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - ps -ef | grep omsagent | grep -v "grep"
+          initialDelaySeconds: 60
+          periodSeconds: 60
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
