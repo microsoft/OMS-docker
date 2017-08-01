@@ -10,7 +10,7 @@ spec:
     metadata:
       labels:
         name: omsagent
-        agentVersion: 1.4.0-12
+        agentVersion: 1.4.0-45
         dockerProviderVersion: 10.0.0-25
     spec:
       nodeSelector:
