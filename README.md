@@ -9,7 +9,7 @@ This is a public preview product.
 ### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
 - Docker 1.11 thru 1.13
-- Docker CE and EE v17.03
+- Docker CE and EE v17.06
 
 - An x64 version of Linux OS
 	- Ubuntu 14.04 LTS, 16.04 LTS
@@ -22,8 +22,9 @@ This is a public preview product.
 	- RHEL 7.2, 7.3
 
 - ACS Mesosphere DC/OS 1.7.3, 1.8.8
-- ACS Kubernetes 1.4.5
+- ACS Kubernetes 1.4.5, 1.6 
 - ACS Docker Swarm
+- Redhat OpenShift (OCP) 3.4, 3.5 
 
 ### Release Note
 Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
@@ -36,6 +37,7 @@ This set up is not for ACS Mesosphere DC/OS or ACS Kubernetes.
 - For Kubernetes, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-kubernetes-oms) yaml file for the daemon-set is [here.](https://github.com/Microsoft/OMS-docker/tree/master/Kubernetes)
 - For Docker Swarm, please see [here.](https://github.com/Microsoft/OMS-docker/tree/master/Swarmmode)
 
+- For Redhat OpenShift, please see [here.](https://github.com/Microsoft/OMS-docker/tree/master/OpenShift)
 This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
 
 
