@@ -52,4 +52,5 @@ Check with ``` oc describe secret omsagent-secret ```.
 ``` 
 oc create -f ocp-ds-omsagent.yaml
 ```
+
 And check with ``` oc describe ds oms ```
