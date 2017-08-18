@@ -4,8 +4,6 @@ The Microsoft Operations Management Suite (OMS) is a software-as-a-service offer
 
 This container solution will generate a container which will runs OMS agent within. This is for Linux OS which has restriction in installing the Operations Management Suite Agent directly. However, it can also be used with other support Linux OS as well.
 
-This is a public preview product. 
-
 ### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
 - Docker 1.11 thru 1.13
@@ -25,6 +23,11 @@ This is a public preview product.
 - ACS Kubernetes 1.4.5, 1.6 
 - ACS Docker Swarm
 - Redhat OpenShift (OCP) 3.4, 3.5 
+
+### Support for Windows Operation Systems
+This site is only for Linux. 
+
+For any information about Windows Operating System, please go [here.](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-containers#windows-container-hosts) 
 
 ### Release Note
 Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)

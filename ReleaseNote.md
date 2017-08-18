@@ -1,4 +1,4 @@
-# Release Note
+# Release Note for OMS Linux Agent 
 
 ##### OMS Agent 1.2.0-75 (9/27/16) - Docker Provider 1.0.0-12 
 - Added Docker 1.12 and Ubuntu 16.04 TLS support
@@ -41,6 +41,13 @@
 - Added support for journald and json log-drivers
 - Added support for secrets (Docker Swarm and Kubernetes)
 - Added livenessProbe for deploying container
+
+##### OMS Agent 1.4.0-45 (08/23/17) - Docker Provider 1.0.0-27
+- Added Kubernetes events
+- Added Kubernetes cluster awareness with hierarchy inventory and search filters for hierarchy like namespace etc.
+- Captures pod label and provides search filters for them
+- Captures container process information ( docker container top ) 
+- Added container node inventory
 
 #### Due to the backend changes, for container monitoring with OMS Agent for Linux and it is a fresh install, you will need to run this workaround. 
 
