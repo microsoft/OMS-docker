@@ -41,6 +41,20 @@ else
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
+#Hack for omi upgrade
+wget http://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
+ dpkg -i packages-microsoft-prod.deb
+ apt-get update
+ apt-get install -y apt-transport-https
+ apt-get update
+ apt-get upgrade -y omi
+
+
+ /opt/omi/bin/omiserver -s
+ /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
+ /opt/omi/bin/omicli id
+ /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
+
 #service omsagent start
 /opt/microsoft/omsagent/bin/service_control start
 
