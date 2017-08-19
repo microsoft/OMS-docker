@@ -9,15 +9,6 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 $TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
-
-#Upgrade OMI
-wget http://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
-dpkg -i packages-microsoft-prod.deb
-apt-get update
-apt-get install -y apt-transport-https
-apt-get update
-apt-get upgrade -y omi
-
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 /$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
