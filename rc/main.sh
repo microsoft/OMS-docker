@@ -45,7 +45,11 @@ fi
 /opt/microsoft/omsagent/bin/service_control start
 
 #check if agent onboarded successfully
-/opt/microsoft/omsagent/bin/omsadmin.sh -l 
+/opt/microsoft/omsagent/bin/omsadmin.sh -l
+
+#get omsagent and docker-provider versions
+dpkg -l | grep omsagent | awk '{print $2 " " $3}'
+dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 #/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 #rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
