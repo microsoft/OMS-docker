@@ -42,7 +42,7 @@ else
 fi
 
 #Test successful install of docker-provider
-/opt/omi/bin/omiserver -d
+/opt/omi/bin/service_control start
 /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
 #service omsagent start
