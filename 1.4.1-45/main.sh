@@ -41,11 +41,7 @@ else
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
-#Reload OMI Server
- /opt/omi/bin/omiserver -s
- /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
  #Test successful install of docker-provider
- /opt/omi/bin/omicli id
  /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
 #service omsagent start
