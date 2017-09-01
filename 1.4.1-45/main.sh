@@ -41,8 +41,8 @@ else
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
- #Test successful install of docker-provider
- /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
+#Test successful install of docker-provider
+/opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
 #service omsagent start
 /opt/microsoft/omsagent/bin/service_control start
