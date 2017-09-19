@@ -7,7 +7,7 @@ This container solution will generate a container which will runs OMS agent with
 ### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
 
 - Docker 1.11 thru 1.13
-- Docker CE and EE v17.06
+- Docker CE and EE v17.06+
 
 - An x64 version of Linux OS
 	- Ubuntu 14.04 LTS, 16.04 LTS
@@ -19,8 +19,8 @@ This container solution will generate a container which will runs OMS agent with
 	- SLES 12
 	- RHEL 7.2, 7.3
 
-- ACS Mesosphere DC/OS 1.7.3, 1.8.8
-- ACS Kubernetes 1.4.5, 1.6 
+- ACS Mesosphere DC/OS 1.7.3, 1.8.8, 1.9
+- ACS Kubernetes 1.4.5, 1.6+ 
 - ACS Docker Swarm
 - Redhat OpenShift (OCP) 3.4, 3.5 
 

@@ -1,10 +1,12 @@
-## How to use the Kubernetes yaml files
+## How to use the Kubernetes yaml files for Linux Server
 
 In this folder, we have 3 yaml files. 
 - Default OMS Agent Daemon-set which does not have secrets (omsagent.yaml)
 - OMS Agent Daemon-set yaml file which uses secrets (omsagent-ds-secrets.yaml) with secret generation scripts which generates the secrets yaml (omsagentsecret.yaml). 
 
 You can select to create omsagent daemonsets with or without secrets. Here are the instructions: 
+
+If you are looking for Windows Kubernetes, please go [here.](windows/.)
 
 ### Without Secret
 1. For the Default OMS Agent Daemon-set yaml file, please make sure to replace the `<WSID>` and `<KEY>` to your WSID and KEY. 
