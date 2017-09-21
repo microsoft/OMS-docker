@@ -1,7 +1,7 @@
 TMPDIR="/opt"
 cd $TMPDIR
 wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_GA_v1.4.0-45/omsagent-1.4.0-45.universal.x64.sh
-wget https://samisstorage.blob.core.windows.net/dockerproviderreleases/docker-cimprov-1.0.0-27.universal.x86_64.sh
+wget https://samisstorage.blob.core.windows.net/testdockerprovider/docker-cimprov-1.0.0-27.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 $TMPDIR/omsagent-*.universal.x64.sh --extract
