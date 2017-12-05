@@ -57,6 +57,7 @@ fi
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
 
 #get omsagent and docker-provider versions
+dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
