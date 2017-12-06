@@ -19,7 +19,8 @@ fi
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #service omid start
-/opt/omi/bin/service_control start
+/opt/omi/bin/omiserver -s
+/opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
 
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
@@ -42,11 +43,7 @@ else
 fi
 
 #Hack for omi upgrade
- /usr/bin/apt-get upgrade -y omi
-
-
- /opt/omi/bin/omiserver -s
- /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
+ 
  /opt/omi/bin/omicli id
  /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
