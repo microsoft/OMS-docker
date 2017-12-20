@@ -58,8 +58,9 @@ dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
-#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
-#rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+/opt/microsoft/omsagent/bin/service_control restart
 
 shutdown() {
 	/opt/omi/bin/service_control stop

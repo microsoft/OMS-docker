@@ -19,7 +19,7 @@ fi
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #service omid start
-/opt/omi/bin/omiserver -s
+#/opt/omi/bin/omiserver -s
 /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
 
 if [ -z $INT ]; then
@@ -48,7 +48,7 @@ fi
  /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
 #service omsagent start
-/opt/microsoft/omsagent/bin/service_control start
+#/opt/microsoft/omsagent/bin/service_control start
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
@@ -58,8 +58,9 @@ dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
-#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
-#rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+/opt/microsoft/omsagent/bin/service_control restart
 
 shutdown() {
 	/opt/omi/bin/service_control stop
