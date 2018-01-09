@@ -18,8 +18,19 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
+#Disable dsc & copy container tailfilereader
+/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+#cp -f /opt/microsoft/docker-cimprov/tailfilereader.rb /opt/microsoft/omsagent/plugin/.
+
+#Setup sudo permission for customtailfilereader
+chmod +w /etc/sudoers.d/omsagent
+echo "#run customtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
+echo "omsagent ALL=(ALL) NOPASSWD: /opt/microsoft/omsagent/ruby/bin/ruby /opt/microsoft/omsagent/plugin/customtailfilereader.rb *" >> /etc/sudoers.d/omsagent
+chmod 440 /etc/sudoers.d/omsagent
+
 #service omid start
-#/opt/omi/bin/omiserver -s
+/opt/omi/bin/omiserver -s
 /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
 
 if [ -z $INT ]; then
@@ -58,9 +69,6 @@ dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
-/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
-rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
-/opt/microsoft/omsagent/bin/service_control restart
 
 shutdown() {
 	/opt/omi/bin/service_control stop
