@@ -1,7 +1,7 @@
 TMPDIR="/opt"
 cd $TMPDIR
 wget https://samisstorage.blob.core.windows.net/omsagentrctest/omsagent-1.4.3-171.universal.x64.sh
-wget https://samisstorage.blob.core.windows.net/testdockerprovider/docker-cimprov-1.0.0-30.universal.x86_64.sh
+wget https://samisstorage.blob.core.windows.net/testkaveeshcontainer/docker-cimprov-1.0.0-29.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 $TMPDIR/omsagent-*.universal.x64.sh --extract
