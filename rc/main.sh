@@ -23,12 +23,6 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 #cp -f /opt/microsoft/docker-cimprov/tailfilereader.rb /opt/microsoft/omsagent/plugin/.
 
-#Setup sudo permission for customtailfilereader
-chmod +w /etc/sudoers.d/omsagent
-echo "#run customtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
-echo "omsagent ALL=(ALL) NOPASSWD: /opt/microsoft/omsagent/ruby/bin/ruby /opt/microsoft/omsagent/plugin/customtailfilereader.rb *" >> /etc/sudoers.d/omsagent
-chmod 440 /etc/sudoers.d/omsagent
-
 #service omid start
 /opt/omi/bin/omiserver -s
 /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
