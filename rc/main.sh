@@ -18,6 +18,12 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
+#Setup sudo permission for containerlogtailfilereader
+chmod +w /etc/sudoers.d/omsagent
+echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
+echo "omsagent ALL=(ALL) NOPASSWD: /opt/microsoft/omsagent/ruby/bin/ruby /opt/microsoft/omsagent/plugin/containerlogtailfilereader.rb *" >> /etc/sudoers.d/omsagent
+chmod 440 /etc/sudoers.d/omsagent
+
 #Disable dsc & copy container tailfilereader
 /opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
