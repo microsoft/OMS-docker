@@ -49,6 +49,14 @@
 - Captures container process information ( docker container top ) 
 - Added container node inventory
 
+
+##### OMS Agent 1.4.3-174 (01/23/18) - Docker Provider 1.0.0-30
+- Fixed exceptopn handling in kube api
+- Dedup kube events based on event id and count instead of event ID
+- Enhanced container log collection mechanism for better scalability
+- Enhanced monitoring data buffering on agent by providing isolation to buffer based on collected data type. This eliminated the deadlock situation on buffer causing the data to not be sent to Log Analytics.  
+
+
 #### Due to the backend changes, for container monitoring with OMS Agent for Linux and it is a fresh install, you will need to run this workaround. 
 
 If this a fresh install, install the agent and onboard later by doing the following steps: 
