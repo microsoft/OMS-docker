@@ -7,8 +7,8 @@ spec:
   metadata:
    labels:
     app: omsagent
-    agentVersion: 1.4.0-12
-    dockerProviderVersion: 10.0.0-25
+    agentVersion: 1.4.3-174
+    dockerProviderVersion: 1.0.0-30
   spec:
    containers:
      - name: omsagent 
@@ -29,10 +29,10 @@ spec:
        volumeMounts:
         - mountPath: /var/run/docker.sock
           name: docker-sock
-        - mountPath: /var/opt/microsoft/omsagent/state/containerhostname
-          name: container-hostname
         - mountPath: /var/log 
           name: host-log
+        - mountPath: /var/lib/docker/containers 
+          name: containerlog-path  
        livenessProbe:
         exec:
          command:
@@ -58,4 +58,9 @@ spec:
        path: /etc/hostname
     - name: host-log
       hostPath:
-       path: /var/log 
+       path: /var/log
+    - name: containerlog-path
+      hostPath:
+       path: /var/lib/docker/containers     
+
+
