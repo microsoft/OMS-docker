@@ -19,6 +19,10 @@ spec:
          value: <WSID>
        - name: KEY 
          value: <KEY>
+       - name: NODE_IP
+         valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP  
        securityContext:
          privileged: true
        ports:
