@@ -30,8 +30,9 @@ rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.c
 #cp -f /opt/microsoft/docker-cimprov/tailfilereader.rb /opt/microsoft/omsagent/plugin/.
 
 #service omid start
-/opt/omi/bin/omiserver -s
-/opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
+#/opt/omi/bin/omiserver -s
+#/opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
+/opt/omi/bin/service_control restart
 
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
