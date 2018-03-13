@@ -3,6 +3,8 @@ kind: DaemonSet
 metadata:
  name: omsagent
 spec:
+ updateStrategy:
+  type: RollingUpdate
  template:
   metadata:
    labels:
