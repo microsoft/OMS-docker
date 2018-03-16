@@ -9,3 +9,4 @@ COPY setup.sh main.sh omi-1.4.2-42.ssl_100.ulinux.x64.deb $tmpdir/
 WORKDIR ${tmpdir}
 RUN chmod 775 $tmpdir/*.sh; sync; $tmpdir/setup.sh
 CMD [ "/opt/main.sh" ]
+
