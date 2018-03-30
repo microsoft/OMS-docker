@@ -1,13 +1,23 @@
 TMPDIR="/opt"
 cd $TMPDIR
 wget https://vishwasstorageaccount.blob.core.windows.net/omsagent/omsagent-1.6.0-23.universal.x64.sh
-wget https://github.com/Microsoft/Docker-Provider/releases/download/1.0.0-31/docker-cimprov-1.0.0-31.universal.x86_64.sh
+
+#create file to disable omi service startup script
+touch /etc/.omi_disable_service_control
+
+wget https://github.com/Microsoft/Docker-Provider/releases/download/1.0.0-32/docker-cimprov-1.0.0-32.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
+#Extract omsbundle
 $TMPDIR/omsagent-*.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
+#Install omi
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
+
+#Install scx
 $TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
+
+#Install omsagent and omsconfig
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
