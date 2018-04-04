@@ -3,11 +3,13 @@ kind: DaemonSet
 metadata:
  name: omsagent
 spec:
+ updateStrategy:
+  type: RollingUpdate
  template:
   metadata:
    labels:
     app: omsagent
-    agentVersion: 1.4.1-123
+    agentVersion: 1.4.3-174
     dockerProviderVersion: 1.0.0-30
   spec:
    containers:
@@ -19,6 +21,10 @@ spec:
          value: <WSID>
        - name: KEY 
          value: <KEY>
+       - name: NODE_IP
+         valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP  
        securityContext:
          privileged: true
        ports:
