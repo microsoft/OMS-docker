@@ -17,6 +17,10 @@ spec:
        image: "microsoft/oms"
        imagePullPolicy: Always
        env:
+       - name: ACS_RESOURCE_NAME
+         value: "aks-scale-eastus"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
        - name: WSID
          value: <WSID>
        - name: KEY 
