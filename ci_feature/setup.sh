@@ -4,7 +4,7 @@ wget https://vishwasstorageaccount.blob.core.windows.net/omsagent/omsagent-1.6.0
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
-wget https://vishwasstorageaccount.blob.core.windows.net/dockerprovider0410/docker-cimprov-1.0.0-31.universal.x86_64.sh
+wget https://vishwasstorageaccount.blob.core.windows.net/dockerprovider0416-2/docker-cimprov-1.0.0-31.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
