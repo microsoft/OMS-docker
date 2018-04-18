@@ -31,16 +31,16 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
     cat /var/opt/microsoft/docker-cimprov/state/omscontainertag
  fi
 
+#Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
-chmod +w /etc/sudoers.d/omsagent
-echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
-echo "omsagent ALL=(ALL) NOPASSWD: /opt/microsoft/omsagent/ruby/bin/ruby /opt/microsoft/omsagent/plugin/containerlogtailfilereader.rb *" >> /etc/sudoers.d/omsagent
-chmod 440 /etc/sudoers.d/omsagent
+#chmod +w /etc/sudoers.d/omsagent
+#echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
+#echo "omsagent ALL=(ALL) NOPASSWD: /opt/microsoft/omsagent/ruby/bin/ruby /opt/microsoft/omsagent/plugin/containerlogtailfilereader.rb *" >> /etc/sudoers.d/omsagent
+#chmod 440 /etc/sudoers.d/omsagent
 
-#Disable dsc & copy container tailfilereader
+#Disable dsc
 /opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
-#cp -f /opt/microsoft/docker-cimprov/tailfilereader.rb /opt/microsoft/omsagent/plugin/.
 
 #service omid start
 /opt/omi/bin/omiserver -s
@@ -71,8 +71,8 @@ fi
  /opt/omi/bin/omicli id
  /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
-#service omsagent start
-#/opt/microsoft/omsagent/bin/service_control start
+#start cron daemon for logrotate
+service cron start
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
