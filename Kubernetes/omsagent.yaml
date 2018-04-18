@@ -17,6 +17,13 @@ spec:
        image: "microsoft/oms"
        imagePullPolicy: Always
        env:
+       - name: AKS_RESOURCE_ID
+         value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+       #- name: ACS_RESOURCE_NAME
+       #  value: "VALUE_ACS_RESOURCE_NAME"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
        - name: WSID
          value: <WSID>
        - name: KEY 
