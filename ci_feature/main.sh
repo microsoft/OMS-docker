@@ -71,8 +71,8 @@ fi
  /opt/omi/bin/omicli id
  /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
-#service omsagent start
-#/opt/microsoft/omsagent/bin/service_control start
+#start cron daemon for logrotate
+service cron start
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
