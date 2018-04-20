@@ -1,7 +1,7 @@
 TMPDIR="/opt"
 cd $TMPDIR
 
-wget https://vishwasstorageaccount.blob.core.windows.net/omsagent/omsagent-1.6.0-23.universal.x64.sh
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-23/omsagent-1.6.0-23.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
