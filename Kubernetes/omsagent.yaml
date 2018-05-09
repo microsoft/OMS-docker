@@ -38,13 +38,13 @@ spec:
   metadata:
    labels:
     app: omsagent
-    agentVersion: 1.6.0-23
-    dockerProviderVersion: 2.0.0-1
+    agentVersion: 1.6.0-42
+    dockerProviderVersion: 2.0.0-2
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod04202018"
+       image: "microsoft/oms:ciprod05082018"
        imagePullPolicy: IfNotPresent
        env:
        #- name: AKS_RESOURCE_ID
