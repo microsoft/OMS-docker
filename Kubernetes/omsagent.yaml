@@ -55,9 +55,9 @@ spec:
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: WSID
-         value: 69232aec-80eb-4029-9052-9dceee46c695
+         value: WSID
        - name: KEY 
-         value: I2DdS+NnmCQoGrC3zvilZLlQZx3W6IA/OSRCXy3OGZ+5iytri7qUwrGxAWlr2UnMNcwdjWD/emuHWOksVdNXVw==
+         value: KEY
        - name: NODE_IP
          valueFrom:
             fieldRef:
