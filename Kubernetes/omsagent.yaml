@@ -1,7 +1,36 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: omsagent
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: omsagent-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods", "events", "nodes", "namespaces", "services"]
+  verbs: ["list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: omsagentclusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: omsagent
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: omsagent-reader
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
  name: omsagent
+ namespace: kube-system
 spec:
  updateStrategy:
   type: RollingUpdate
@@ -12,22 +41,23 @@ spec:
     agentVersion: 1.6.0-23
     dockerProviderVersion: 2.0.0-1
   spec:
+   serviceAccountName: omsagent
    containers:
      - name: omsagent 
        image: "microsoft/oms:ciprod04202018"
        imagePullPolicy: IfNotPresent
        env:
-       - name: AKS_RESOURCE_ID
-         value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-       #  value: "VALUE_ACS_RESOURCE_NAME"
+       - name: ACS_RESOURCE_NAME
+         value: "vishwa-aks-rbac-1"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: WSID
-         value: <WSID>
+         value: 69232aec-80eb-4029-9052-9dceee46c695
        - name: KEY 
-         value: <KEY>
+         value: I2DdS+NnmCQoGrC3zvilZLlQZx3W6IA/OSRCXy3OGZ+5iytri7qUwrGxAWlr2UnMNcwdjWD/emuHWOksVdNXVw==
        - name: NODE_IP
          valueFrom:
             fieldRef:
