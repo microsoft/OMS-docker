@@ -38,13 +38,15 @@ data:
     kubeservices\r\n\ttag oms.api.KubeServices.CollectionTime\r\n\trun_interval 60s\r\n
     \ log_level debug\r\n</source>\r\n\r\n#Kubernetes Nodes\r\n<source>\r\n\ttype
     kubenodeinventory\r\n\ttag oms.containerinsights.KubeNodeInventory\r\n\trun_interval
-    60s\r\n  log_level debug\r\n</source>\r\n\r\n<match oms.containerinsights.KubePodInventory**>\r\n
-    \ type out_oms\r\n  log_level debug\r\n  num_threads 5\r\n  buffer_chunk_limit
-    20m\r\n  buffer_type file\r\n  buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer\r\n
-    \ buffer_queue_limit 20\r\n  buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval
-    20s\r\n  retry_limit 10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match
-    oms.api.KubeEvents**>\r\n\ttype out_oms_api\r\n\tlog_level debug\r\n  num_threads
-    5\r\n\tbuffer_chunk_limit 5m\r\n\tbuffer_type file\r\n\tbuffer_path %STATE_DIR_WS%/out_oms_api_kubeevents*.buffer\r\n\tbuffer_queue_limit
+    60s\r\n  log_level debug\r\n</source>\r\n\r\n#Kubernetes perf\r\n<source>\r\n\ttype
+    kubeperf\r\n\ttag oms.api.KubePerf\r\n\trun_interval 60s\r\n  log_level debug\r\n</source>\r\n\r\n<match
+    oms.containerinsights.KubePodInventory**>\r\n  type out_oms\r\n  log_level debug\r\n
+    \ num_threads 5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path
+    %STATE_DIR_WS%/out_oms_kubepods*.buffer\r\n  buffer_queue_limit 20\r\n  buffer_queue_full_action
+    drop_oldest_chunk\r\n  flush_interval 20s\r\n  retry_limit 10\r\n  retry_wait
+    30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubeEvents**>\r\n\ttype
+    out_oms_api\r\n\tlog_level debug\r\n  num_threads 5\r\n\tbuffer_chunk_limit 5m\r\n\tbuffer_type
+    file\r\n\tbuffer_path %STATE_DIR_WS%/out_oms_api_kubeevents*.buffer\r\n\tbuffer_queue_limit
     10\r\n  buffer_queue_full_action drop_oldest_chunk\r\n\tflush_interval 20s\r\n\tretry_limit
     10\r\n\tretry_wait 30s\r\n</match>\r\n\r\n<match oms.api.KubeLogs**>\r\n\ttype
     out_oms_api\r\n\tlog_level debug\r\n  buffer_chunk_limit 10m\r\n\tbuffer_type
@@ -58,7 +60,11 @@ data:
     \ num_threads 5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path
     %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer\r\n  buffer_queue_limit 20\r\n
     \ buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval 20s\r\n  retry_limit
-    10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n"
+    10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubePerf**>\t\r\n
+    \ type out_oms\r\n  log_level debug\r\n  num_threads 5\r\n  buffer_chunk_limit
+    20m\r\n  buffer_type file\r\n  buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer\r\n
+    \ buffer_queue_limit 20\r\n  buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval
+    20s\r\n  retry_limit 10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n"
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -206,7 +212,7 @@ spec:
         periodSeconds: 60
    nodeSelector:
     beta.kubernetes.io/os: linux
-    kubernetes.io/hostname: aks-agentpool-69847723-0  
+    kubernetes.io/role: agent
    volumes:
     - name: docker-sock 
       hostPath:
