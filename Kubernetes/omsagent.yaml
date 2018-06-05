@@ -69,6 +69,17 @@ metadata:
   name: omsagent-rs-config
   namespace: kube-system
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+ name: omsagent-secret
+ namespace: kube-system
+type: Opaque
+data:
+  #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
+  WSID: "WSID"
+  KEY: "KEY"
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -80,27 +91,31 @@ spec:
  template:
   metadata:
    labels:
-    app: omsagent
-    agentVersion: 1.6.0-42
-    dockerProviderVersion: 2.0.0-2
+    dsName: "omsagent-ds"
+   annotations:
+    agentVersion: "1.6.0-42"
+    dockerProviderVersion: "2.0.0-3"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod05082018"
+       image: "microsoft/oms:internaltest0529n0"
        imagePullPolicy: IfNotPresent
+       resources:
+        limits:
+         cpu: 150m
+         memory: 750Mi
+        requests:
+         cpu: 50m
+         memory: 200Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+         value: "node-0-removal-aks-yaml"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
-       - name: WSID
-         value: WSID
-       - name: KEY 
-         value: KEY
        - name: NODE_IP
          valueFrom:
             fieldRef:
@@ -119,6 +134,9 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/omsagent-secret
+          name: omsagent-secret
+          readOnly: true
        livenessProbe:
         exec:
          command:
@@ -148,6 +166,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: omsagent-secret
+      secret:
+       secretName: omsagent-secret
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -156,32 +177,39 @@ metadata:
  namespace: kube-system
 spec:
  replicas: 1
+ selector:
+  matchLabels:
+   rsName: "omsagent-rs"
  strategy:
   type: RollingUpdate
  template:
   metadata:
    labels:
-    app: omsagent
-    agentVersion: 1.6.0-42
-    dockerProviderVersion: 2.0.0-2
+    rsName: "omsagent-rs"
+   annotations:
+    agentVersion: "1.6.0-42"
+    dockerProviderVersion: "2.0.0-3"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod05082018"
+       image: "microsoft/oms:internaltest0529n0"
        imagePullPolicy: IfNotPresent
+       resources:
+        limits:
+         cpu: 150m
+         memory: 500Mi
+        requests:
+         cpu: 50m
+         memory: 100Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+         value: "node-0-removal-aks-yaml"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
-       - name: WSID
-         value: WSID
-       - name: KEY 
-         value: KEY
        - name: NODE_IP
          valueFrom:
             fieldRef:
@@ -200,6 +228,9 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/omsagent-secret
+          name: omsagent-secret
+          readOnly: true
         - mountPath : /etc/config
           name: omsagent-rs-config
        livenessProbe:
@@ -226,6 +257,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: omsagent-secret
+      secret:
+       secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
         name: omsagent-rs-config    
