@@ -26,6 +26,60 @@ roleRef:
   name: omsagent-reader
   apiGroup: rbac.authorization.k8s.io
 ---
+kind: ConfigMap
+apiVersion: v1
+data:
+  kube.conf: "# Fluentd config file for OMS Docker - cluster components (kubeAPI)\r\n\r\n#Kubernetes
+    pod inventory\r\n<source>\r\n\ttype kubepodinventory\r\n\ttag oms.containerinsights.KubePodInventory\r\n\trun_interval
+    60s\r\n  log_level debug\r\n</source>\r\n\r\n#Kubernetes events\r\n<source>\r\n\ttype
+    kubeevents\r\n\ttag oms.api.KubeEvents.CollectionTime\r\n\trun_interval 60s\r\n
+    \ log_level debug\r\n</source>\r\n\r\n#Kubernetes logs\r\n<source>\r\n\ttype kubelogs\r\n\ttag
+    oms.api.KubeLogs\r\n\trun_interval 60s\r\n</source>\r\n\r\n#Kubernetes services\r\n<source>\r\n\ttype
+    kubeservices\r\n\ttag oms.api.KubeServices.CollectionTime\r\n\trun_interval 60s\r\n
+    \ log_level debug\r\n</source>\r\n\r\n#Kubernetes Nodes\r\n<source>\r\n\ttype
+    kubenodeinventory\r\n\ttag oms.containerinsights.KubeNodeInventory\r\n\trun_interval
+    60s\r\n  log_level debug\r\n</source>\r\n\r\n#Kubernetes perf\r\n<source>\r\n\ttype
+    kubeperf\r\n\ttag oms.api.KubePerf\r\n\trun_interval 60s\r\n  log_level debug\r\n</source>\r\n\r\n<match
+    oms.containerinsights.KubePodInventory**>\r\n  type out_oms\r\n  log_level debug\r\n
+    \ num_threads 5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path
+    %STATE_DIR_WS%/out_oms_kubepods*.buffer\r\n  buffer_queue_limit 20\r\n  buffer_queue_full_action
+    drop_oldest_chunk\r\n  flush_interval 20s\r\n  retry_limit 10\r\n  retry_wait
+    30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubeEvents**>\r\n\ttype
+    out_oms_api\r\n\tlog_level debug\r\n  num_threads 5\r\n\tbuffer_chunk_limit 5m\r\n\tbuffer_type
+    file\r\n\tbuffer_path %STATE_DIR_WS%/out_oms_api_kubeevents*.buffer\r\n\tbuffer_queue_limit
+    10\r\n  buffer_queue_full_action drop_oldest_chunk\r\n\tflush_interval 20s\r\n\tretry_limit
+    10\r\n\tretry_wait 30s\r\n</match>\r\n\r\n<match oms.api.KubeLogs**>\r\n\ttype
+    out_oms_api\r\n\tlog_level debug\r\n  buffer_chunk_limit 10m\r\n\tbuffer_type
+    file\r\n\tbuffer_path %STATE_DIR_WS%/out_oms_api_kubernetes_logs*.buffer\r\n\tbuffer_queue_limit
+    10\r\n\tflush_interval 20s\r\n\tretry_limit 10\r\n\tretry_wait 30s\r\n</match>\r\n\r\n<match
+    oms.api.KubeServices**>\t  \r\n  type out_oms_api\r\n  log_level debug\r\n  num_threads
+    5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer\r\n
+    \ buffer_queue_limit 20\r\n  buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval
+    20s\r\n  retry_limit 10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match
+    oms.containerinsights.KubeNodeInventory**>\r\n  type out_oms\r\n  log_level debug\r\n
+    \ num_threads 5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path
+    %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer\r\n  buffer_queue_limit 20\r\n
+    \ buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval 20s\r\n  retry_limit
+    10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubePerf**>\t\r\n
+    \ type out_oms\r\n  log_level debug\r\n  num_threads 5\r\n  buffer_chunk_limit
+    20m\r\n  buffer_type file\r\n  buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer\r\n
+    \ buffer_queue_limit 20\r\n  buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval
+    20s\r\n  retry_limit 10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n"
+metadata:
+  name: omsagent-rs-config
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+ name: omsagent-secret
+ namespace: kube-system
+type: Opaque
+data:
+  #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
+  WSID: "WSID"
+  KEY: "KEY"
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -37,27 +91,31 @@ spec:
  template:
   metadata:
    labels:
-    app: omsagent
-    agentVersion: 1.6.0-42
-    dockerProviderVersion: 2.0.0-2
+    dsName: "omsagent-ds"
+   annotations:
+    agentVersion: "1.6.0-42"
+    dockerProviderVersion: "2.0.0-3"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod05082018"
+       image: "microsoft/oms:internaltest0529n0"
        imagePullPolicy: IfNotPresent
+       resources:
+        limits:
+         cpu: 150m
+         memory: 750Mi
+        requests:
+         cpu: 50m
+         memory: 200Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+         value: "node-0-removal-aks-yaml"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
-       - name: WSID
-         value: WSID
-       - name: KEY 
-         value: KEY
        - name: NODE_IP
          valueFrom:
             fieldRef:
@@ -75,7 +133,10 @@ spec:
         - mountPath: /var/log 
           name: host-log
         - mountPath: /var/lib/docker/containers 
-          name: containerlog-path  
+          name: containerlog-path
+        - mountPath: /etc/omsagent-secret
+          name: omsagent-secret
+          readOnly: true
        livenessProbe:
         exec:
          command:
@@ -104,6 +165,103 @@ spec:
        path: /var/log
     - name: containerlog-path
       hostPath:
-       path: /var/lib/docker/containers     
+       path: /var/lib/docker/containers
+    - name: omsagent-secret
+      secret:
+       secretName: omsagent-secret
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+ name: omsagent-rs
+ namespace: kube-system
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   rsName: "omsagent-rs"
+ strategy:
+  type: RollingUpdate
+ template:
+  metadata:
+   labels:
+    rsName: "omsagent-rs"
+   annotations:
+    agentVersion: "1.6.0-42"
+    dockerProviderVersion: "2.0.0-3"
+  spec:
+   serviceAccountName: omsagent
+   containers:
+     - name: omsagent 
+       image: "microsoft/oms:internaltest0529n0"
+       imagePullPolicy: IfNotPresent
+       resources:
+        limits:
+         cpu: 150m
+         memory: 500Mi
+        requests:
+         cpu: 50m
+         memory: 100Mi
+       env:
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+       - name: ACS_RESOURCE_NAME
+         value: "node-0-removal-aks-yaml"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
+       - name: NODE_IP
+         valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP  
+       securityContext:
+         privileged: true
+       ports:
+       - containerPort: 25225
+         protocol: TCP 
+       - containerPort: 25224
+         protocol: UDP
+       volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+        - mountPath: /var/log 
+          name: host-log
+        - mountPath: /var/lib/docker/containers 
+          name: containerlog-path
+        - mountPath: /etc/omsagent-secret
+          name: omsagent-secret
+          readOnly: true
+        - mountPath : /etc/config
+          name: omsagent-rs-config
+       livenessProbe:
+        exec:
+         command:
+         - /bin/bash
+         - -c
+         - ps -ef | grep omsagent | grep -v "grep"
+        initialDelaySeconds: 60
+        periodSeconds: 60
+   nodeSelector:
+    beta.kubernetes.io/os: linux
+    kubernetes.io/role: agent
+   volumes:
+    - name: docker-sock 
+      hostPath:
+       path: /var/run/docker.sock
+    - name: container-hostname
+      hostPath:
+       path: /etc/hostname
+    - name: host-log
+      hostPath:
+       path: /var/log
+    - name: containerlog-path
+      hostPath:
+       path: /var/lib/docker/containers
+    - name: omsagent-secret
+      secret:
+       secretName: omsagent-secret
+    - name: omsagent-rs-config
+      configMap:
+        name: omsagent-rs-config    
 
 
