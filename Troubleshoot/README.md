@@ -10,4 +10,4 @@ The table below summarizes known issues you may face while using Container Helat
 
 If steps above did not help to resolve your issue you can use either of the following methods to contact us for help:
 *	File a [GitHub Issue](https://github.com/Microsoft/OMS-docker/issues)
-*	Email [AskCoin](mailto:askcoin@example.com)
+*	Email [AskCoin](mailto:askcoin@microsoft.com)
