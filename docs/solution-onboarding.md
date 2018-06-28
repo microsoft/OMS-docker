@@ -10,11 +10,11 @@ If you are not familiar with the concepts of deploying resources using a templat
  - TemplateParams file [azuremonitor-containerSolutionParams.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/templates/azuremonitor-containerSolutionParams.json)
 2. Edit the TemplateParams file in your local computer.
  * workspaceResourceId parameter :
- ..1. Replace <SubscriptionId> with Azure subscriptionID for your Workspace
- ..2. Replace <ResourceGroup> with Azure ResourceGroup name for your Workspace
- ..3. Replace <workspaceName> with Azure LogAnalytics Workspace name for your Workspace
+  1. Replace <SubscriptionId> with Azure subscriptionID for your Workspace
+  2. Replace <ResourceGroup> with Azure ResourceGroup name for your Workspace
+  3. Replace <workspaceName> with Azure LogAnalytics Workspace name for your Workspace
  * workspaceRegion parameter :
- ..1. Replace <eastus> with your Azure LogAnalytics Workspace region
+  1. Replace <eastus> with your Azure LogAnalytics Workspace region
 
 ## Deploy using Powershell
 - Use the following PowerShell commands from the folder containing the template files:
