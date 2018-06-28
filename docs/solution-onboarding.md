@@ -6,15 +6,15 @@ You can either use the Azure Powershell or Azure cli to deploy the solution.
 If you are not familiar with the concepts of deploying resources using a template with PowerShell, see [Deploy resources with Resource Manager templates and Azure PowerShell](https://review.docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-deploy)
 
 1. Get the below template files to your local computer.
- * Template file [azuremonitor-containerSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/templates/azuremonitor-containerSolution.json)
- * TemplateParams file [azuremonitor-containerSolutionParams.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/templates/azuremonitor-containerSolutionParams.json)
+   - Template file [azuremonitor-containerSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/templates/azuremonitor-containerSolution.json)
+   - TemplateParams file [azuremonitor-containerSolutionParams.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/templates/azuremonitor-containerSolutionParams.json)
 2. Edit the TemplateParams file in your local computer.
- * workspaceResourceId parameter :
-   - Replace <SubscriptionId> with Azure subscriptionID for your Workspace
-   - Replace <ResourceGroup> with Azure ResourceGroup name for your Workspace
-   - Replace <workspaceName> with Azure LogAnalytics Workspace name for your Workspace
- * workspaceRegion parameter :
-   - Replace <eastus> with your Azure LogAnalytics Workspace region
+   * workspaceResourceId parameter :
+       - Replace `<SubscriptionId>` with Azure subscriptionID for your Workspace
+       - Replace `<ResourceGroup>` with Azure ResourceGroup name for your Workspace
+       - Replace `<workspaceName>` with Azure Log Analytics Workspace name for your Workspace
+* workspaceRegion parameter :
+       - Replace `<eastus>` with your Azure Log Analytics Workspace region
 
 ## Deploy using Powershell
 - Use the following PowerShell commands from the folder containing the template files:
