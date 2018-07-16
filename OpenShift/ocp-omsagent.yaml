@@ -47,3 +47,6 @@ spec:
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
+      - name: containerlog-path
+        hostPath:
+         path: /var/lib/docker/containers
