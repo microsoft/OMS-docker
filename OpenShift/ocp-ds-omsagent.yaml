@@ -48,3 +48,6 @@ spec:
       - name: omsagent-secret
         secret:
          secretName: omsagent-secret
+      - name: containerlog-path
+        hostPath:
+         path: /var/lib/docker/containers
