@@ -9,11 +9,11 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-42/omsagent-1.6.0-42.universal.x64.sh
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.6.0-155.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
-wget https://rashmi.blob.core.windows.net/bld-docker-image/Linux_ULINUX_1.0_x64_64_Release/docker-cimprov-1.0.0-33.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-2.0.0-4.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
@@ -33,7 +33,7 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-2.0.0-*.x86_64.sh --install
 
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
