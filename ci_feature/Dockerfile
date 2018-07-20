@@ -4,7 +4,7 @@ LABEL vendor=Microsoft\ Corp \
 com.microsoft.product="OMS Container Docker Provider" \
 com.microsoft.version="2.0.0-7"
 ENV tmpdir /opt
-RUN /usr/bin/apt-get update && /usr/bin/apt-get install -y libc-bin wget openssl curl sudo python-ctypes sysv-rc net-tools rsyslog cron vim dmidecode apt-transport-https && rm -rf /var/lib/apt/lists/*
+RUN /usr/bin/apt-get update && /usr/bin/apt-get install -y libc-bin wget openssl curl sudo python-ctypes sysv-rc net-tools rsyslog cron vim dmidecode apt-transport-https && rm -rf /var/lib/apt/lists/* && service rsyslog stop
 COPY setup.sh main.sh $tmpdir/
 WORKDIR ${tmpdir}
 RUN chmod 775 $tmpdir/*.sh; sync; $tmpdir/setup.sh
