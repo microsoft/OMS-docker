@@ -130,8 +130,6 @@ spec:
        volumeMounts:
         - mountPath: /var/run/docker.sock
           name: docker-sock
-        - mountPath: /var/log 
-          name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
         - mountPath: /etc/omsagent-secret
@@ -160,9 +158,6 @@ spec:
     - name: container-hostname
       hostPath:
        path: /etc/hostname
-    - name: host-log
-      hostPath:
-       path: /var/log
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
@@ -224,8 +219,6 @@ spec:
        volumeMounts:
         - mountPath: /var/run/docker.sock
           name: docker-sock
-        - mountPath: /var/log 
-          name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
         - mountPath: /etc/omsagent-secret
@@ -251,9 +244,6 @@ spec:
     - name: container-hostname
       hostPath:
        path: /etc/hostname
-    - name: host-log
-      hostPath:
-       path: /var/log
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
@@ -262,6 +252,4 @@ spec:
        secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
-        name: omsagent-rs-config    
-
-
+        name: omsagent-rs-config
