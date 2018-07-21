@@ -86,6 +86,8 @@ dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+#stopping rsyslog to disable collecting syslog for all debug messages
+service rsyslog stop
 
 shutdown() {
 	/opt/omi/bin/service_control stop
