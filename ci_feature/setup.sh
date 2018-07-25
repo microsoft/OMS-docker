@@ -1,11 +1,19 @@
 TMPDIR="/opt"
 cd $TMPDIR
 
-wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-42/omsagent-1.6.0-42.universal.x64.sh
+#Download utf-8 encoding capability on the omsagent container.
+
+apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+
+sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.6.0-155.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
-wget https://github.com/Microsoft/Docker-Provider/releases/download/2.0.0-3/docker-cimprov-2.0.0-3.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-2.0.0-4.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
