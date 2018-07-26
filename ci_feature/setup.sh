@@ -9,7 +9,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.6.0-155.universal.x64.sh
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.6.0-163.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
