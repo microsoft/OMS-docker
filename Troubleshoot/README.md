@@ -10,6 +10,7 @@ The table below summarizes known issues you may face while using Container Healt
 
 # Troubleshooting script
 
+
 You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Prequisites: 
