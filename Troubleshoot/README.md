@@ -10,7 +10,7 @@ The table below summarizes known issues you may face while using Container Healt
 
 # Troubleshooting script
 
-You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
+You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Prequisites: 
 - Powershell version 5.1 or above. To install powershell use the following [link](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6). If you've it installed already, check the powershell version using the command `$psversiontable` and look at the PSVersion row.
@@ -19,7 +19,7 @@ Prequisites:
 - Type the following command 'Set-ExecutionPolicy Unrestricted' before running the script
 
 Steps:
-- Download [TroubleshootError.ps1](https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/ContainerInsightsSolution.json)
+- Download [TroubleshootError.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature/Troubleshoot/ContainerInsightsSolution.json)
 - Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
 - Use the following command to run the script : `.\TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
