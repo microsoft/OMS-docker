@@ -10,10 +10,10 @@ The table below summarizes known issues you may face while using Container Healt
 
 # Troubleshooting script
 
-You can use the troubleshooting script provided here to diagnose the problem.
+You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Prequisites: 
-- Powershell version 5.1 or above. To install powershell use the following link -> https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6. If you've it installed already, check the powershell version using the command `$psversiontable` and look at the PSVersion row.
+- Powershell version 5.1 or above. To install powershell use the following [link](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6). If you've it installed already, check the powershell version using the command `$psversiontable` and look at the PSVersion row.
 - Run powershell as an administrator
 - Use 'Get-ExecutionPolicy' to get the current execution policy and store it in a file
 - Type the following command 'Set-ExecutionPolicy Unrestricted' before running the script
