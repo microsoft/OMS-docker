@@ -347,7 +347,7 @@ if ($LogAnalyticsWorkspaceResourceID -eq $null) {
 				New-AzureRmResourceGroupDeployment -Name $DeploymentName `
 											   -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] `
 											   -TemplateFile $TemplateFile `
-											   -TemplateParameterObject $Parameters -ErrorAction Stop`
+											   -TemplateParameterObject $Parameters -ErrorAction Stop
 				Write-Host("")
 				Write-Host("Template deployment was successful. You will be able to see data flowing into your cluster in 10-15 mins.") -ForegroundColor Green
 				Write-Host("")
