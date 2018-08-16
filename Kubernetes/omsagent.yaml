@@ -70,6 +70,94 @@ metadata:
   namespace: kube-system
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: logging
+  labels:
+    k8s-app: fluent-bit
+data:
+  # Configuration files: server, input, filters and output
+  # ======================================================
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+        Log_File      /var/log/fluent-bit.log
+        HTTP_Server   On
+        HTTP_Listen   0.0.0.0
+        HTTP_Port     2020
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output-stdout.conf
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        Parser            docker
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+  filter-kubernetes.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc.cluster.local:443
+        Merge_Log           On
+        K8S-Logging.Parser  On
+  output-stdout.conf: |
+    [OUTPUT]
+        Name            stdout
+        Match           *
+  parsers.conf: |
+    [PARSER]
+        Name   apache
+        Format regex
+        Regex  ^(?<host>[^ ]*) [^ ]* (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+    [PARSER]
+        Name   apache2
+        Format regex
+        Regex  ^(?<host>[^ ]*) [^ ]* (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^ ]*) +\S*)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+    [PARSER]
+        Name   apache_error
+        Format regex
+        Regex  ^\[[^ ]* (?<time>[^\]]*)\] \[(?<level>[^\]]*)\](?: \[pid (?<pid>[^\]]*)\])?( \[client (?<client>[^\]]*)\])? (?<message>.*)$
+    [PARSER]
+        Name   nginx
+        Format regex
+        Regex ^(?<remote>[^ ]*) (?<host>[^ ]*) (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+    [PARSER]
+        Name   json
+        Format json
+        Time_Key time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+        # Command      |  Decoder | Field | Optional Action
+        # =============|==================|=================
+        Decode_Field_As   escaped    log
+    [PARSER]
+        Name        syslog
+        Format      regex
+        Regex       ^\<(?<pri>[0-9]+)\>(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$
+        Time_Key    time
+        Time_Format %b %d %H:%M:%S
+---
+apiVersion: v1
 kind: Secret
 metadata:
  name: omsagent-secret
@@ -109,11 +197,11 @@ spec:
          cpu: 50m
          memory: 200Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       - name: AKS_RESOURCE_ID
+         value: "/subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourcegroups/dilipr-fb-out/providers/Microsoft.ContainerService/managedClusters/dilipr-fb-out"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+      #  - name: ACS_RESOURCE_NAME
+      #    value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: NODE_IP
@@ -145,6 +233,30 @@ spec:
          - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
+     - name: fluent-bit
+       image: rdilip83/fluent-bit_oms:0.7
+       imagePullPolicy: Always
+       ports:
+         - containerPort: 2020
+       securityContext:
+         privileged: true
+       volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+        - mountPath: /var/log 
+          name: host-log
+        - mountPath: /var/lib/docker/containers 
+          name: containerlog-path
+        - mountPath: /fluent-bit/etc/
+          name: fluent-bit-config
+       livenessProbe:
+        exec:
+         command:
+         - /bin/bash
+         - -c
+         - ps -ef | grep fluent | grep -v "grep"
+        initialDelaySeconds: 60
+        periodSeconds: 60   
    nodeSelector:
     beta.kubernetes.io/os: linux    
    # Tolerate a NoSchedule taint on master that ACS Engine sets.
@@ -169,99 +281,6 @@ spec:
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
- name: omsagent-rs
- namespace: kube-system
-spec:
- replicas: 1
- selector:
-  matchLabels:
-   rsName: "omsagent-rs"
- strategy:
-  type: RollingUpdate
- template:
-  metadata:
-   labels:
-    rsName: "omsagent-rs"
-   annotations:
-    agentVersion: "1.6.0-163"
-    dockerProviderVersion: "2.0.0-4"
-  spec:
-   serviceAccountName: omsagent
-   containers:
-     - name: omsagent 
-       image: "microsoft/oms:ciprod07312018"
-       imagePullPolicy: IfNotPresent
-       resources:
-        limits:
-         cpu: 150m
-         memory: 500Mi
-        requests:
-         cpu: 50m
-         memory: 100Mi
-       env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "node-0-removal-aks-yaml"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
-       - name: NODE_IP
-         valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP  
-       securityContext:
-         privileged: true
-       ports:
-       - containerPort: 25225
-         protocol: TCP 
-       - containerPort: 25224
-         protocol: UDP
-       volumeMounts:
-        - mountPath: /var/run/docker.sock
-          name: docker-sock
-        - mountPath: /var/log 
-          name: host-log
-        - mountPath: /var/lib/docker/containers 
-          name: containerlog-path
-        - mountPath: /etc/omsagent-secret
-          name: omsagent-secret
-          readOnly: true
-        - mountPath : /etc/config
-          name: omsagent-rs-config
-       livenessProbe:
-        exec:
-         command:
-         - /bin/bash
-         - -c
-         - ps -ef | grep omsagent | grep -v "grep"
-        initialDelaySeconds: 60
-        periodSeconds: 60
-   nodeSelector:
-    beta.kubernetes.io/os: linux
-    kubernetes.io/role: agent
-   volumes:
-    - name: docker-sock 
-      hostPath:
-       path: /var/run/docker.sock
-    - name: container-hostname
-      hostPath:
-       path: /etc/hostname
-    - name: host-log
-      hostPath:
-       path: /var/log
-    - name: containerlog-path
-      hostPath:
-       path: /var/lib/docker/containers
-    - name: omsagent-secret
-      secret:
-       secretName: omsagent-secret
-    - name: omsagent-rs-config
+    - name: fluent-bit-config
       configMap:
-        name: omsagent-rs-config    
-
-
+        name: fluent-bit-config    
