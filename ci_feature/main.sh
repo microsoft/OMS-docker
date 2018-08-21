@@ -88,7 +88,6 @@ service cron start
 find / -name oms.key | xargs cp -t /shared/data/
 find / -name oms.crt | xargs cp -t /shared/data/
 
-
 #get omsagent and docker-provider versions
 dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
