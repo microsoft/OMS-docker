@@ -152,7 +152,7 @@ spec:
        imagePullPolicy: Always
        env:
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "false"
+         value: "true"
        ports:
          - containerPort: 2020
        securityContext:
