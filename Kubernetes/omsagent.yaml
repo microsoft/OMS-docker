@@ -99,7 +99,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:noFluentdLogs"
+       image: "microsoft/oms:ciprod07312018"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -229,7 +229,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:noFluentdLogs"
+       image: "microsoft/oms:ciprod07312018"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
