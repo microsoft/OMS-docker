@@ -12,8 +12,8 @@ done
 echo "`date +%H:%M:%S`  All required file present in shared volume" >> $LOGFILE
 
 # This is for testing
-echo "`date +%H:%M:%S`  Removing fluent-bit logs database" >> $LOGFILE
-rm -rf /var/log/fblogs.db
+# echo "`date +%H:%M:%S`  Removing fluent-bit logs database" >> $LOGFILE
+# rm -rf /var/log/fblogs.db
 
 /fluent-bit/bin/fluent-bit -c /fluent-bit/etc/fluent-bit.conf \
                            -e /fluent-bit/bin/out_oms.so "$@"
