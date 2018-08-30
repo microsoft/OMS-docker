@@ -147,7 +147,7 @@ spec:
          - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
-     - name: fluent-bit
+     - name: container-log
        image: rdilip83/fluent-bit-oms:testing
        imagePullPolicy: Always
        env:
