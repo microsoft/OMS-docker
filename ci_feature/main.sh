@@ -81,6 +81,13 @@ service cron start
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
 
+# write the workspace id to a conf file so fluent-bit can pick it up
+# shared/data will be mounted to emptyDir and will be shared with fluent-bit container running on the same pod
+# also copy shared certs and key into the shared volume
+/opt/microsoft/omsagent/bin/omsadmin.sh -l | cut -d" " -f1-3 | tr -d ' '  | cut -d":" -f2 > /shared/data/workspaceId
+find / -name oms.key | xargs cp -t /shared/data/
+find / -name oms.crt | xargs cp -t /shared/data/
+
 #get omsagent and docker-provider versions
 dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
