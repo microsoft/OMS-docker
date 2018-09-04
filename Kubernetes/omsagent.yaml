@@ -10,8 +10,8 @@ metadata:
   name: omsagent-reader
 rules:
 - apiGroups: [""]
-  resources: ["pods", "events", "nodes", "namespaces", "services", "containers"]
-  verbs: ["get","list"]
+  resources: ["pods", "events", "nodes", "namespaces", "services"]
+  verbs: ["list"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -109,8 +109,8 @@ spec:
          cpu: 50m
          memory: 200Mi
        env:
-      #  - name: AKS_RESOURCE_ID
-      #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
          value: "my_acs_cluster_name"
@@ -137,8 +137,6 @@ spec:
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
-        - mountPath: /shared/data
-          name: shared-data          
        livenessProbe:
         exec:
          command:
@@ -147,35 +145,6 @@ spec:
          - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
-     - name: container-log
-       image: rdilip83/fluent-bit-oms:testing
-       imagePullPolicy: Always
-       env:
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
-       ports:
-         - containerPort: 2020
-       securityContext:
-         privileged: true
-       volumeMounts:
-        - mountPath: /var/run/docker.sock
-          name: docker-sock
-        - mountPath: /var/log 
-          name: host-log
-        - mountPath: /var/lib/docker/containers 
-          name: containerlog-path
-        - mountPath: /shared/data
-          name: shared-data
-        - mountPath: /var/opt/microsoft/docker-cimprov/state/ContainerInventory
-          name: container-inventory-path 
-       livenessProbe:
-        exec:
-         command:
-         - /bin/bash
-         - -c
-         - ps -ef | grep fluent | grep -v "grep"
-        initialDelaySeconds: 60
-        periodSeconds: 60   
    nodeSelector:
     beta.kubernetes.io/os: linux    
    # Tolerate a NoSchedule taint on master that ACS Engine sets.
@@ -197,14 +166,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
-    - name: container-inventory-path
-      hostPath:
-       path: /var/opt/microsoft/docker-cimprov/state/ContainerInventory
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
-    - name: shared-data
-      emptyDir: {}   
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -299,4 +263,5 @@ spec:
     - name: omsagent-rs-config
       configMap:
         name: omsagent-rs-config    
+
 
