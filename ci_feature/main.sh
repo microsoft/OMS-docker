@@ -94,7 +94,7 @@ dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 #start the fluent-bit(td-agent-bit) process in the background
-/opt/td-agent-bit/bin -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+/opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
 
 shutdown() {
 	/opt/omi/bin/service_control stop
