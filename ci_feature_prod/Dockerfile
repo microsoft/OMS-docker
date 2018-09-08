@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 MAINTAINER OMSContainers@microsoft.com
 LABEL vendor=Microsoft\ Corp \
 com.microsoft.product="OMS Container Docker Provider" \
