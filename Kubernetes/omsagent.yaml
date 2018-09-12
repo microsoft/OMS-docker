@@ -137,8 +137,6 @@ spec:
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
-        - mountPath: /shared/data
-          name: shared-data          
        livenessProbe:
         exec:
          command:
@@ -147,35 +145,6 @@ spec:
          - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
-     - name: container-log
-       image: rdilip83/fluent-bit-oms:testing
-       imagePullPolicy: Always
-       env:
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
-       ports:
-         - containerPort: 2020
-       securityContext:
-         privileged: true
-       volumeMounts:
-        - mountPath: /var/run/docker.sock
-          name: docker-sock
-        - mountPath: /var/log 
-          name: host-log
-        - mountPath: /var/lib/docker/containers 
-          name: containerlog-path
-        - mountPath: /shared/data
-          name: shared-data
-        - mountPath: /var/opt/microsoft/docker-cimprov/state/ContainerInventory
-          name: container-inventory-path 
-       livenessProbe:
-        exec:
-         command:
-         - /bin/bash
-         - -c
-         - ps -ef | grep fluent | grep -v "grep"
-        initialDelaySeconds: 60
-        periodSeconds: 60   
    nodeSelector:
     beta.kubernetes.io/os: linux    
    # Tolerate a NoSchedule taint on master that ACS Engine sets.
@@ -203,8 +172,6 @@ spec:
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
-    - name: shared-data
-      emptyDir: {}   
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
