@@ -8,7 +8,7 @@ spec:
    labels:
     app: omsagent
     agentVersion: 1.6.0-163
-    dockerProviderVersion: 1.0.0-34
+    dockerProviderVersion: 1.0.0-35
   spec:
    containers:
      - name: omsagent 
