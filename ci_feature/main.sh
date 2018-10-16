@@ -65,8 +65,11 @@ if [ -z $INT ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
   fi
 else
+#To onboard to INT workspace - workspace-id (WSID-not base64 encoded), workspace-key (KEY-not base64 encoded), Domain(DOMAIN-int2.microsoftatlanta-int.com)
+#need to be added to omsagent.yaml.
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
+        echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
@@ -86,6 +89,13 @@ dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+
+
+if [ ! -e "/etc/config/kube.conf" ]; then
+    #start the fluent-bit(td-agent-bit) process in the background
+    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+    dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
+fi
 
 shutdown() {
 	/opt/omi/bin/service_control stop
