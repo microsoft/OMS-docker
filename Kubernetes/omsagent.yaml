@@ -94,20 +94,20 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.6.0-163"
-    dockerProviderVersion: "2.0.0-4"
+    dockerProviderVersion: "3.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod07312018"
+       image: "microsoft/oms:ciprod10162018"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
-         memory: 750Mi
+         memory: 300Mi
         requests:
          cpu: 50m
-         memory: 200Mi
+         memory: 150Mi
        env:
       #  - name: AKS_RESOURCE_ID
       #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
@@ -191,12 +191,12 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.6.0-163"
-    dockerProviderVersion: "2.0.0-4"
+    dockerProviderVersion: "3.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod07312018"
+       image: "microsoft/oms:ciprod10162018"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
