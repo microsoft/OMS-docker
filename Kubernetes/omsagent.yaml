@@ -166,9 +166,6 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
-    - name: container-inventory-path
-      hostPath:
-       path: /var/opt/microsoft/docker-cimprov/state/ContainerInventory
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
