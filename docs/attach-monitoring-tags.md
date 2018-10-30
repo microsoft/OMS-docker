@@ -1,4 +1,4 @@
-# How to add 'AzureMonitor-Containers' Log Analytics workspace tags to Acs-engine Kubernetes cluster resources
+# How to add Log Analytics Workspace ResourceId tags to Acs-engine Kubernetes cluster resources
 
 You can either use the Azure Powershell or Azure cli to attach the Log Analytics workspace tag to Acs-engine Kubernetes master nodes.
 
@@ -10,7 +10,7 @@ If you are not familiar with the concepts of azure resource tags (https://docs.m
 ## Attach tags using Powershell
 
 Get the below powershell script files to your local computer.
-   - Powershell script file [AddMonitoringWorkspaceTags.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/acsengine/kubernetes/AddMonitoringWorkspaceTags.ps1)
+   - Powershell script file [AddMonitoringWorkspaceTags.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/acsengine/kubernetes/AddMonitoringWorkspaceTags.ps1)
    - Refer for updating the Powershell execution policy (https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-6)
    - Log analytics workspace resource Id can retrieved either Azure CLI or Powershell or Azure Portal  
       Azure CLI
