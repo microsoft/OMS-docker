@@ -8,7 +8,10 @@
        |logAnalyticsWorkspaceResourceId      | <azure ResourceId of the workspace configured on the omsAgent >  |
        ----------------------------------------------------------------------------------------------------------
      
-     https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags        
+     https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags  
+	 
+	See below reference to get the Log Analytics workspace resource Id 
+	https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
  
     .PARAMETER SubscriptionId
         Subscription Id that the acs-engine Kubernetes cluster is in

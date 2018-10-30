@@ -12,6 +12,25 @@ If you are not familiar with the concepts of azure resource tags (https://docs.m
 Get the below powershell script files to your local computer.
    - Powershell script file [AddMonitoringWorkspaceTags.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/acsengine/kubernetes/AddMonitoringWorkspaceTags.ps1)
    - Refer for updating the Powershell execution policy (https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-6)
+   - Log analytics workspace resource Id can retrieved either Azure CLI or Powershell or Azure Portal  
+      Azure CLI
+
+      az resource list --resource-type Microsoft.OperationalInsights/workspaces 
+
+                  OR 
+
+      az resource show -g `<resource group of the workspace>` -n `<name of the workspace>` --resource-type Microsoft.OperationalInsights/workspaces
+
+      Powershell
+
+      https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
+
+     Azure Portal
+
+     From the Portal URL when the Log Analytics Workspace selected,see below for the format of the Log Analytics Workspace Resource Id
+
+     /subscriptions/`<subId>`/resourceGroups/`<rgName>`/providers/Microsoft.OperationalInsights/workspaces/`<workspaceName>`
+       
 
 - Use the following PowerShell command from the folder containing the Powershell script file:
 
