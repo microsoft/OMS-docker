@@ -51,11 +51,13 @@ The configuration change can take a few minutes to complete. When it finishes, y
 # login
 az login
 
+workspaceResourceId="/subscriptions/<subscription id>/resourceGroups/<resource group name>/providers/Microsoft.OperationalInsights/workspaces/<workspace name>"
+
 # set subscription of the acs-engine resource group
 az account set -s <subscriptionId of acs-engine Kubernetes cluster>
 
 # check whether log analytics workspace resource exists or not
-az resource show --ids "<resource Id of the log analytics workspace which configured on the omsagent>"
+az resource show --ids $workspaceResourceId
 
 # get the all existing k8s master nodes
 resources=$(az resource list -g <resource group name of acs engine cluster> --resource-type "Microsoft.Compute/virtualMachines" --query "[?starts_with(name,'k8s-master')].id" --output tsv)
@@ -65,7 +67,7 @@ for resid in $resources
  do
     jsonrtag=$(az resource show --id $resid --query tags)
     rt=$(echo $jsonrtag | tr -d '"{},' | sed 's/: /=/g')
-    az resource tag --tags $rt logAnalyticsWorkspaceResourceId="<resource Id of the log analytics workspace which configured on the omsagent>" --id $resid
+    az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId --id $resid
 done
 
 ```
