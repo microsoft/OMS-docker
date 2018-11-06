@@ -35,7 +35,7 @@ provisioningState       : Succeeded
 ``` sh 
 az login
 az account set --subscription "<Subscription Name of your Log Analytics Workspace>"
-az group deployment create --resource-group <ResourceGroupName> --template-file ./existingClusterOnboarding.json --parameters @./existingClusterParam.json 
+az group deployment create --resource-group <ResourceGroupName> --template-file ./azuremonitor-containerSolution.json --parameters @./azuremonitor-containerSolutionParams.json
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:
