@@ -50,9 +50,6 @@ rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.c
 /opt/omi/bin/omiserver -s
 /opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
 
-groupadd docker
-usermod -a -G docker omsagent
-
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
