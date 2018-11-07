@@ -34,6 +34,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
+#add docker group and assign permissions to omsagent to access docker.sock
+groupadd docker
+usermod -a -G docker omsagent
+
 /$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
