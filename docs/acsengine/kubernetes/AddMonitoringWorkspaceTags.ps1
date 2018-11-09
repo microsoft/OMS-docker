@@ -177,7 +177,7 @@ Write-Host("Successfully checked resource groups details...") -ForegroundColor G
 #
 $k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
 
-$isKubernetesCluster = false 
+$isKubernetesCluster = $false 
 
 foreach($k8MasterVM in $k8sMasterVMs) {
   
@@ -191,7 +191,7 @@ foreach($k8MasterVM in $k8sMasterVMs) {
   Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
 
   if([string]$orchestrator.StartsWith('Kubernetes')) {
-   $isKubernetesCluster = true
+   $isKubernetesCluster = $true
 
     Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
   }

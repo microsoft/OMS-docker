@@ -1,6 +1,7 @@
 # How to add Log Analytics Workspace ResourceId tags to Acs-engine Kubernetes cluster resources
 
-You can either use the Azure Powershell or Azure cli to attach the Log Analytics workspace tag to Acs-engine Kubernetes master nodes.
+You can either use the Azure Powershell or Azure cli to attach the Azure Resource Id of the Log Analytics workspace and optionally clusterName tag to Acs-engine Kubernetes master nodes. If the clusterName tag attached and that will be used to identify that as cluster name in the UI else its name of the resource group where the acs-engine resources exist. ClusterName should be match with what's configured on the omsagent for omsagent.env.clusterName as part of the omsagent installation. Log Analytics workspace ResourceId tag on the K8s master node used to determine whether the specified cluster is onboarded to monitoring or not.  
+
 
 These  tags required for the Azure Monitor for Containers Ux experience (https://docs.microsoft.com/en-us/azure/monitoring/monitoring-container-insights-overview )
 
@@ -72,11 +73,11 @@ for resid in $resources
  do
     jsonrtag=$(az resource show --id $resid --query tags)
     rt=$(echo $jsonrtag | tr -d '"{},' | sed 's/: /=/g')
-    if[- z $clusterName]; 
-    then
-       az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId --id $resid
+    if [ -z $clusterName ]; then
+      az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId --id $resid
     else 
-       az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId clusterName=$clusterName --id $resid
+       az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId clusterName=$clusterName --id $resid        
+    fi   
 done
 
 ```
