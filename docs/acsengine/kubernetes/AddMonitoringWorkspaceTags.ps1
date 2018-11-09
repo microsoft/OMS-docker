@@ -21,6 +21,9 @@
 
     .PARAMETER logAnalyticsWorkspaceResourceId
         ResourceId of the Log Analytics. This should be the same as the one configured on the omsAgent of specified acs-engine Kubernetes cluster
+
+	 .PARAMETER clusterName
+        Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified acs-engine Kubernetes cluster	
 #>
 
 param(
@@ -28,7 +31,9 @@ param(
 	[string]$SubscriptionId,
 	[Parameter(mandatory=$true)]
 	[string]$ResourceGroupName,
-	[string]$LogAnalyticsWorkspaceResourceId
+	[Parameter(mandatory=$true)]
+	[string]$LogAnalyticsWorkspaceResourceId,
+	[string] $clusterName
 )
 
 
@@ -212,7 +217,7 @@ if($workspaceResource -eq $null) {
 }
 
 #
-#  Add logAnalyticsWorkspaceResourceId tag to the K8s master VMs
+#  Add logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
 
 foreach($k8MasterVM in $k8sMasterVMs) { 
@@ -246,10 +251,31 @@ foreach($k8MasterVM in $k8sMasterVMs) {
                     
         }
 
+        # if clusterName parameter passed-in
+        if ($clusterName) {
+            if($r.Tags.ContainsKey("clusterName")) {
+				$existingclusterName = $r.Tags["clusterName"]
+
+				if ($existingclusterName -eq $clusterName) {
+					 Write-Host("Ignoring the request since K8s master VM :" + $k8MasterVM.Name + " already has existing tag with specified clusterName" ) -ForegroundColor Green
+                     exit
+				}
+		
+		      Write-Host("K8s master VM :" + $k8MasterVM.Name + " has the existing tag for clusterName with different from specified one" ) -ForegroundColor Green
+              $r.Tags.Remove("clusterName")        
+			}
+
+           $r.Tags.Add("clusterName", $clusterName) 
+		}
+
         $r.Tags.Add("logAnalyticsWorkspaceResourceId", $LogAnalyticsWorkspaceResourceId) 
         Set-AzureRmResource -Tag $r.Tags -ResourceId $r.ResourceId -Force
   } 
-
-Write-Host("Successfully added logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green
+if ($clusterName) {
+   Write-Host("Successfully added clusterName and logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green 
+}
+else {
+  Write-Host("Successfully added logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green 
+}
 
 

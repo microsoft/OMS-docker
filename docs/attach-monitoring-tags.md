@@ -16,9 +16,7 @@ Get the below powershell script files to your local computer.
       Azure CLI
 
       az resource list --resource-type Microsoft.OperationalInsights/workspaces 
-
                   OR 
-
       az resource show -g `<resource group of the workspace>` -n `<name of the workspace>` --resource-type Microsoft.OperationalInsights/workspaces
 
       Powershell
@@ -51,7 +49,14 @@ The configuration change can take a few minutes to complete. When it finishes, y
 # login
 az login
 
+# Azure resource Id of the workspace configured on the omsagent
 workspaceResourceId="/subscriptions/<subscription id>/resourceGroups/<resource group name>/providers/Microsoft.OperationalInsights/workspaces/<workspace name>"
+
+# Azure Monitor for container Ux uses  name of resource group where the acs-engine resources present
+# if you have configured name of the cluster for omsagent.env.clusterName parameter on omsagent is different from resource id of resource group
+# then you need attach same clusterName as clusterName tag hence replace '' with actual clusterName for below clusterName variable
+clusterName=''
+
 
 # set subscription of the acs-engine resource group
 az account set -s <subscriptionId of acs-engine Kubernetes cluster>
@@ -67,7 +72,11 @@ for resid in $resources
  do
     jsonrtag=$(az resource show --id $resid --query tags)
     rt=$(echo $jsonrtag | tr -d '"{},' | sed 's/: /=/g')
-    az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId --id $resid
+    if[- z $clusterName]; 
+    then
+       az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId --id $resid
+    else 
+       az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId clusterName=$clusterName --id $resid
 done
 
 ```
