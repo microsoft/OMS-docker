@@ -36,7 +36,8 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 
 #add docker group and assign permissions to omsagent to access docker.sock
 groupadd docker
-usermod -a -G docker omsagent
+sudo usermod -a -G docker omsagent
+sudo /opt/omi/bin/service_control restart
 
 /$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
 
