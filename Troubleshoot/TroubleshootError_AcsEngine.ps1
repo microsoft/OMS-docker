@@ -3,39 +3,34 @@
 #
 <# 
     .DESCRIPTION 
-		Classifies the error type that a user is facing with their AKS cluster
+		Classifies the error type that a user is facing with their Acs-Engine Kubernetes cluster
  
     .PARAMETER SubscriptionId
-        Subscription Id that the AKS cluster is in
+        Subscription Id that the Acs-Engine Kubernetes cluster is in
 
     .PARAMETER ResourceGroupName
-        Resource Group name where the AKS cluster is in
-
-    .PARAMETER AKSClusterName
-        AKS Cluster name
+        Resource Group name where the Acs-Engine Kubernetes cluster is in
+    
 #>
 
 param(
 	[Parameter(mandatory=$true)]
 	[string]$SubscriptionId,
 	[Parameter(mandatory=$true)]
-	[string]$ResourceGroupName,
-	[Parameter(mandatory=$true)]
-	[string]$AKSClusterName
+	[string]$ResourceGroupName	
 )
 
 $ErrorActionPreference = "Stop";
 Start-Transcript -path .\TroubleshootDump.txt -Force
-$DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
-$OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
-$OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$OptOutLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers"
+$OptInLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers"
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 $azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
 
-if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)  -or ($null -eq $azureRmOperationalInsights)) {
+if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null)  -or ($azureRmOperationalInsights -eq $null)) {
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -134,7 +129,7 @@ try {
 #
 #   Subscription existance and access check
 #
-if ($null -eq $account.Account) {
+if ($account.Account -eq $null) {
 	try {
 		Write-Host("Please login...")
 		Login-AzureRmAccount -subscriptionid $SubscriptionId
@@ -180,39 +175,85 @@ if ($notPresent) {
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
-Write-Host("Checking AKS Cluster details...")
-try {
-	$ResourceDetailsArray = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -Name $AKSClusterName -ExpandProperties -ErrorAction Stop -WarningAction Stop
-} catch {
-	Write-Host("")
-	Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
-	Write-Host("")
-	Stop-Transcript
-	exit
+Write-Host("Checking specified Resource Group has the acs-engine Kuberentes cluster resources...")
+
+#
+#  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources 
+#
+$k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
+
+$isKubernetesCluster = $false 
+
+foreach($k8MasterVM in $k8sMasterVMs) {
+
+  $tags = $k8MasterVM.Tags
+
+  $acsEngineVersion = $tags['acsengineVersion']  
+  $orchestrator = $tags['orchestrator']
+
+  Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green  
+  Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
+
+  if([string]$orchestrator.StartsWith('Kubernetes')) {
+	$isKubernetesCluster = $true	
+    Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
+  }
+  else {
+        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+        exit 
+  }
+
 }
 
-if ($ResourceDetailsArray -eq $null) {
-	Write-Host("")
-	Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
-	Write-Host("")
-	Stop-Transcript
-	exit
-} else {
-	Write-Host("Successfully checked AKS Cluster details...") -ForegroundColor Green
-	Write-Host("")
-	foreach ($ResourceDetail in $ResourceDetailsArray) {
-		if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
-			# profile can be different casing so convert properties to lowecase and extract it
-			$props =  ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json
-			$LogAnalyticsWorkspaceResourceID = $props.addonprofiles.omsagent.config.loganalyticsworkspaceresourceid
-			$AKSClusterResourceId = $ResourceDetail.ResourceId
-			
-			Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");  
-			
-			break
-		}
+if($isKubernetesCluster -eq $false) {
+    Write-Host("Resource group name: '" + $ResourceGroupName + "' doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+    exit 
+}
+
+Write-Host("Successfully checked the Acs-engine Kuberentes cluster resources in specified resource group") -ForegroundColor Green
+
+#
+#  Extract logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
+#
+
+foreach($k8MasterVM in $k8sMasterVMs) { 
+
+	$r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
+	
+	if ($null -eq $r) {
+	   
+	   Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :"  + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
+	   exit 
+	}
+
+	if ($null -eq $r.Tags) {
+	   
+	   Write-Host("K8s master VM should have the tags" ) -ForegroundColor Red
+	   exit 
+	}
+
+	if($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
+	   $LogAnalyticsWorkspaceResourceId = $r.Tags["logAnalyticsWorkspaceResourceId"]
+	   break;
 	}
 }
+
+# validate specified logAnalytics workspace exists or not
+
+if ($null -eq $LogAnalyticsWorkspaceResourceId) {
+	Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes" ) -ForegroundColor Red	
+	Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+	Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+	Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+}
+
+$workspaceResource = Get-AzureRmResource -ResourceId $LogAnalyticsWorkspaceResourceId
+
+if($workspaceResource -eq $null) {
+    Write-Host("Specified Log Analytics workspace ResourceId: '" + $LogAnalyticsWorkspaceResourceId + "' doesnt exist or don't have access to it") -ForegroundColor Red
+    exit 
+}
+
 
 if ($LogAnalyticsWorkspaceResourceID -eq $null) {
 	Write-Host("")
@@ -305,10 +346,6 @@ if ($LogAnalyticsWorkspaceResourceID -eq $null) {
 			exit
 	}
 
-	$WorkspacePricingTier = $WorkspaceInformation.sku
-
-	Write-Host("Pricing tier of the configured LogAnalytics workspace: '" + $WorkspacePricingTier + "' ") -ForegroundColor Green
-
 	try {
 		$WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -WorkspaceName $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
 		Write-Host("Successfully fetched workspace IP details...") -ForegroundColor Green
@@ -335,13 +372,7 @@ if ($LogAnalyticsWorkspaceResourceID -eq $null) {
 	$isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
 	
 	if ($isSolutionOnboarded) {
-
-		if ($WorkspacePricingTier -eq "Free")  {
-			Write-Host("Pricing tier of the configured LogAnalytics workspace is Free so you may need to upgrade to pricing tier to non-Free") -ForegroundColor Red
-		}
-		else {
-			Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
-     	}
+		Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
 	} else {
 		#
 		# Check contributor access to WS
