@@ -31,6 +31,11 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
+
+#Assign permissions to omsagent user to access docker.sock
+sudo apt-get install acl
+sudo setfacl -m user:omsagent:rw /var/run/docker.sock
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
