@@ -25,6 +25,9 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
+# add permissions for omsagent user to docker.sock
+sudo setfacl -m user:omsagent:rw /var/run/docker.sock
+
 #dump OMS agent Image tag for telemetry purpose
 #step-1 dump the oms agent container imageID
  curl --unix-socket /var/run/docker.sock "http:/containers/json" | python -c "import sys, json; data=json.load(sys.stdin); omscontainer=[item for item in data if item['Image'].startswith('microsoft/oms@sha256:')]; print omscontainer[0]['ImageID'];" > /var/opt/microsoft/docker-cimprov/state/omscontainerimageid
