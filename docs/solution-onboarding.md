@@ -14,7 +14,7 @@ If you are not familiar with the concepts of deploying resources using a templat
        - Replace `<ResourceGroup>` with Azure ResourceGroup name for your Workspace
        - Replace `<workspaceName>` with Azure Log Analytics Workspace name for your Workspace
    * workspaceRegion parameter :
-       - Replace `<eastus>` with your Azure Log Analytics Workspace region
+       - Replace `<workspaceRegion>` with your Azure Log Analytics Workspace region 
 
 ## Deploy using Powershell
 - Use the following PowerShell commands from the folder containing the template files:

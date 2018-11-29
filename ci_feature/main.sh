@@ -13,6 +13,12 @@ sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get
 
 #using /var/opt/microsoft/docker-cimprov/state instead of /var/opt/microsoft/omsagent/state since the latter gets deleted during onboarding
 mkdir -p /var/opt/microsoft/docker-cimprov/state
+
+if [ ! -e "/etc/config/kube.conf" ]; then
+  # add permissions for omsagent user to docker.sock
+  sudo setfacl -m user:omsagent:rw /var/run/docker.sock
+fi
+
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
 	curl --unix-socket /var/run/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname

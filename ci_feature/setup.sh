@@ -13,7 +13,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
-wget https://github.com/Microsoft/Docker-Provider/releases/download/2.0.0-4/docker-cimprov-2.0.0-4.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-3.0.0-2.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -31,6 +31,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
+
+#Assign permissions to omsagent user to access docker.sock
+sudo apt-get install acl
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
