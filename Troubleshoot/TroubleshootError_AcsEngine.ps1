@@ -14,10 +14,10 @@
 #>
 
 param(
-	[Parameter(mandatory=$true)]
-	[string]$SubscriptionId,
-	[Parameter(mandatory=$true)]
-	[string]$ResourceGroupName	
+    [Parameter(mandatory = $true)]
+    [string]$SubscriptionId,
+    [Parameter(mandatory = $true)]
+    [string]$ResourceGroupName	
 )
 
 $ErrorActionPreference = "Stop";
@@ -30,19 +30,19 @@ $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 $azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
 
-if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null)  -or ($azureRmOperationalInsights -eq $null)) {
+if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null) -or ($azureRmOperationalInsights -eq $null)) {
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-	    Write-Host("Running script as an admin...")
-	    Write-Host("")
-    } else {
-	    Write-Host("Please run the script as an administrator") -ForegroundColor Red
-	    Stop-Transcript
-	    exit
+        Write-Host("Running script as an admin...")
+        Write-Host("")
+    }
+    else {
+        Write-Host("Please run the script as an administrator") -ForegroundColor Red
+        Stop-Transcript
+        exit
     }
     
-
     $message = "This script will try to install the latest versions of the following Modules : `
 			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
@@ -57,107 +57,118 @@ if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null)  -
     $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
     switch ($decision) {
-	    0 { 
-		    try {
-			    Write-Host("Installing AzureRM.profile...")
-			    Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
-			    exit
-		    }
-		    try {
-			    Write-Host("Installing AzureRM.Resources...")
-			    Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
-			    exit
-		    }
+        0 { 
+            try {
+                Write-Host("Installing AzureRM.profile...")
+                Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            }
+            catch {
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
+                exit
+            }
+            try {
+                Write-Host("Installing AzureRM.Resources...")
+                Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            }
+            catch {
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
+                exit
+            }
 	
-		    try {
-			    Write-Host("Installing AzureRM.OperationalInsights...")
-			    Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
-			    exit
-		    }
-	    }
-	    1 {
-		    try {
-			    Import-Module AzureRM.profile -ErrorAction Stop
-		    } catch {
-			    Write-Host("Could not import AzureRM.profile...") -ForegroundColor Red
-			    Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }
-		    try {
-			    Import-Module AzureRM.Resources
-		    } catch {
-			    Write-Host("Could not import AzureRM.Resources... Please reinstall this Module") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }
-		    try {
-			    Import-Module AzureRM.OperationalInsights
-		    } catch {
-			    Write-Host("Could not import AzureRM.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }
-		    Write-Host("Running troubleshooting script... Please reinstall this Module")
-		    Write-Host("")
-	    }
-	    2 { 
-		    Write-Host("")
-		    Stop-Transcript
-		    exit
-	    }
+            try {
+                Write-Host("Installing AzureRM.OperationalInsights...")
+                Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            }
+            catch {
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
+                exit
+            }
+        }
+        1 {
+            try {
+                Import-Module AzureRM.profile -ErrorAction Stop
+            }
+            catch {
+                Write-Host("Could not import AzureRM.profile...") -ForegroundColor Red
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
+                Stop-Transcript
+                exit
+            }
+            try {
+                Import-Module AzureRM.Resources
+            }
+            catch {
+                Write-Host("Could not import AzureRM.Resources... Please reinstall this Module") -ForegroundColor Red
+                Stop-Transcript
+                exit
+            }
+            try {
+                Import-Module AzureRM.OperationalInsights
+            }
+            catch {
+                Write-Host("Could not import AzureRM.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
+                Stop-Transcript
+                exit
+            }
+            Write-Host("Running troubleshooting script... Please reinstall this Module")
+            Write-Host("")
+        }
+        2 { 
+            Write-Host("")
+            Stop-Transcript
+            exit
+        }
     }
 }
 try {
-	Write-Host("")
-	Write-Host("Trying to get the current AzureRM login context...")
-	$account = Get-AzureRmContext -ErrorAction Stop
-	Write-Host("Successfully fetched current AzureRM context...") -ForegroundColor Green
-	Write-Host("")
-} catch {
-	Write-Host("")
-	Write-Host("Could not fetch AzureRMContext..." ) -ForegroundColor Red
-	Write-Host("")
+    Write-Host("")
+    Write-Host("Trying to get the current AzureRM login context...")
+    $account = Get-AzureRmContext -ErrorAction Stop
+    Write-Host("Successfully fetched current AzureRM context...") -ForegroundColor Green
+    Write-Host("")
+}
+catch {
+    Write-Host("")
+    Write-Host("Could not fetch AzureRMContext..." ) -ForegroundColor Red
+    Write-Host("")
 }
 
 #
-#   Subscription existance and access check
+#   Subscription existence and access check
 #
 if ($account.Account -eq $null) {
-	try {
-		Write-Host("Please login...")
-		Login-AzureRmAccount -subscriptionid $SubscriptionId
-	} catch {
-		Write-Host("")
-		Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
-} else {
-	if ($account.Subscription.Id -eq $SubscriptionId) {
-		Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
-		$account
-	} else {
-		try {
-			Write-Host("Current Subscription:")
-			$account
-			Write-Host("Changing to subscription: $SubscriptionId")
-			Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-		} catch {
-			Write-Host("")
-			Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
-			Write-Host("")
-			Stop-Transcript
-			exit
-		}
-	}
+    try {
+        Write-Host("Please login...")
+        Login-AzureRmAccount -subscriptionid $SubscriptionId
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+}
+else {
+    if ($account.Subscription.Id -eq $SubscriptionId) {
+        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
+        $account
+    }
+    else {
+        try {
+            Write-Host("Current Subscription:")
+            $account
+            Write-Host("Changing to subscription: $SubscriptionId")
+            Select-AzureRmSubscription -SubscriptionId $SubscriptionId
+        }
+        catch {
+            Write-Host("")
+            Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
+            Write-Host("")
+            Stop-Transcript
+            exit
+        }
+    }
 }
 
 
@@ -167,46 +178,47 @@ if ($account.Account -eq $null) {
 Write-Host("Checking resource group details...")
 Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent) {
-	Write-Host("")
-	Write-Host("Could not find RG. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the Resource Group") -ForegroundColor Red
-	Write-Host("")
-	Stop-Transcript
-	exit
+    Write-Host("")
+    Write-Host("Could not find RG. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the Resource Group") -ForegroundColor Red
+    Write-Host("")
+    Stop-Transcript
+    exit
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
-
-Write-Host("Checking specified Resource Group has the acs-engine Kuberentes cluster resources...")
 
 #
 #  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources 
 #
+Write-Host("Checking specified Resource Group has the acs-engine Kuberentes cluster resources...")
+
 $k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
 
 $isKubernetesCluster = $false 
 
-foreach($k8MasterVM in $k8sMasterVMs) {
+foreach ($k8MasterVM in $k8sMasterVMs) {
 
-  $tags = $k8MasterVM.Tags
+    $tags = $k8MasterVM.Tags
 
-  $acsEngineVersion = $tags['acsengineVersion']  
-  $orchestrator = $tags['orchestrator']
+    $acsEngineVersion = $tags['acsengineVersion']  
+    $orchestrator = $tags['orchestrator']
 
-  Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green  
-  Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
+    Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green  
+    Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
 
-  if([string]$orchestrator.StartsWith('Kubernetes')) {
-	$isKubernetesCluster = $true	
-    Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
-  }
-  else {
-        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+    if ([string]$orchestrator.StartsWith('Kubernetes')) {
+        $isKubernetesCluster = $true	
+        Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
+
+        break
+    }
+    else {
+        Write-Host("This Resource group : '" + $ResourceGroupName + "'does not have the Kubernetes acs-engine resources") -ForegroundColor Red
         exit 
-  }
-
+    }
 }
 
-if($isKubernetesCluster -eq $false) {
-    Write-Host("Resource group name: '" + $ResourceGroupName + "' doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+if ($isKubernetesCluster -eq $false) {
+    Write-Host("Monitoring only supported  for Acs-engine with Kubernetes") -ForegroundColor Red
     exit 
 }
 
@@ -216,203 +228,215 @@ Write-Host("Successfully checked the Acs-engine Kuberentes cluster resources in 
 #  Extract logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
 
-foreach($k8MasterVM in $k8sMasterVMs) { 
+foreach ($k8MasterVM in $k8sMasterVMs) { 
 
-	$r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
+    $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
 	
-	if ($null -eq $r) {
-	   
-	   Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :"  + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
-	   exit 
-	}
+    if ($null -eq $r) {
+        Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :" + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
+        exit 
+    }
 
-	if ($null -eq $r.Tags) {
+    if ($null -eq $r.Tags) {
 	   
-	   Write-Host("K8s master VM should have the tags" ) -ForegroundColor Red
-	   exit 
-	}
+        Write-Host("K8s master VM does not have required tags" ) -ForegroundColor Red
+        Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red		
+        exit 
+    }
 
-	if($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
-	   $LogAnalyticsWorkspaceResourceId = $r.Tags["logAnalyticsWorkspaceResourceId"]
-	   break;
-	}
+    if ($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
+        $LogAnalyticsWorkspaceResourceId = $r.Tags["logAnalyticsWorkspaceResourceId"]
+        break;
+    }
+}
+
+
+if ($null -eq $LogAnalyticsWorkspaceResourceId) {
+    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
+    Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
+    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+    exit
 }
 
 # validate specified logAnalytics workspace exists or not
 
-if ($null -eq $LogAnalyticsWorkspaceResourceId) {
-	Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes" ) -ForegroundColor Red	
-	Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-	Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-	Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-}
-
 $workspaceResource = Get-AzureRmResource -ResourceId $LogAnalyticsWorkspaceResourceId
 
-if($workspaceResource -eq $null) {
+if ($null -eq $workspaceResource) {
     Write-Host("Specified Log Analytics workspace ResourceId: '" + $LogAnalyticsWorkspaceResourceId + "' doesnt exist or don't have access to it") -ForegroundColor Red
+    Write-Host("Please try to opt-in for monitoring if the this workspace has been deleted using the following links:") -ForegroundColor Red    
+    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+
     exit 
 }
-
-
-if ($LogAnalyticsWorkspaceResourceID -eq $null) {
-	Write-Host("")
-	Write-Host("No log analytics workspace associated with the cluster: Please see how to onboard your cluster to Container health from the following documentation: " + $OptInLink) -ForegroundColor Red
-	Write-Host("")
-	Stop-Transcript
-	exit
-} else {
+else {
 
     Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ") 
 
-	try {
-		if($SubscriptionId -eq $LogAnalyticsWorkspaceResourceID.split("/")[2]) {
-			#Nothing to do here
-		} else {
-			Write-Host("Changing to workspace's subscription")
-			Select-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2]
-		}
-	} catch {
-		Write-Host("")
-		Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to this workspace" ) -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
+    try {
+        if ($SubscriptionId -eq $LogAnalyticsWorkspaceResourceID.split("/")[2]) {
+            #Nothing to do here
+        }
+        else {
+            Write-Host("Changing to workspace's subscription")
+            Select-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2]
+        }
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to this workspace" ) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
 
 
-	#
-	#   Check WS subscription exists and access
-	#
-	try {
-		Write-Host("Checking workspace subscription details...") 
-		Get-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2] -ErrorAction Stop
-	} catch {
-		Write-Host("")
-		Write-Host("The subscription containing the workspace (" + $LogAnalyticsWorkspaceResourceID +") looks like it was deleted or you do NOT have access to this workspace") -ForegroundColor Red
-		Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-		Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-		Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
-	Write-Host("Successfully fetched workspace subcription details...") -ForegroundColor Green
-	Write-Host("")
+    #
+    #   Check WS subscription exists and access
+    #
+    try {
+        Write-Host("Checking workspace subscription details...") 
+        Get-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2] -ErrorAction Stop
+    }
+    catch {
+        Write-Host("")
+        Write-Host("The subscription containing the workspace (" + $LogAnalyticsWorkspaceResourceID + ") looks like it was deleted or you do NOT have access to this workspace") -ForegroundColor Red
+        Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+    Write-Host("Successfully fetched workspace subcription details...") -ForegroundColor Green
+    Write-Host("")
 
-	#
-	#   Check WS Resourecegroup exists and access
-	#
-	Write-Host("Checking workspace's resource group details...")
-	Get-AzureRmResourceGroup -Name $LogAnalyticsWorkspaceResourceID.split("/")[4] -ErrorVariable notPresent -ErrorAction SilentlyContinue
-	if ($notPresent) {
-		Write-Host("")
-		Write-Host("Could not find resource group. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the workspace") -ForegroundColor Red
-		Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-		Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-		Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-		Stop-Transcript
-		exit
-	}
-	Write-Host("Successfully fetched workspace resource group...") -ForegroundColor Green
-	Write-Host("")
+    #
+    #   Check WS Resourecegroup exists and access
+    #
+    Write-Host("Checking workspace's resource group details...")
+    Get-AzureRmResourceGroup -Name $LogAnalyticsWorkspaceResourceID.split("/")[4] -ErrorVariable notPresent -ErrorAction SilentlyContinue
+    if ($notPresent) {
+        Write-Host("")
+        Write-Host("Could not find resource group. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the workspace") -ForegroundColor Red
+        Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+    Write-Host("Successfully fetched workspace resource group...") -ForegroundColor Green
+    Write-Host("")
 
-	#
-	#    Check WS exits and access
-	#
-	try {
-		Write-Host("Checking workspace name's details...")
-		$WorkspaceInformation = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -Name $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
-		Write-Host("Successfully fetched workspace name...") -ForegroundColor Green
-		Write-Host("")
-	} catch {
-		Write-Host("")
-		Write-Host("Could not fetch details for the workspace : '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
-		Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-		Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-		Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
+    #
+    #    Check WS exits and access
+    #
+    try {
+        Write-Host("Checking workspace name's details...")
+        $WorkspaceInformation = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -Name $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
+        Write-Host("Successfully fetched workspace name...") -ForegroundColor Green
+        Write-Host("")
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not fetch details for the workspace : '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
+        Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
 	
-	$WorkspaceLocation = $WorkspaceInformation.Location
+    $WorkspaceLocation = $WorkspaceInformation.Location
 		
-	if ($WorkspaceLocation -eq $null) {
-			Write-Host("")
-			Write-Host("Cannot fetch workspace location. Please try again...") -ForegroundColor Red
-			Write-Host("")
-			Stop-Transcript
-			exit
-	}
+    if ($null -eq $WorkspaceLocation) {
+        Write-Host("")
+        Write-Host("Cannot fetch workspace location. Please try again...") -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
 
-	try {
-		$WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -WorkspaceName $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
-		Write-Host("Successfully fetched workspace IP details...") -ForegroundColor Green
-		Write-Host("")
-	} catch {
-		Write-Host("")
-		Write-Host("Failed to get the list of solutions onboarded to the workspace. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
+    $WorkspacePricingTier = $WorkspaceInformation.sku
 
-	try {
-		$ContainerInsightsIndex = $WorkspaceIPDetails.Name.IndexOf("ContainerInsights");
-		Write-Host("Successfully located ContainerInsights solution") -ForegroundColor Green
-		Write-Host("")
-	} catch {
-		Write-Host("Failed to get ContainerInsights solution details from the workspace") -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
+    Write-Host("Pricing tier of the configured LogAnalytics workspace: '" + $WorkspacePricingTier + "' ") -ForegroundColor Green
 
-	$isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
+	   
+    try {
+        $WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -WorkspaceName $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
+        Write-Host("Successfully fetched workspace IP details...") -ForegroundColor Green
+        Write-Host("")
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Failed to get the list of solutions onboarded to the workspace. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+
+    try {
+        $ContainerInsightsIndex = $WorkspaceIPDetails.Name.IndexOf("ContainerInsights");
+        Write-Host("Successfully located ContainerInsights solution") -ForegroundColor Green
+        Write-Host("")
+    }
+    catch {
+        Write-Host("Failed to get ContainerInsights solution details from the workspace") -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+
+    $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
 	
-	if ($isSolutionOnboarded) {
-		Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
-	} else {
-		#
-		# Check contributor access to WS
-		#
-		$message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "' in subscription '" +  $LogAnalyticsWorkspaceResourceID.split("/")[2] + "' IS NOT ONBOARDED with container health solution.";
-		$question = " Do you want to onboard container health to the workspace?"
+    if ($isSolutionOnboarded) {
+        Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
+    }
+    else {
+        #
+        # Check contributor access to WS
+        #
+        $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "' in subscription '" + $LogAnalyticsWorkspaceResourceID.split("/")[2] + "' IS NOT ONBOARDED with container health solution.";
+        $question = " Do you want to onboard container health to the workspace?"
 
-		$choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-		$choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
-		$choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
+        $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
 
-		$decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
+        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
-		if ($decision -eq 0) {
-			Write-Host("Deploying template to onboard container health : Please wait...")
+        if ($decision -eq 0) {
+            Write-Host("Deploying template to onboard container health : Please wait...")
 
-			$CurrentDir = (Get-Item -Path ".\" -Verbose).FullName
-			$TemplateFile = $CurrentDir + "\ContainerInsightsSolution.json"
-			$DeploymentName = "ContainerHealthOnboarding-Solution-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-			$Parameters = @{}
-			$Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
-			$Parameters.Add("workspaceRegion", $WorkspaceLocation)
+            $CurrentDir = (Get-Item -Path ".\" -Verbose).FullName
+            $TemplateFile = $CurrentDir + "\ContainerInsightsSolution.json"
+            $DeploymentName = "ContainerHealthOnboarding-Solution-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+            $Parameters = @{}
+            $Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
+            $Parameters.Add("workspaceRegion", $WorkspaceLocation)
 
-			$Parameters
+            $Parameters
 
-			try {
-				New-AzureRmResourceGroupDeployment -Name $DeploymentName `
-											   -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] `
-											   -TemplateFile $TemplateFile `
-											   -TemplateParameterObject $Parameters -ErrorAction Stop`
-				Write-Host("")
-				Write-Host("Template deployment was successful. You will be able to see data flowing into your cluster in 10-15 mins.") -ForegroundColor Green
-				Write-Host("")
-			} catch {
-				Write-Host("Template deployment failed : Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
-			}
-		} else {
-			Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com") -ForegroundColor Red
-		}
-	}
+            try {
+                New-AzureRmResourceGroupDeployment -Name $DeploymentName `
+                    -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] `
+                    -TemplateFile $TemplateFile `
+                    -TemplateParameterObject $Parameters -ErrorAction Stop`
+                Write-Host("")
+                Write-Host("Template deployment was successful. You will be able to see data flowing into your cluster in 10-15 mins.") -ForegroundColor Green
+                Write-Host("")
+            }
+            catch {
+                Write-Host("Template deployment failed : Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
+            }
+        }
+        else {
+            Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com") -ForegroundColor Red
+        }
+    }
 }
 
 Write-Host("")

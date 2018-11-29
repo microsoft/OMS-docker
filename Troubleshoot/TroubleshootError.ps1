@@ -216,7 +216,10 @@ if ($ResourceDetailsArray -eq $null) {
 
 if ($LogAnalyticsWorkspaceResourceID -eq $null) {
 	Write-Host("")
-	Write-Host("No log analytics workspace associated with the cluster: Please see how to onboard your cluster to Container health from the following documentation: " + $OptInLink) -ForegroundColor Red
+	Write-Host("Onboarded  log analytics workspace to this cluster either deleted or moved.This requires Opt-out and Opt-in back to Monitoring") -ForegroundColor Red
+	Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+	Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+	Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
 	Write-Host("")
 	Stop-Transcript
 	exit
