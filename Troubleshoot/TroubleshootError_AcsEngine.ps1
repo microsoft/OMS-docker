@@ -247,46 +247,34 @@ foreach ($k8MasterVM in $k8sMasterVMs) {
     }
 
     if ($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
-        $LogAnalyticsWorkspaceResourceId = $r.Tags["logAnalyticsWorkspaceResourceId"]
+        $LogAnalyticsWorkspaceResourceID = $r.Tags["logAnalyticsWorkspaceResourceId"]
+        $LogAnalyticsWorkspaceResourceID = $LogAnalyticsWorkspaceResourceID.Trim()
         break;
     }
 }
 
 
-if ($null -eq $LogAnalyticsWorkspaceResourceId) {
+if ($null -eq $LogAnalyticsWorkspaceResourceID) {
     Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
     Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
     Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
     exit
-}
-
-# validate specified logAnalytics workspace exists or not
-
-$workspaceResource = Get-AzureRmResource -ResourceId $LogAnalyticsWorkspaceResourceId
-
-if ($null -eq $workspaceResource) {
-    Write-Host("Specified Log Analytics workspace ResourceId: '" + $LogAnalyticsWorkspaceResourceId + "' doesnt exist or don't have access to it") -ForegroundColor Red
-    Write-Host("Please try to opt-in for monitoring if the this workspace has been deleted using the following links:") -ForegroundColor Red    
-    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-
-    exit 
-}
-else {
+} else {
 
     Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ") 
+    $workspaceSubscriptionId = $LogAnalyticsWorkspaceResourceID.split("/")[2]
+    $workspaceResourceGroupName = $LogAnalyticsWorkspaceResourceID.split("/")[4]
+    $workspaceName = $LogAnalyticsWorkspaceResourceID.split("/")[8]
 
     try {
-        if ($SubscriptionId -eq $LogAnalyticsWorkspaceResourceID.split("/")[2]) {
-            #Nothing to do here
-        }
-        else {
+        if ($SubscriptionId -ne $workspaceSubscriptionId) {
             Write-Host("Changing to workspace's subscription")
-            Select-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2]
+            Select-AzureRmSubscription -SubscriptionId $workspaceSubscriptionId
         }
     }
     catch {
         Write-Host("")
-        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to this workspace" ) -ForegroundColor Red
+        Write-Host("Could not change to Workspace subscriptionId : '" + $workspaceSubscriptionId + "'." ) -ForegroundColor Red
         Write-Host("")
         Stop-Transcript
         exit
@@ -298,7 +286,7 @@ else {
     #
     try {
         Write-Host("Checking workspace subscription details...") 
-        Get-AzureRmSubscription -SubscriptionId $LogAnalyticsWorkspaceResourceID.split("/")[2] -ErrorAction Stop
+        Get-AzureRmSubscription -SubscriptionId $workspaceSubscriptionId -ErrorAction Stop
     }
     catch {
         Write-Host("")
@@ -317,7 +305,7 @@ else {
     #   Check WS Resourecegroup exists and access
     #
     Write-Host("Checking workspace's resource group details...")
-    Get-AzureRmResourceGroup -Name $LogAnalyticsWorkspaceResourceID.split("/")[4] -ErrorVariable notPresent -ErrorAction SilentlyContinue
+    Get-AzureRmResourceGroup -Name $workspaceResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
     if ($notPresent) {
         Write-Host("")
         Write-Host("Could not find resource group. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the workspace") -ForegroundColor Red
@@ -335,13 +323,13 @@ else {
     #
     try {
         Write-Host("Checking workspace name's details...")
-        $WorkspaceInformation = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -Name $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
+        $WorkspaceInformation = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
         Write-Host("Successfully fetched workspace name...") -ForegroundColor Green
         Write-Host("")
     }
     catch {
         Write-Host("")
-        Write-Host("Could not fetch details for the workspace : '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
+        Write-Host("Could not fetch details for the workspace : '" + $workspaceName + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
         Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
         Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
         Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
@@ -364,9 +352,8 @@ else {
 
     Write-Host("Pricing tier of the configured LogAnalytics workspace: '" + $WorkspacePricingTier + "' ") -ForegroundColor Green
 
-	   
     try {
-        $WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] -WorkspaceName $LogAnalyticsWorkspaceResourceID.split("/")[8] -ErrorAction Stop
+        $WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $workspaceResourceGroupName -WorkspaceName $workspaceName -ErrorAction Stop
         Write-Host("Successfully fetched workspace IP details...") -ForegroundColor Green
         Write-Host("")
     }
@@ -393,13 +380,21 @@ else {
     $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
 	
     if ($isSolutionOnboarded) {
-        Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
+
+        if ($WorkspacePricingTier -eq "Free") {
+            Write-Host("Pricing tier of the configured LogAnalytics workspace is Free so you may need to upgrade to pricing tier to non-Free") -ForegroundColor Red
+        }
+        else {
+            Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
+        }
     }
     else {
         #
         # Check contributor access to WS
         #
-        $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $LogAnalyticsWorkspaceResourceID.split("/")[8] + "' in subscription '" + $LogAnalyticsWorkspaceResourceID.split("/")[2] + "' IS NOT ONBOARDED with container health solution.";
+        $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $workspaceName + "' in subscription '" + $workspaceSubscriptionId + "' IS NOT ONBOARDED with container health solution.";
+        Write-Host($message)
+
         $question = " Do you want to onboard container health to the workspace?"
 
         $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
@@ -422,7 +417,7 @@ else {
 
             try {
                 New-AzureRmResourceGroupDeployment -Name $DeploymentName `
-                    -ResourceGroupName $LogAnalyticsWorkspaceResourceID.split("/")[4] `
+                    -ResourceGroupName $workspaceResourceGroupName `
                     -TemplateFile $TemplateFile `
                     -TemplateParameterObject $Parameters -ErrorAction Stop`
                 Write-Host("")
@@ -430,11 +425,12 @@ else {
                 Write-Host("")
             }
             catch {
-                Write-Host("Template deployment failed : Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
+                Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
+                Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
             }
         }
         else {
-            Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com") -ForegroundColor Red
+            Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
         }
     }
 }
