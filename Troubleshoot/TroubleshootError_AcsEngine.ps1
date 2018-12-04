@@ -22,15 +22,15 @@ param(
 
 $ErrorActionPreference = "Stop";
 Start-Transcript -path .\TroubleshootDump.txt -Force
-$OptOutLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers"
-$OptInLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers"
+$OptOutLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers#uninstalling-the-chart"
+$OptInLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers#installing-the-chart"
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 $azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
 
-if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null) -or ($azureRmOperationalInsights -eq $null)) {
+if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights)) {
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -136,7 +136,7 @@ catch {
 #
 #   Subscription existence and access check
 #
-if ($account.Account -eq $null) {
+if ($null -eq $account.Account) {
     try {
         Write-Host("Please login...")
         Login-AzureRmAccount -subscriptionid $SubscriptionId
@@ -430,7 +430,7 @@ if ($null -eq $LogAnalyticsWorkspaceResourceID) {
             }
         }
         else {
-            Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
+            Write-Host("The container health solution isn't onboarded to your cluster. This required for the monitoring to work. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
         }
     }
 }

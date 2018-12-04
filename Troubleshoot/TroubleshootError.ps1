@@ -411,7 +411,7 @@ else {
             }
         }
         else {
-            Write-Host("The container health solution isn't onboarded to your cluster. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
+            Write-Host("The container health solution isn't onboarded to your cluster. This required for the monitoring to work. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
         }
     }
 }
