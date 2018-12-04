@@ -1,10 +1,10 @@
-# Trying the Azure Monitor for Containers for AKS-engine Cluster(s)
+# Trying the Azure Monitor for containers for AKS-engine Cluster(s)
 
 Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (old name is ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
 
 Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
 
- Azure Monitor for Containers UI experience and Data collection is pretty much same for AKS-engine cluster(s) same as Azure Kubernetes Service (AKS) cluster(s).
+ Azure Monitor for containers UI experience and Data collection is pretty much same for AKS-engine cluster(s) same as Azure Kubernetes Service (AKS) cluster(s).
  For more details, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
 
 ### Supported Kubernetes versions, Container Runtime(s) and OS Distro(s):
