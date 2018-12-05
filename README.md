@@ -1,80 +1,62 @@
-# Trying the container solution for Microsoft Operations Management Suite
+# Trying the Azure Monitor for containers for AKS-engine Cluster(s)
 
-The Microsoft Operations Management Suite (OMS) is a software-as-a-service offering from Microsoft that allows Enterprise IT to manage any hybrid cloud. It offers log analytics, automation, backup and recovery, and security and compliance.  Sign up for a free account at [http://mms.microsoft.com](http://mms.microsoft.com) or read more about here: [https://www.microsoft.com/en-us/server-cloud/operations-management-suite/overview.aspx](https://www.microsoft.com/en-us/server-cloud/operations-management-suite/overview.aspx)
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to [AKS-engine](https://github.com/Azure/aks-engine) (formerly known as ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
 
-This container solution will generate a container which will runs OMS agent within. This is for Linux OS which has restriction in installing the Operations Management Suite Agent directly. However, it can also be used with other support Linux OS as well.
+Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
 
-### Supported Linux Operating Systems, Docker, and ACS Mesosphere DC/OS:
+This site will provide you the instructions on how to onboard to Azure Monitor for containers for AKS-engine cluster. 
 
-- Docker 1.11 thru 1.13
-- Docker CE and EE v17.06+
+For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-analyze)
 
-- An x64 version of Linux OS
-	- Ubuntu 14.04 LTS, 16.04 LTS
-	- CoreOS(stable)
-	- Amazon Linux 2016.09.0
-	- openSUSE 13.2
-	- openSUSE LEAP 42.2
-	- CentOS 7.2, 7.3
-	- SLES 12
-	- RHEL 7.2, 7.3
+### Supported Kubernetes versions, Container Runtime(s) and OS Distro(s):
+Below support matrix are based on [AKS-engine cluster definition](https://github.com/Azure/acs-engine/blob/master/docs/clusterdefinition.md): 
+- Kubernetes versions, same as [AKS supported versions](https://docs.microsoft.com/en-us/azure/aks/supported-kubernetes-versions)
+- Container Runtime : Docker, Moby
+- Linux Distros for master and agent pool of AKS-engine: ubuntu, AKS, and aks-docker-engine
+- RBAC and Non-RBAC
 
-- ACS Mesosphere DC/OS 1.7.3, 1.8.8, 1.9
-- ACS Kubernetes 1.4.5, 1.6+ 
-- ACS Docker Swarm
-- Redhat OpenShift (OCP) 3.4, 3.5 
+## How to Set up
+1. You will need a location to store your monitoring data. If you do not have an Azure Log Analytics Workspace, please create it [here](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-quick-create-workspace).
+2. You will need to add the "Container Insights" solution to your workspace if you do not have any. Please follow the steps [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/docs/solution-onboarding.md).
+3. You will need to deploy the agent using helm. Please follow the steps [here](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers).
+4. Finally, please run this [script](https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/attach-monitoring-tags.md) which helps you set the tags to the AKS-engine. 
 
-### Support for Windows Operation Systems
-This site is only for Linux. 
-
-For any information about Windows Operating System, please go [here.](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-containers#windows-container-hosts) 
-
-### Release Note
-Update Information are [here.](https://github.com/Microsoft/OMS-docker/blob/master/ReleaseNote.md)
-
-## Setting up
-As a pre-requisite, docker must be running prior to this installation. If you have installed before running docker, please re-install OMS Agent. For more information about docker, please go to https://www.docker.com/.
-
-This set up is not for ACS Mesosphere DC/OS or ACS Kubernetes. 
-- For more information on Mesosphere DC/OS, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-monitoring-oms)
-- For Kubernetes, please see [here.](https://docs.microsoft.com/en-us/azure/container-service/container-service-kubernetes-oms) yaml file for the daemon-set is [here.](https://github.com/Microsoft/OMS-docker/tree/master/Kubernetes)
-- For Docker Swarm, please see [here.](https://github.com/Microsoft/OMS-docker/tree/master/Swarmmode)
-
-- For Redhat OpenShift, please see [here.](https://github.com/Microsoft/OMS-docker/tree/master/OpenShift)
-This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
-
-
-### To use OMS for all containers on a container host
-
-- Start the OMS container:
-```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -e WSID="your workspace id" -e KEY="your key" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
-```
-
-### To use OMS for all containers on a container host for FairFax OMS Workspace
-
-- Start the OMS container on FairFax OMS workspace:
-```
-$>sudo docker run --privileged -d -v /var/run/docker.sock:/var/run/docker.sock -v /var/log:/var/log -e WSID="your workspace id" -e KEY="your key" -e DOMAIN="opinsights.azure.us" -p 127.0.0.1:25225:25225 -p 127.0.0.1:25224:25224/udp --name="omsagent" -h=`hostname` --restart=always microsoft/oms
-```
-
-### If you are switching from the installed agent to the container
-
-If you previously used the directly installed agent and want to switch to using the container, you must remove the omsagent.
-See [Steps to install the OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux/blob/master/docs/OMS-Agent-for-Linux.md)
-
-#### If you have an older version of Docker and would want to still use OMS Container Solution to monitor your data go [here.](https://github.com/Microsoft/OMS-docker/blob/master/OlderVersionREADME.md)
-
-### Upgrade
-You can upgrade to a newer version of the agent. See [here.](https://github.com/Microsoft/OMS-docker/blob/master/Upgrade.md)
+### Agent Upgrade
+You can upgrade the agent to a newer version by re-deploying the [agent.](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) 
 
 ## What now?
-Once you're set up, we'd like you to try the following scenarios and play around with the system.
+Once you're set up, you can go to the [Azure portal](https://portal.azure.com) and go to Azure Monitor and click on the "Containers" on the left TOC. There, you will see a list of onboarded AKS-engine clusters. 
 
-[More Container Management Scenarios](http://github.com/Microsoft/OMS-Agent-for-Linux/blob/master/docs/Docker-Instructions.md#overview)
+For more details on how to use the product, go to [Azure Monitor for containers overview](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview).
+
+## Troubleshooting
+Follow the instructions in [Azure Monitor for Containers Troubleshoot](https://github.com/Microsoft/OMS-docker/tree/aks-engine/Troubleshoot) to troubleshoot the issues related to onboarding of Azure Monitor for containers for AKS-engine Kubernetes cluster(s).
+
+Azure Monitor for containers uses the following tags on the master nodes of AKS-engine Kubernetes cluster to detect whether the cluster is AKS-engine or not, onboarded to monitoring or not, determine log analytics workspace id to query the data etc. These tags critical to enable the Azure Monitor for containers experience. 
+
+Following Azure tags are used by Azure Monitor for containers:
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tag Name                        | Tag Value                                                              | Creation Source of the Tag                |
+| ----------------------------    | -------------------------------------------------------                | ------------------------------------      | 
+| acsengineversion                | v0.24.0                                                                | ACS-engine or AKS-engine                  |
+| orchestrator                      | Kubernetes                                                             | ACS-engine or AKS-engine                  |
+| creationsource                  | acs-engine-k8s-master                                                  | ACS-engine or AKS-engine                  |
+| logAnalyticsWorkspaceResourceId | Azure Resource Id of Log Analytics workspace configured on the Agent   | Azure Monitor for containers onboarding   |
+| clusterName                     | Resource Id of the cluster Resource group or cluster Name              | Azure Monitor for containers onboarding   |
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Note: clusterName is the optional tag. If this tag not specified, clusterName should be Azure Resource Id of the AKS-engine resource group during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
+If the clusterName tag specified, please make sure the value of the tag is same used during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
+
+Except logAnalyticsWorkspaceResourceId tag and all other tags are created by ACS-engine (new name is AKS-engine). logAnalyticsWorkspaceResourceId is a custom tag and this tag lost during the upgrade or scale as reported github issue https://github.com/Azure/acs-engine/issues/4155. Azure Monitor for containers should work as long as at least one of the K8s master node has required tags described above. If the Azure Monitor for containers not working, please verify   logAnalyticsWorkspaceResourceId tag after Upgrade or scale up if the Azure Monitor for containers not working.
+
+## Supportability
+Supporting of Azure Monitor for containers for AKS-engine (formerly known as ACS-engine) cluster is best effort basis.
+Azure Monitor for container for related issues should be reported to [github issues.](https://github.com/Microsoft/OMS-docker/issues) 
 
 ## Let us know!!!
-What works? What is missing? What else do you need for this to be useful for you? Let us know at OMSContainers@microsoft.com.
+What works? What is missing? What else do you need for this to be useful for you? Let us know at askcoin@microsoft.com.
 
 ## Code of Conduct
 
