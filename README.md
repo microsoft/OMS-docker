@@ -1,21 +1,23 @@
 # Trying the Azure Monitor for containers for AKS-engine Cluster(s)
 
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS-engine (old name is ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to [AKS-engine](https://github.com/Azure/aks-engine) (aka ACS-engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
 
 Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
 
- Azure Monitor for containers UI experience and Data collection is pretty much same for AKS-engine cluster(s) same as Azure Kubernetes Service (AKS) cluster(s).
- For more details, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
+This site will provide you instructions on how to onboard to Azure Monitor for containers for AKS-engine cluster. 
+
+For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-analyze)
 
 ### Supported Kubernetes versions, Container Runtime(s) and OS Distro(s):
-
+Below 
 - Kubernetes versions, same as [AKS supported versions](https://docs.microsoft.com/en-us/azure/aks/supported-kubernetes-versions)
 - Container Runtime : Docker, Moby
-- OS Distros : Ubuntu, AKS and aks-docker-engine
-- Agent Nodepool : Linux
-- Managed Disks
+- Linux Distros for master and agent pool of aks engine: 
+  
+  - AKS (Linux base image)
+  - aks-docker-engine
+- Agent Nodepool : Linux 
 - RBAC and Non-RBAC
-- Azure CNI Network
 
 ## Setting up
 
@@ -23,7 +25,7 @@ AKS-engine cluster(s) can be configured to use Azure Monitor for containers usin
 
 ### Upgrade
 
-You can upgrade to a newer version of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) using the helm upgrade.
+You can upgrade to a newer version of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) using the helm upgrade. (agent) 
 
 ## What now?
 Once you're set up, we'd like you to try the UI experience of [Azure Monitor for Containers](https://aka.ms/azmon-containers).
@@ -43,7 +45,7 @@ Following tags are used by Azure Monitor for containers
 | Tag Name                        | Tag Value                                                              | Creation Source of the Tag                |
 | ----------------------------    | -------------------------------------------------------                | ------------------------------------      | 
 | acsengineversion                | v0.24.0                                                                | ACS-engine or AKS-engine                  |
-| orchestror                      | Kubernetes                                                             | ACS-engine or AKS-engine                  |
+| orchestrator                      | Kubernetes                                                             | ACS-engine or AKS-engine                  |
 | creationsource                  | acs-engine-k8s-master                                                  | ACS-engine or AKS-engine                  |
 | logAnalyticsWorkspaceResourceId | Azure Resource Id of Log Analytics workspace configured on the Agent   | Azure Monitor for containers onboarding   |
 | clusterName                     | Resource Id of the cluster Resource group or cluster Name              | Azure Monitor for containers onboarding   |
@@ -57,7 +59,7 @@ Except logAnalyticsWorkspaceResourceId tag and all other tags are created by ACS
 ## Supportability
 
 Supporting of Azure Monitor for containers for AKS-engine (old name is ACS-engine) cluster is best effort basis.
-Azure Monitor for container related issues  should be reported to https://github.com/Microsoft/OMS-docker.
+Azure Monitor for container for  related issues should be reported to https://github.com/Microsoft/OMS-docker.
 
 Please refer https://github.com/Microsoft/OMS-docker/tree/aks-engine/SUPPORTABILITY.md for more details.
 
