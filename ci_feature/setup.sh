@@ -21,7 +21,7 @@ chmod 775 $TMPDIR/*.sh
 $TMPDIR/omsagent-*.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Install omi
-#/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
 
 #Install scx
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
