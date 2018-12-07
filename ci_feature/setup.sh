@@ -12,7 +12,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-163/omsagent-1.6.0-163.universal.x64.sh
 
 #create file to disable omi service startup script
-#touch /etc/.omi_disable_service_control
+touch /etc/.omi_disable_service_control
 wget https://rashmi.blob.core.windows.net/containernodeinventory/docker-cimprov-1.0.0-35.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
