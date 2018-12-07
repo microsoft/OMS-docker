@@ -60,7 +60,11 @@ data:
     \ num_threads 5\r\n  buffer_chunk_limit 20m\r\n  buffer_type file\r\n  buffer_path
     %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer\r\n  buffer_queue_limit 20\r\n
     \ buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval 20s\r\n  retry_limit
-    10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubePerf**>\t\r\n
+    10\r\n  retry_wait 30s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.ContainerNodeInventory**>\r\n
+    \ type out_oms_api\r\n  log_level debug\r\n  buffer_chunk_limit 20m\r\n  buffer_type
+    file\r\n  buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer\r\n
+    \ buffer_queue_limit 20\r\n  flush_interval 20s\r\n  retry_limit 10\r\n  retry_wait
+    15s\r\n  max_retry_wait 9m\r\n</match>\r\n\r\n<match oms.api.KubePerf**>\t\r\n
     \ type out_oms\r\n  log_level debug\r\n  num_threads 5\r\n  buffer_chunk_limit
     20m\r\n  buffer_type file\r\n  buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer\r\n
     \ buffer_queue_limit 20\r\n  buffer_queue_full_action drop_oldest_chunk\r\n  flush_interval
