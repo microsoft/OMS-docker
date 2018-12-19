@@ -15,8 +15,8 @@ sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get
 mkdir -p /var/opt/microsoft/docker-cimprov/state
 
 if [ ! -e "/etc/config/kube.conf" ]; then
-  # add permissions for omsagent user to /var/run/host to access docker.sock
-  sudo setfacl -m user:omsagent:rw /var/run/docker.sock
+  # add permissions for omsagent user to access docker.sock
+  sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
