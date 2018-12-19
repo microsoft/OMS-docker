@@ -146,7 +146,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - ps -ef | grep omsagent | grep -v "grep" && sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
