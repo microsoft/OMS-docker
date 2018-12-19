@@ -29,7 +29,7 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
-  kube.conf: kube.conf: "# Fluentd config file for OMS Docker - cluster components (kubeAPI)\r\n\r\n#Kubernetes
+  kube.conf: "# Fluentd config file for OMS Docker - cluster components (kubeAPI)\r\n\r\n#Kubernetes
     pod inventory\r\n<source>\r\n\ttype kubepodinventory\r\n\ttag oms.containerinsights.KubePodInventory\r\n\trun_interval
     60s\r\n  log_level debug\r\n</source>\r\n\r\n#Kubernetes events\r\n<source>\r\n\ttype
     kubeevents\r\n\ttag oms.api.KubeEvents.CollectionTime\r\n\trun_interval 60s\r\n
@@ -132,7 +132,7 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /var/run/docker.sock
+        - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
           name: host-log
@@ -160,7 +160,7 @@ spec:
    volumes:
     - name: docker-sock 
       hostPath:
-       path: /var/run/docker.sock
+       path: /var/run
     - name: container-hostname
       hostPath:
        path: /etc/hostname
@@ -211,7 +211,7 @@ spec:
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "node-0-removal-aks-yaml"
+         value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: NODE_IP
@@ -226,8 +226,6 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /var/run/docker.sock
-          name: docker-sock
         - mountPath: /var/log 
           name: host-log
         - mountPath: /var/lib/docker/containers 
@@ -249,10 +247,7 @@ spec:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
-    - name: docker-sock 
-      hostPath:
-       path: /var/run/docker.sock
-    - name: container-hostname
+   - name: container-hostname
       hostPath:
        path: /etc/hostname
     - name: host-log
