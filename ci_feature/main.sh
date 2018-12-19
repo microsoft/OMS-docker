@@ -19,6 +19,7 @@ if [ ! -e "/etc/config/kube.conf" ]; then
   ln -sf /var/run/host/docker.sock /var/run/docker.sock
   # add permissions for omsagent user to access docker.sock
   sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
+  sudo setfacl -m user:omsagent:rw /var/run/docker.sock
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
