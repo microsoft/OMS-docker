@@ -6,6 +6,7 @@ com.microsoft.version="2.0.0-7"
 ENV tmpdir /opt
 ENV APPLICATIONINSIGHTS_AUTH OTQzNWI0M2YtOTdkNS00ZGVkLThkOTAtYjA0Nzk1OGU2ZTg3
 ENV AGENT_VERSION ciprod11292018
+ENV AZMON_COLLECT_ENV False
 RUN /usr/bin/apt-get update && /usr/bin/apt-get install -y libc-bin wget openssl curl sudo python-ctypes sysv-rc net-tools rsyslog cron vim dmidecode apt-transport-https && rm -rf /var/lib/apt/lists/*
 COPY setup.sh main.sh $tmpdir/
 WORKDIR ${tmpdir}
