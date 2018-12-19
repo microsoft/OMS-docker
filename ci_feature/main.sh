@@ -18,7 +18,7 @@ if [ ! -e "/etc/config/kube.conf" ]; then
   # Setting up symbolic link so that the omsagent user retains permissions when docker daemon restarts
   ln -sf /var/run/host/docker.sock /var/run/docker.sock
   # add permissions for omsagent user to access docker.sock
-  sudo setfacl -m user:omsagent:rw /var/run/docker.sock
+  sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
