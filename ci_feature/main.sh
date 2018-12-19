@@ -16,7 +16,7 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
 
 if [ ! -e "/etc/config/kube.conf" ]; then
   # add permissions for omsagent user to /var/run/host to access docker.sock
-  sudo setfacl -R -m user:omsagent:rw /var/run/host
+  sudo setfacl -m user:omsagent:rw /var/run/docker.sock
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
