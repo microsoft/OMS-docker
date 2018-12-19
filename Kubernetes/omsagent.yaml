@@ -226,6 +226,8 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /var/run/host
+          name: docker-sock
         - mountPath: /var/log 
           name: host-log
         - mountPath: /var/lib/docker/containers 
@@ -240,13 +242,16 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - ps -ef | grep omsagent | grep -v "grep" && sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
+   - name: docker-sock 
+      hostPath:
+       path: /var/run
    - name: container-hostname
       hostPath:
        path: /etc/hostname
