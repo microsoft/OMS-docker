@@ -249,10 +249,10 @@ spec:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
-   - name: docker-sock 
+    - name: docker-sock 
       hostPath:
        path: /var/run
-   - name: container-hostname
+    - name: container-hostname
       hostPath:
        path: /etc/hostname
     - name: host-log
