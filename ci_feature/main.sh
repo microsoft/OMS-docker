@@ -39,10 +39,6 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 /opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
-#service omid start
-/opt/omi/bin/omiserver -s
-/opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
-
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
@@ -66,11 +62,6 @@ else
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
-#Hack for omi upgrade
- 
- /opt/omi/bin/omicli id
- /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
-
 #start cron daemon for logrotate
 service cron start
 
@@ -78,7 +69,6 @@ service cron start
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
 
 #get omsagent and docker-provider versions
-dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
@@ -91,7 +81,6 @@ if [ ! -e "/etc/config/kube.conf" ]; then
 fi
 
 shutdown() {
-	/opt/omi/bin/service_control stop
 	/opt/microsoft/omsagent/bin/service_control stop
 	}
 
