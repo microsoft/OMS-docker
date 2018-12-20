@@ -132,7 +132,7 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /var/run/docker.sock
+        - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
           name: host-log
@@ -146,7 +146,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - ps -ef | grep omsagent | grep -v "grep" && if [ "$(getfacl -p /var/run/host/docker.sock | grep -c "omsagent")" -eq 0 ]; then sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock; fi
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -160,7 +160,7 @@ spec:
    volumes:
     - name: docker-sock 
       hostPath:
-       path: /var/run/docker.sock
+       path: /var/run
     - name: container-hostname
       hostPath:
        path: /etc/hostname
@@ -211,7 +211,7 @@ spec:
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "node-0-removal-aks-yaml"
+         value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: NODE_IP
@@ -226,7 +226,7 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /var/run/docker.sock
+        - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
           name: host-log
@@ -249,10 +249,10 @@ spec:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
-    - name: docker-sock 
+   - name: docker-sock 
       hostPath:
-       path: /var/run/docker.sock
-    - name: container-hostname
+       path: /var/run
+   - name: container-hostname
       hostPath:
        path: /etc/hostname
     - name: host-log
