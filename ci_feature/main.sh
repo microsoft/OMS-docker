@@ -17,9 +17,6 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
 if [ ! -e "/etc/config/kube.conf" ]; then
   # add permissions for omsagent user to access docker.sock
   sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
-  export CONTROLLER_TYPE="DaemonSet"
-else
-  export CONTROLLER_TYPE="ReplicaSet"
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
