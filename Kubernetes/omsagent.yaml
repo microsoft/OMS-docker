@@ -120,6 +120,8 @@ spec:
          value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
+       - name: CONTROLLER_TYPE
+         value: "DaemonSet"
        - name: NODE_IP
          valueFrom:
             fieldRef:
@@ -214,6 +216,8 @@ spec:
          value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
+       - name: CONTROLLER_TYPE
+         value: "ReplicaSet"
        - name: NODE_IP
          valueFrom:
             fieldRef:
