@@ -94,8 +94,8 @@ spec:
    labels:
     dsName: "omsagent-ds"
    annotations:
-    agentVersion: "1.6.0-163"
-    dockerProviderVersion: "3.0.0-2"
+    agentVersion: "1.8.1.256"
+    dockerProviderVersion: "3.0.0-3"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -190,8 +190,8 @@ spec:
    labels:
     rsName: "omsagent-rs"
    annotations:
-    agentVersion: "1.6.0-163"
-    dockerProviderVersion: "3.0.0-2"
+    agentVersion: "1.8.1.256"
+    dockerProviderVersion: "3.0.0-3"
   spec:
    serviceAccountName: omsagent
    containers:
