@@ -35,6 +35,16 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 
 /$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
 
+#download and install fluent-bit(td-agent-bit)
+wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
+sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
+sudo apt-get update
+sudo apt-get install td-agent-bit=0.13.7 sqlite3=3.11.0-1ubuntu1 libsqlite3-dev=3.11.0-1ubuntu1 -y
+
+#download fluentbit outoms output plugin & fluentbit config for container log collection
+wget --directory-prefix=/opt/td-agent-bit/bin/ https://github.com/Microsoft/Docker-Provider/releases/download/1.0.0-36/out_oms.so
+wget --directory-prefix=/etc/opt/microsoft/docker-cimprov/ https://github.com/Microsoft/Docker-Provider/releases/download/1.0.0-36/td-agent-bit.conf /etc/opt/microsoft/docker-cimprov/
+
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
 rm -f $TMPDIR/docker-cimprov*.sh
