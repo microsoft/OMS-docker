@@ -3,32 +3,27 @@
 #
 <# 
     .DESCRIPTION 
-		Classifies the error type that a user is facing with their AKS cluster
+		Classifies the error type that a user is facing with their Acs-Engine Kubernetes cluster
  
     .PARAMETER SubscriptionId
-        Subscription Id that the AKS cluster is in
+        Subscription Id that the Acs-Engine Kubernetes cluster is in
 
     .PARAMETER ResourceGroupName
-        Resource Group name where the AKS cluster is in
-
-    .PARAMETER AKSClusterName
-        AKS Cluster name
+        Resource Group name where the Acs-Engine Kubernetes cluster is in
+    
 #>
 
 param(
     [Parameter(mandatory = $true)]
     [string]$SubscriptionId,
     [Parameter(mandatory = $true)]
-    [string]$ResourceGroupName,
-    [Parameter(mandatory = $true)]
-    [string]$AKSClusterName
+    [string]$ResourceGroupName	
 )
 
 $ErrorActionPreference = "Stop";
 Start-Transcript -path .\TroubleshootDump.txt -Force
-$DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
-$OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
-$OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$OptOutLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers#uninstalling-the-chart"
+$OptInLink = "https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers#installing-the-chart"
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
@@ -48,7 +43,6 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
         exit
     }
     
-
     $message = "This script will try to install the latest versions of the following Modules : `
 			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
@@ -140,7 +134,7 @@ catch {
 }
 
 #
-#   Subscription existance and access check
+#   Subscription existence and access check
 #
 if ($null -eq $account.Account) {
     try {
@@ -192,56 +186,80 @@ if ($notPresent) {
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
-Write-Host("Checking AKS Cluster details...")
-try {
-    $ResourceDetailsArray = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -Name $AKSClusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
-}
-catch {
-    Write-Host("")
-    Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
-    Write-Host("")
-    Stop-Transcript
-    exit
-}
+#
+#  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources 
+#
+Write-Host("Checking specified Resource Group has the acs-engine Kuberentes cluster resources...")
 
-if ($ResourceDetailsArray -eq $null) {
-    Write-Host("")
-    Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
-    Write-Host("")
-    Stop-Transcript
-    exit
-}
-else {
-    Write-Host("Successfully checked AKS Cluster details...") -ForegroundColor Green
-    Write-Host("")
-    foreach ($ResourceDetail in $ResourceDetailsArray) {
-        if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
-            #gangams: profile can be different casing so convert properties to lowecase and extract it
-            $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json
-            $omsagentconfig = $props.addonprofiles.omsagent.config
-            #gangams - figure out betterway to do this
-            $omsagentconfig = $omsagentconfig.Trim("{", "}")
-            $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1]
-            $AKSClusterResourceId = $ResourceDetail.ResourceId
-			
-            Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");  
-			
-            break
-        }
+$k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
+
+$isKubernetesCluster = $false 
+
+foreach ($k8MasterVM in $k8sMasterVMs) {
+
+    $tags = $k8MasterVM.Tags
+
+    $acsEngineVersion = $tags['acsengineVersion']  
+    $orchestrator = $tags['orchestrator']
+
+    Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green  
+    Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
+
+    if ([string]$orchestrator.StartsWith('Kubernetes')) {
+        $isKubernetesCluster = $true	
+        Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
+
+        break
+    }
+    else {
+        Write-Host("This Resource group : '" + $ResourceGroupName + "'does not have the Kubernetes acs-engine resources") -ForegroundColor Red
+        exit 
     }
 }
 
-if ($LogAnalyticsWorkspaceResourceID -eq $null) {
-    Write-Host("")
-    Write-Host("Onboarded  log analytics workspace to this cluster either deleted or moved.This requires Opt-out and Opt-in back to Monitoring") -ForegroundColor Red
-    Write-Host("Please try to opt out of monitoring and opt-in following the instructions in below links:") -ForegroundColor Red
-    Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
-    Write-Host("")
-    Stop-Transcript
-    exit
+if ($isKubernetesCluster -eq $false) {
+    Write-Host("Monitoring only supported  for Acs-engine with Kubernetes") -ForegroundColor Red
+    exit 
 }
-else {
+
+Write-Host("Successfully checked the Acs-engine Kuberentes cluster resources in specified resource group") -ForegroundColor Green
+
+#
+#  Extract logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
+#
+
+foreach ($k8MasterVM in $k8sMasterVMs) { 
+
+    $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
+	
+    if ($null -eq $r) {
+        Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :" + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
+        exit 
+    }
+
+    if ($null -eq $r.Tags) {
+	   
+        Write-Host("K8s master VM does not have required tags" ) -ForegroundColor Red
+        Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
+        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red		
+        exit 
+    }
+
+    if ($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
+        $LogAnalyticsWorkspaceResourceID = $r.Tags["logAnalyticsWorkspaceResourceId"]
+        $LogAnalyticsWorkspaceResourceID = $LogAnalyticsWorkspaceResourceID.Trim()
+        break;
+    }
+}
+
+
+if ($null -eq $LogAnalyticsWorkspaceResourceID) {
+    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
+    Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
+    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+    exit
+} else {
 
     Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ") 
     $workspaceSubscriptionId = $LogAnalyticsWorkspaceResourceID.split("/")[2]
@@ -376,6 +394,7 @@ else {
         #
         $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $workspaceName + "' in subscription '" + $workspaceSubscriptionId + "' IS NOT ONBOARDED with container health solution.";
         Write-Host($message)
+
         $question = " Do you want to onboard container health to the workspace?"
 
         $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
