@@ -14,9 +14,22 @@ sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get
 #using /var/opt/microsoft/docker-cimprov/state instead of /var/opt/microsoft/omsagent/state since the latter gets deleted during onboarding
 mkdir -p /var/opt/microsoft/docker-cimprov/state
 
-if [ ! -e "/etc/config/kube.conf" ]; then
+#if [ ! -e "/etc/config/kube.conf" ]; then
   # add permissions for omsagent user to access docker.sock
-  sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
+  #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
+#fi
+
+DOCKER_SOCKET=/var/run/host/docker.sock
+DOCKER_GROUP=docker
+REGULAR_USER=omsagent
+
+if [ -S ${DOCKER_SOCKET} ]; then
+    echo "getting gid for docker.sock"
+    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+    echo "creating a local docker group"
+    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+    echo "adding omsagent user to local docker group"
+    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
 fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
