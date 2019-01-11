@@ -23,13 +23,13 @@ DOCKER_SOCKET=/var/run/host/docker.sock
 DOCKER_GROUP=docker
 REGULAR_USER=omsagent
 
-if [ -S ${DOCKER_SOCKET} ]; then
+if [ -S ${DOCKER_SOCKET} ]; then
     echo "getting gid for docker.sock"
-    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
     echo "creating a local docker group"
-    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
-    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
 fi 
 
 
