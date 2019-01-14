@@ -41,6 +41,11 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
+#set nodename from /etc/hostname
+
+nodename=$(cat /hostfs/etc/hostname)
+echo "nodename $nodename"
+
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
@@ -77,6 +82,10 @@ fi
 
 #start cron daemon for logrotate
 service cron start
+#start telegraf service
+service telegraf start
+#get telegraf service status
+service telegraf status
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
@@ -84,6 +93,7 @@ service cron start
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
+dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 
 
 

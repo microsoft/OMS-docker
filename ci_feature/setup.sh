@@ -47,6 +47,11 @@ sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/
 sudo apt-get update
 sudo apt-get install td-agent-bit=0.13.7 sqlite3=3.11.0-1ubuntu1 libsqlite3-dev=3.11.0-1ubuntu1 -y
 
+#download and install telegraf
+wget https://dl.influxdata.com/telegraf/releases/telegraf_1.9.2-1_amd64.deb
+sudo dpkg -i telegraf_1.9.2-1_amd64.deb
+
+
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
 rm -f $TMPDIR/docker-cimprov*.sh

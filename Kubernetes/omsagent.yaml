@@ -131,6 +131,18 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs/proc
+          name: host-proc
+          readOnly: true
+        - mountPath: /hostfs/sys
+          name: host-sys
+          readOnly: true
+        - mountPath: /hostfs/etc
+          name: host-etc
+          readOnly: true
+        - mountPath: /hostfs/var
+          name: host-var
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -145,7 +157,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep" && if [ "$(getfacl -p /var/run/host/docker.sock | grep -c "omsagent")" -eq 0 ]; then sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock; fi
+         - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -157,6 +169,18 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
+    - name: host-proc
+      hostPath:
+       path: /proc
+    - name: host-sys
+      hostPath:
+       path: /sys
+    - name: host-etc
+      hostPath:
+       path: /etc
+    - name: host-var
+      hostPath:
+       path: /var
     - name: docker-sock 
       hostPath:
        path: /var/run
@@ -227,6 +251,18 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs/proc
+          name: host-proc
+          readOnly: true
+        - mountPath: /hostfs/sys
+          name: host-sys
+          readOnly: true
+        - mountPath: /hostfs/etc
+          name: host-etc
+          readOnly: true
+        - mountPath: /hostfs/var
+          name: host-var
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -250,6 +286,18 @@ spec:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
+    - name: host-proc
+      hostPath:
+       path: /proc
+    - name: host-sys
+      hostPath:
+       path: /sys
+    - name: host-etc
+      hostPath:
+       path: /etc
+    - name: host-var
+      hostPath:
+       path: /var
     - name: docker-sock 
       hostPath:
        path: /var/run
