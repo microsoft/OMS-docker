@@ -42,7 +42,7 @@ sudo apt-get install acl
 wget https://dl.influxdata.com/telegraf/releases/telegraf_1.9.2-1_amd64.deb
 sudo dpkg -i telegraf_1.9.2-1_amd64.deb
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
