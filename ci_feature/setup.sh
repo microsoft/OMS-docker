@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-3.0.0-3.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/dockercimprovtgf/docker-cimprov-4.0.0-0.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -39,7 +39,7 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
