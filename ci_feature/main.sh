@@ -82,7 +82,8 @@ fi
 
 #start cron daemon for logrotate
 service cron start
-#start telegraf service
+#copy config file and start telegraf service
+cp /etc/opt/microsoft/docker-cimprov/telegraf.conf /etc/telegraf/telegraf.conf
 service telegraf start
 #get telegraf service status
 service telegraf status
