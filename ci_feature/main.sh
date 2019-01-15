@@ -42,9 +42,11 @@ fi
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #set nodename from /etc/hostname
-
 nodename=$(cat /hostfs/etc/hostname)
 echo "nodename $nodename"
+echo " setting nodename as environment variable"
+echo "export nodename=$nodename" >> ~/.bashrc
+export | grep nodename
 
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
@@ -83,10 +85,10 @@ fi
 #start cron daemon for logrotate
 service cron start
 #copy config file and start telegraf service
-cp /etc/opt/microsoft/docker-cimprov/telegraf.conf /etc/telegraf/telegraf.conf
-service telegraf start
+#cp /etc/opt/microsoft/docker-cimprov/telegraf.conf /etc/telegraf/telegraf.conf
+#service telegraf start
 #get telegraf service status
-service telegraf status
+#service telegraf status
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
@@ -103,6 +105,10 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 fi
+
+echo "starting telegraf"
+/usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
+echo " done starting telegraf"
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
