@@ -47,7 +47,14 @@ nodename=$(cat /hostfs/etc/hostname)
 echo "nodename $nodename"
 echo " setting nodename as environment variable"
 echo "export nodename=$nodename" >> ~/.bashrc
+echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
+source ~/.bashrc
 export | grep nodename
+export | grep HOST_
 
 
 #Commenting it for test. We do this in the installer now.
