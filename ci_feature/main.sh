@@ -89,7 +89,7 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 if [ ! -e "/etc/config/kube.conf" ]; then
     #start the fluent-bit(td-agent-bit) process in the background
-    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/out_oms_nologs.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 fi
 
