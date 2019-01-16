@@ -18,6 +18,7 @@ wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-3.0.0
 
 wget https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-2/out_oms_partiallogs.so
 wget https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-2/out_oms_nologs.so
+wget https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-2/out_oms_noimagename.so
 
 chmod 775 $TMPDIR/*.sh
 
