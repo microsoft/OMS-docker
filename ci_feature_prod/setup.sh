@@ -10,6 +10,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     update-locale LANG=en_US.UTF-8
 
 wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-163/omsagent-1.6.0-163.universal.x64.sh
+wget https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-2/out_oms.so
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
