@@ -37,14 +37,14 @@ Azure Monitor for containers uses the following tags on the master nodes of AKS-
 Following Azure tags are used by Azure Monitor for containers:
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
-| Tag Name                        | Tag Value                                                              | Creation Source of the Tag                |
-| ----------------------------    | -------------------------------------------------------                | ------------------------------------      | 
-| acsengineversion                | v0.24.0                                                                | ACS-engine or AKS-engine                  |
-| orchestrator                      | Kubernetes                                                             | ACS-engine or AKS-engine                  |
-| creationsource                  | acs-engine-k8s-master                                                  | ACS-engine or AKS-engine                  |
-| logAnalyticsWorkspaceResourceId | Azure Resource Id of Log Analytics workspace configured on the Agent   | Azure Monitor for containers onboarding   |
-| clusterName                     | Resource Id of the cluster Resource group or cluster Name              | Azure Monitor for containers onboarding   |
--------------------------------------------------------------------------------------------------------------------------------------------------------
+| Tag Name                             | Tag Value                                                              | Creation Source of the Tag                    |
+| -----------------------------------  | ------------------------------------------------------           | ------------------------------------                | 
+| acsengineversion or aksengineversion | v0.24.0 or higher                                                | ACS-engine for acsengineversion tag else AKS-engine |
+| orchestrator                         | Kubernetes                                                       | ACS-engine or AKS-engine                            |
+| creationsource                       | acs-engine-k8s-master-* or aks-engine-k8s-master                 | ACS-engine for the tag which starts with acs-engine-k8s-master else  AKS-engine                            |
+| logAnalyticsWorkspaceResourceId      | Azure Resource Id of Log Analytics workspace configured on the Agent | Azure Monitor for containers onboarding         |
+| clusterName                          | Resource Id of the cluster Resource group or cluster Name        | Azure Monitor for containers onboarding             |
+------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Note: clusterName is the optional tag. If this tag not specified, clusterName should be Azure Resource Id of the AKS-engine resource group during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
 If the clusterName tag specified, please make sure the value of the tag is same used during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
