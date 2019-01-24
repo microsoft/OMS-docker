@@ -42,11 +42,17 @@ fi
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
 #set nodename from /etc/hostname
-
 nodename=$(cat /hostfs/etc/hostname)
 echo "nodename $nodename"
 echo "replacing nodename in config"
 sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
+#set nodeip
+nodeip=$(NODE_IP)
+echo "nodeip $nodeip"
+echo "replacing nodeip in config"
+sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
 #echo "export nodename=$nodename" >> ~/.bashrc
 echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
 echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
