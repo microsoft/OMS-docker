@@ -121,11 +121,13 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     #start the fluent-bit(td-agent-bit) process in the background
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
+
+    echo "starting telegraf"
+    /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
+    echo " done starting telegraf"
 fi
 
-echo "starting telegraf"
-/usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-echo " done starting telegraf"
+
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
