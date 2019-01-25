@@ -48,7 +48,7 @@ echo "replacing nodename in config"
 sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
 
 #set nodeip
-nodeip=$(NODE_IP)
+nodeip=$NODE_IP
 echo "nodeip $nodeip"
 echo "replacing nodeip in config"
 sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
