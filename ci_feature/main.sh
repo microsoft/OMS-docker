@@ -53,6 +53,17 @@ echo "nodeip $nodeip"
 echo "replacing nodeip in config"
 sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
 
+#set cluster SPN (only for AKS)
+tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
+cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
+cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
+region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
+
+sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
 #echo "export nodename=$nodename" >> ~/.bashrc
 echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
 echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
@@ -111,7 +122,7 @@ service cron start
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
-dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+
 
 
 
@@ -120,9 +131,8 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 
-    echo "starting telegraf"
     /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-    echo " done starting telegraf"
+    dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 fi
 
 
