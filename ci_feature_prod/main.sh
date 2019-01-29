@@ -41,40 +41,6 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
-#set nodename from /etc/hostname
-nodename=$(cat /hostfs/etc/hostname)
-echo "nodename $nodename"
-echo "replacing nodename in config"
-sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-
-#set nodeip
-nodeip=$NODE_IP
-echo "nodeip $nodeip"
-echo "replacing nodeip in config"
-sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-
-#set cluster SPN (only for AKS)
-tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
-cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
-cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
-region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
-
-sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-
-#echo "export nodename=$nodename" >> ~/.bashrc
-echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-source ~/.bashrc
-export | grep nodename
-export | grep HOST_
-
-
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
@@ -133,6 +99,44 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 
+    #telegraf requirements
+
+    #set nodename from /etc/hostname
+    nodename=$(cat /hostfs/etc/hostname)
+    echo "nodename $nodename"
+    echo "replacing nodename in config"
+    sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
+    #set nodeip
+    nodeip=$NODE_IP
+    echo "nodeip $nodeip"
+    echo "replacing nodeip in config"
+    sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
+    #set cluster SPN (only for AKS)
+    tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
+    cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
+    cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
+    rid=$(echo $AKS_RESOURCE_ID)
+    region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
+
+    sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    sed -i -e "s/placeholder_placeholder_resource_id/$rid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+
+    #echo "export nodename=$nodename" >> ~/.bashrc
+    echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+    echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+    echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+    echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+    echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
+    source ~/.bashrc
+    export | grep nodename
+    export | grep HOST_
+
+    #start telegraf
     /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
     dpkg -l | grep telegraf | awk '{print $2 " " $3}'
 fi
