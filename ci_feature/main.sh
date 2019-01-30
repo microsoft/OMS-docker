@@ -49,7 +49,7 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 #chmod 440 /etc/sudoers.d/omsagent
 
 #Disable dsc
-/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
 if [ -z $INT ]; then
@@ -98,62 +98,69 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 
-    #telegraf requirements
+      #telegraf requirements
+      if [ -n "$AKS_RESOURCE_ID"] || [ -n "$AKS_RID"]; then
+            #set nodename from /etc/hostname
+            echo "AKS=true"
+            region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
+            echo "region: $region"
+            if grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf then
+                  echo "custom metric supported region: $region"
+                  nodename=$(cat /hostfs/etc/hostname)
+                  echo "nodename: $nodename"
+                  echo "replacing nodename in config"
+                  sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
 
-    #set nodename from /etc/hostname
-    nodename=$(cat /hostfs/etc/hostname)
-    echo "nodename $nodename"
-    echo "replacing nodename in config"
-    sed -i -e "s/placeholder_hostname/$nodename/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  #set nodeip
+                  nodeip=$NODE_IP
+                  echo "nodeip $nodeip"
+                  echo "replacing nodeip in config"
+                  sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
 
-    #set nodeip
-    nodeip=$NODE_IP
-    echo "nodeip $nodeip"
-    echo "replacing nodeip in config"
-    sed -i -e "s/placeholder_nodeip/$nodeip/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  #set cluster SPN (only for AKS)
+                  tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
+                  cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
+                  cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
+                  rid=$AKS_RID
+                  
 
-    #set cluster SPN (only for AKS)
-    tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
-    cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
-    cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
-    rid=$AKS_RID
-    region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
+                  #sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  #sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  #sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
 
-    #sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-    #sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-    #sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
+                  sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+                  
+                  export AZURE_TENANT_ID=$tid
+                  echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
+                  export AZURE_CLIENT_ID=$cid
+                  echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
+                  export AZURE_CLIENT_SECRET=$cse
+                  echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
 
-    #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
-    sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-    sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-    
-    export AZURE_TENANT_ID=$tid
-    echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
-    export AZURE_CLIENT_ID=$cid
-    echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
-    export AZURE_CLIENT_SECRET=$cse
-    echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
+                  #echo "export nodename=$nodename" >> ~/.bashrc
+                  export HOST_MOUNT_PREFIX=/hostfs
+                  echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+                  export HOST_PROC=/hostfs/proc
+                  echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+                  export HOST_SYS=/hostfs/sys
+                  echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+                  export HOST_ETC=/hostfs/etc
+                  echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+                  export HOST_VAR=/hostfs/var
+                  echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
 
-    #echo "export nodename=$nodename" >> ~/.bashrc
-    export HOST_MOUNT_PREFIX=/hostfs
-    echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-    export HOST_PROC=/hostfs/proc
-    echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-    export HOST_SYS=/hostfs/sys
-    echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-    export HOST_ETC=/hostfs/etc
-    echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-    export HOST_VAR=/hostfs/var
-    echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-
-    export | grep nodename
-    export | grep HOST_
-    export | grep AZURE_
-    source ~/.bashrc
-    
-    #start telegraf
-    /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-    dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+                  #export | grep nodename
+                  #export | grep HOST_
+                  #export | grep AZURE_
+                  source ~/.bashrc
+                  
+                  #start telegraf
+                  /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
+                  dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+            fi
+      fi
 fi
 
 
