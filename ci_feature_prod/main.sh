@@ -95,7 +95,7 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 
 if [ ! -e "/etc/config/kube.conf" ]; then
-    #start the fluent-bit(td-agent-bit) process in the background
+     #start the fluent-bit(td-agent-bit) process in the background
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 
@@ -128,37 +128,31 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     
-    AZURE_TENANT_ID=$tid
+    export AZURE_TENANT_ID=$tid
     echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
-    source ~/.bashrc
-    AZURE_CLIENT_ID=$cid
+    export AZURE_CLIENT_ID=$cid
     echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
-    source ~/.bashrc
-    AZURE_CLIENT_SECRET=$cse
+    export AZURE_CLIENT_SECRET=$cse
     echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
-    source ~/.bashrc
 
     #echo "export nodename=$nodename" >> ~/.bashrc
-    HOST_MOUNT_PREFIX=/hostfs
+    export HOST_MOUNT_PREFIX=/hostfs
     echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-    HOST_PROC=/hostfs/proc
+    export HOST_PROC=/hostfs/proc
     echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-    HOST_SYS=/hostfs/sys
+    export HOST_SYS=/hostfs/sys
     echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-    HOST_ETC=/hostfs/etc
+    export HOST_ETC=/hostfs/etc
     echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-    HOST_VAR=/hostfs/var
+    export HOST_VAR=/hostfs/var
     echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-    source ~/.bashrc
+
     export | grep nodename
     export | grep HOST_
-
-    #start telegraf
-    AZURE_TENANT_ID=$tid
-    AZURE_CLIENT_ID=$cid
-    AZURE_CLIENT_SECRET=$cse
-    env | grep AZURE_
+    export | grep AZURE_
+    source ~/.bashrc
     
+    #start telegraf
     /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
     dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 fi
