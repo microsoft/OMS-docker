@@ -116,13 +116,13 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
     cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
     cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
-    rid=$AKS_RESOURCE_ID
+    rid=$AKS_RID
     region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
 
     #sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     #sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     #sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-    
+
     #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
     sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
