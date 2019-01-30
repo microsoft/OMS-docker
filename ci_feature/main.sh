@@ -123,7 +123,8 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     #sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     #sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     
-    sed -i -e "s/placeholder_resource_id/$rid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
+    sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
     echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
