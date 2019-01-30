@@ -127,15 +127,24 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
     sed -i -e "s#placeholder_resource_id#$rid#g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
     sed -i -e "s/placeholder_region/$region/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
+    
+    AZURE_TENANT_ID=$tid
     echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
+    AZURE_CLIENT_ID=$cid
     echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
+    AZURE_CLIENT_SECRET=$cse
     echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
 
     #echo "export nodename=$nodename" >> ~/.bashrc
+    HOST_MOUNT_PREFIX=/hostfs
     echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+    HOST_PROC=/hostfs/proc
     echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+    HOST_SYS=/hostfs/sys
     echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+    HOST_ETC=/hostfs/etc
     echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+    HOST_VAR=/hostfs/var
     echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
     source ~/.bashrc
     export | grep nodename
@@ -143,7 +152,7 @@ if [ ! -e "/etc/config/kube.conf" ]; then
 
     #start telegraf
     /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-    dpkg -l | grep telegraf | awk '{print $2 " " $3}'
+    dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 fi
 
 
