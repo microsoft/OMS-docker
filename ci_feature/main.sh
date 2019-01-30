@@ -129,10 +129,13 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     
     AZURE_TENANT_ID=$tid
     echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
+    source ~/.bashrc
     AZURE_CLIENT_ID=$cid
     echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
+    source ~/.bashrc
     AZURE_CLIENT_SECRET=$cse
     echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
+    source ~/.bashrc
 
     #echo "export nodename=$nodename" >> ~/.bashrc
     HOST_MOUNT_PREFIX=/hostfs
@@ -148,8 +151,13 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     source ~/.bashrc
     export | grep nodename
     export | grep HOST_
-
+   
     #start telegraf
+    AZURE_TENANT_ID=$tid
+    AZURE_CLIENT_ID=$cid
+    AZURE_CLIENT_SECRET=$cse
+    env | grep AZURE_
+
     /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
     dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 fi
