@@ -99,12 +99,12 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 
       #telegraf requirements
-      if [ -n "$AKS_RESOURCE_ID"] || [ -n "$AKS_RID"]; then
+      if [ -n "$AKS_RESOURCE_ID" ] || [ -n "$AKS_RID" ]; then
             #set nodename from /etc/hostname
             echo "AKS=true"
             region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
             echo "region: $region"
-            if [grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf]; then
+            if [ grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf ]; then
                   echo "custom metric supported region: $region"
                   nodename=$(cat /hostfs/etc/hostname)
                   echo "nodename: $nodename"
