@@ -190,9 +190,8 @@ metadata:
 type: Opaque
 data:
   #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
-  #vishwa-telegraf-01-14-2019
-  WSID: "ZTBmYzFlNjUtN2FjOC00NWQxLTk1NTEtMjM4OTBmNmFjYmYw"
-  KEY: "RDVVMjJaaTZpSlIraE1neTFpRzQwdmNFT3lDY1ordU9WRzNycFM2bmxGOThwZzZrSFZpSHJ3NTFIWVhWM05IYVc3TGY1ZWNGUXpabm1PU0dQOS9EU2c9PQ=="
+  WSID: ""
+  KEY: ""
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -213,7 +212,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:internaltest-tgf-01302019-6"
+       image: "microsoft/oms:ciprod01092019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -223,11 +222,9 @@ spec:
          cpu: 50m
          memory: 150Mi
        env:
-      #  - name: AKS_RESOURCE_ID
-      #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "vishwa-telegraf-01302019-6-sea"
+       #- name: ACS_RESOURCE_NAME
+       #  value: ""
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -236,8 +233,6 @@ spec:
          valueFrom:
             fieldRef:
               fieldPath: status.hostIP
-       - name: AKS_RID
-         value: "/subscriptions/692aea0b-2d89-4e7e-ae30-fffe40782ee2/resourceGroups/vishwa-telegraf-01-14-2019-sea/providers/Microsoft.ContainerService/managedClusters/vishwa-telegraf-01-14-2019-sea"
        securityContext:
          privileged: true
        ports:
@@ -335,7 +330,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:internaltest-tgf-01302019-6"
+       image: "microsoft/oms:ciprod01092019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -345,11 +340,9 @@ spec:
          cpu: 50m
          memory: 100Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "vishwa-telegraf-01302019-6-sea"
+       #- name: ACS_RESOURCE_NAME
+       #  value: ""
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
