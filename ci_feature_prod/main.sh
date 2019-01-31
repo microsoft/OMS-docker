@@ -105,7 +105,8 @@ if [ ! -e "/etc/config/kube.conf" ]; then
             echo "AKS=true"
             region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
             echo "region: $region"
-            if [ grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf ]; then
+            if grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf
+            then
                   echo "custom metric supported region: $region"
                   nodename=$(cat /hostfs/etc/hostname)
                   echo "nodename: $nodename"
