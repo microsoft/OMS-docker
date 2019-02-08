@@ -124,7 +124,7 @@ if [ -n "$AKS_RESOURCE_ID" ]; then
             tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
             cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
             cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
-            rid=$AKS_RID
+            rid=$AKS_RESOURCE_ID
             
 
             #sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
