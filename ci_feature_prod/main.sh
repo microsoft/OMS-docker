@@ -95,9 +95,9 @@ if [ ! -e "/etc/config/kube.conf" ]; then
     #start the fluent-bit(td-agent-bit) process in the background
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
     dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-    telegrafConfFile = "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+    telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
 else
-    telegrafConfFile = "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
+    telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
 fi 
 
 #telegraf requirements
