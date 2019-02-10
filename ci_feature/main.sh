@@ -90,14 +90,18 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+
 if [ ! -e "/etc/config/kube.conf" ]; then
     #start the fluent-bit(td-agent-bit) process in the background
     /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-    dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
+    
     telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
 else
+    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
     telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
 fi 
+
+dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
 #telegraf requirements
 if [ -n "$AKS_RESOURCE_ID" ]; then

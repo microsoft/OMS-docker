@@ -40,8 +40,8 @@ sudo apt-get install acl
 #Use downloaded docker-provider instead of the bundled one
 
 #download and install telegraf
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.9.4-1_amd64.deb
-sudo dpkg -i telegraf_1.9.4-1_amd64.deb
+wget https://dl.influxdata.com/telegraf/nightlies/telegraf_nightly_amd64.deb
+sudo dpkg -i telegraf_nightly_amd64.deb
 
 service telegraf stop
 
