@@ -19,6 +19,9 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
   #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 #fi
 
+# add permissions for omsagent user to access azure.json
+sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
+
 DOCKER_SOCKET=/var/run/host/docker.sock
 DOCKER_GROUP=docker
 REGULAR_USER=omsagent
@@ -40,6 +43,8 @@ else
 fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
+
+
 
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
