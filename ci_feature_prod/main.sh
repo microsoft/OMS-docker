@@ -20,7 +20,7 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
 #fi
 
 # add permissions for omsagent user to access azure.json
-sudo setfacl -m user:omsagent:rw /etc/kubernetes/azure.json
+sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
 
 DOCKER_SOCKET=/var/run/host/docker.sock
 DOCKER_GROUP=docker
