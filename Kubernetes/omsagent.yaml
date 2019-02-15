@@ -79,6 +79,12 @@ data:
       log_level debug
      </source>
 
+     <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
+      type filter_inventory2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+      log_level info
+     </filter>
+
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
       log_level debug
@@ -178,6 +184,22 @@ data:
       retry_wait 30s
       max_retry_wait 9m
      </match>
+
+     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 20m
+      buffer_type file
+      buffer_path /var/opt/microsoft/omsagent/6bb1e963-b08c-43a8-b708-1628305e964a/state/out_mdm_*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+      max_retry_wait 9m
+      retry_mdm_post_wait_minutes 60
+     </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -249,6 +271,9 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/kubernetes/host
+          name: azure-json-path
+          readOnly: true
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
@@ -281,6 +306,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: azure-json-path
+      hostPath:
+       path: /etc/kubernetes
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
@@ -345,6 +373,9 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/kubernetes/host
+          name: azure-json-path
+          readOnly: true
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
@@ -374,6 +405,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: azure-json-path
+      hostPath:
+       path: /etc/kubernetes
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
