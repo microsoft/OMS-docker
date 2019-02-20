@@ -273,7 +273,6 @@ spec:
           name: containerlog-path
         - mountPath: /etc/kubernetes/host
           name: azure-json-path
-          readOnly: true
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
@@ -375,7 +374,6 @@ spec:
           name: containerlog-path
         - mountPath: /etc/kubernetes/host
           name: azure-json-path
-          readOnly: true
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
