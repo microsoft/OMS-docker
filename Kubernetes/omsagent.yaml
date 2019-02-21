@@ -234,7 +234,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod01092019"
+       image: "microsoft/oms:ciprod02202019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -335,7 +335,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod01092019"
+       image: "microsoft/oms:ciprod02202019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
