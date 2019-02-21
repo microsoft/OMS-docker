@@ -33,7 +33,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi 
+fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case

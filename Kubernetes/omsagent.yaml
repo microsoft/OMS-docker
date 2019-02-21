@@ -229,7 +229,7 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-3"
+    dockerProviderVersion: "3.0.0-4"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -330,7 +330,7 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-3"
+    dockerProviderVersion: "3.0.0-4"
   spec:
    serviceAccountName: omsagent
    containers:
