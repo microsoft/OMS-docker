@@ -244,8 +244,10 @@ spec:
          cpu: 50m
          memory: 150Mi
        env:
-      #  - name: AKS_RESOURCE_ID
-      #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
          value: "my_acs_cluster_name"
@@ -347,6 +349,8 @@ spec:
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
          value: "my_acs_cluster_name"
