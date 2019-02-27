@@ -16,7 +16,7 @@ touch /etc/.omi_disable_service_control
 
 #wget https://github.com/Microsoft/Docker-Provider/releases/download/hotfix-01292019/docker-cimprov-3.0.0-8.universal.x86_64.sh
 
-wget "https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-4(2)/docker-cimprov-3.0.0-4.universal.x86_64.sh"
+wget "https://rashmi.blob.core.windows.net/health-image/docker-cimprov-1.0.0-35.universal.x86_64.sh"
 
 chmod 775 $TMPDIR/*.sh
 
@@ -41,7 +41,7 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
