@@ -79,11 +79,31 @@ data:
       log_level debug
      </source>
 
+     #Kubelet health
+     <source>
+      type kubelethealth
+      tag oms.api.KubeletHealth
+      run_interval 60s
+      log_level debug
+     </source>
+
      <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
       type filter_inventory2mdm
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
       log_level info
      </filter>
+
+     <match oms.api.KubeletHealth**>
+      type out_oms_api
+      log_level debug
+      buffer_chunk_limit 10m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_kubelet_health*.buffer
+      buffer_queue_limit 10
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+     </match>
 
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
@@ -244,13 +264,13 @@ spec:
          cpu: 50m
          memory: 150Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #- name: AKS_REGION
-       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+       - name: AKS_RESOURCE_ID
+         value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       - name: AKS_REGION
+         value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+       #- name: ACS_RESOURCE_NAME
+         #value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -347,13 +367,13 @@ spec:
          cpu: 50m
          memory: 100Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #- name: AKS_REGION
-       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+       - name: AKS_RESOURCE_ID
+         value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       - name: AKS_REGION
+         value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+       #- name: ACS_RESOURCE_NAME
+         #value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -416,4 +436,3 @@ spec:
     - name: omsagent-rs-config
       configMap:
         name: omsagent-rs-config    
-
