@@ -1,3 +1,4 @@
+```
 let endDateTime = now();
     let startDateTime = ago(1h);
     let trendBinSize = 1m;
@@ -29,3 +30,4 @@ let endDateTime = now();
               FailedCount = todouble(FailedCount) / ClusterSnapshotCount,
               UnknownCount = todouble(UnknownCount) / ClusterSnapshotCount
 | summarize AggregatedValue = avg(PendingCount) by bin(TimeGenerated, trendBinSize)
+```
