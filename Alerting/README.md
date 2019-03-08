@@ -8,7 +8,7 @@ For step by step procedures on how to create alert rules, please go [here.](http
 ### Alerting situations (Queries):
 - [Node CPU and memory utilization exceeds your defined threshold](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-alerts#resource-utilization-log-search-queries)
 - [Pod CPU or memory utilization within a controller exceeds your defined threshold as compared to the set limit](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-alerts#resource-utilization-log-search-queries)
-- ["NotReady" Node counts](NotReadyQuery.md)
+- ["NotReady" Status Node counts](NotReadyQuery.md)
 - [Pod phase counts (Failed, Pending, Unkown, Running, Succeeded)](PendingPodCount.md)
 
 #### *Note on the queries*
@@ -19,7 +19,7 @@ For step by step procedures on how to create alert rules, please go [here.](http
  For example) Alert on FailedCount
 ```| summarize AggregatedValue = avg(FailedCount) by bin(TimeGenerated, trendBinSize) ```
 
-- *View in Chart*: If you want to see what the query does in the chart, go to Log Analytics and replace the last line that starts with ```| summarize ...``` to ```| render timechart```. Also you can change the start date time and duration by modifying. 
+- *View in Chart*: If you want to see what the query does in the chart, go to Log Analytics and replace the last line that starts with ```| summarize ...``` to ```| render timechart```. Also you can change the start date time and duration by modifying the following: 
 ```
 let startDateTime = startofday(ago(14d));
 let trendBinSize = 1d;
