@@ -2,23 +2,23 @@
 let endDateTime = now();
 let startDateTime = ago(1h);
 let trendBinSize = 1m;
-let clusterName = 'YOURCLUSTERNAME'; //can remove references for this from the query to show data for all clusters
 KubeNodeInventory
 | where TimeGenerated < endDateTime
 | where TimeGenerated >= startDateTime
-| where ClusterName == clusterName
-| distinct ClusterName, TimeGenerated
-| summarize ClusterSnapshotCount = count() by Timestamp = bin(TimeGenerated, trendBinSize), ClusterName
-| join hint.strategy=broadcast (
+| distinct ClusterName, Computer, TimeGenerated
+| summarize ClusterSnapshotCount = count() by bin(TimeGenerated, trendBinSize), ClusterName, Computer
+| join hint.strategy=broadcast kind=inner (
     KubeNodeInventory
     | where TimeGenerated < endDateTime
     | where TimeGenerated >= startDateTime
     | summarize TotalCount = count(), ReadyCount = sumif(1, Status contains ('Ready'))
-                by ClusterName, Timestamp = bin(TimeGenerated, trendBinSize)
+                by ClusterName, Computer,  bin(TimeGenerated, trendBinSize)
     | extend NotReadyCount = TotalCount - ReadyCount
-) on ClusterName, Timestamp
-| project Timestamp,
-          ReadyCount = todouble(ReadyCount) / ClusterSnapshotCount,
-          NotReadyCount = todouble(NotReadyCount) / ClusterSnapshotCount
-| summarize AggregatedValue = avg(NotReadyCount) by bin(Timestamp, trendBinSize)
+) on ClusterName, Computer, TimeGenerated
+| project   TimeGenerated,
+            ClusterName,
+            Computer,
+            ReadyCount = todouble(ReadyCount) / ClusterSnapshotCount,
+            NotReadyCount = todouble(NotReadyCount) / ClusterSnapshotCount
+| order by ClusterName asc, Computer asc, TimeGenerated desc
 ```
