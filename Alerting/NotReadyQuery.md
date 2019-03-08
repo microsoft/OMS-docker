@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 ```
-=======
->>>>>>> fa1b0395db80ded75f26f53d9ae134ff5ac70dd1
 let endDateTime = now();
 let startDateTime = ago(1h);
 let trendBinSize = 1m;
@@ -24,7 +21,4 @@ KubeNodeInventory
           ReadyCount = todouble(ReadyCount) / ClusterSnapshotCount,
           NotReadyCount = todouble(NotReadyCount) / ClusterSnapshotCount
 | summarize AggregatedValue = avg(NotReadyCount) by bin(Timestamp, trendBinSize)
-<<<<<<< HEAD
 ```
-=======
->>>>>>> fa1b0395db80ded75f26f53d9ae134ff5ac70dd1
