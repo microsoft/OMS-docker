@@ -35,6 +35,8 @@ spec:
         volumeMounts:
         - mountPath: /var/run/docker.sock
           name: docker-sock
+        - mountPath: /var/lib/docker/containers 
+          name: containerlog-path
         livenessProbe:
           exec:
             command:
@@ -47,3 +49,6 @@ spec:
       - name: docker-sock
         hostPath:
           path: /var/run/docker.sock
+      - name: containerlog-path
+        hostPath:
+         path: /var/lib/docker/containers

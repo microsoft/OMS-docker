@@ -33,6 +33,8 @@ spec:
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
+        - mountPath: /var/lib/docker/containers 
+          name: containerlog-path
         livenessProbe:
           exec:
             command:
@@ -48,3 +50,6 @@ spec:
       - name: omsagent-secret
         secret:
          secretName: omsagent-secret
+      - name: containerlog-path
+        hostPath:
+         path: /var/lib/docker/containers
