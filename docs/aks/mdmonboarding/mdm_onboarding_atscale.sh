@@ -4,7 +4,8 @@
 # the following line (beginning with curl...) at the command prompt and then replacing the args:
 #  This script adds the 'Monitoring Metrics Publisher' role assignment for all the AKS clusters 
 #  in specified subscription
-# Note: owner or admin permission required on the subscription to add the role assignment
+#  Note: 'Microsoft.Authorization/roleAssignments/write'  permission required on the  each cluster resource to add the role assignment.
+#  Of the built-in roles, only Owner and User Access Administrator are granted access to this permission.
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 #           jq : sudo apt-get install jq

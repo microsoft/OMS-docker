@@ -8,7 +8,8 @@ For more details on custom metrics, read [custom-metrics-azure-monitor](https://
 
 You can either use the Azure CLI  or Powershell to add the role assignment to one or more existing AKS clusters which were onboarded to AKS Monitoring.
 
-Note: Adding role assignment requires the owner or admin role on the Subscription
+> Note: For adding role assignment, you must have access to the 'Microsoft.Authorization/roleAssignments/write' permission on the AKS cluster resource scope.
+Of the built-in roles, only Owner and User Access Administrator are granted access to this permission. If you prefer granular level access to grant, recommended to go custom roles https://docs.microsoft.com/en-us/azure/role-based-access-control/custom-roles.
 
 ## Add the role assignment using Azure CLI
 
