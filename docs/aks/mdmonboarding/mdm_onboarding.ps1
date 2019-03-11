@@ -14,12 +14,12 @@
 #>
 
 param(
-	[Parameter(mandatory=$true)]
-	[string]$SubscriptionId,
-	[Parameter(mandatory=$true)]
-	[string]$ResourceGroupName,
-	[Parameter(mandatory=$true)]
-	[string] $clusterName
+    [Parameter(mandatory = $true)]
+    [string]$SubscriptionId,
+    [Parameter(mandatory = $true)]
+    [string]$ResourceGroupName,
+    [Parameter(mandatory = $true)]
+    [string] $clusterName
 )
 
 
@@ -28,18 +28,19 @@ $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
 $azAksModule = Get-Module -ListAvailable -Name Az.Aks 
 $azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
 
-if (($azAccountModule -eq $null) -or ($azAksModule -eq $null) -or ($azResourcesModule -eq $nul)) {
+if (($null -eq $azAccountModule) -or ($null -eq $azAksModule) -or ($null -eq $azResourcesModule)) {
 
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-	    Write-Host("Running script as an admin...")
-	    Write-Host("")
-    } else {
-	    Write-Host("Please run the script as an administrator") -ForegroundColor Red
-	    Stop-Transcript
-	    exit
+        Write-Host("Running script as an admin...")
+        Write-Host("")
+    }
+    else {
+        Write-Host("Please run the script as an administrator") -ForegroundColor Red
+        Stop-Transcript
+        exit
     }
 
 
@@ -57,111 +58,133 @@ if (($azAccountModule -eq $null) -or ($azAksModule -eq $null) -or ($azResourcesM
     $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
     switch ($decision) {
-	    0 { 
+        0 { 
 
-           try {
-			    Write-Host("Installing Az.Resources...")
-			    Install-Module Az.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
-			    exit
-		    }
+            if ($null -eq $azResourcesModule) {
+                try {
+                    Write-Host("Installing Az.Resources...")
+                    Install-Module Az.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    exit
+                }
+            }
 
-		    try {
-			    Write-Host("Installing Az.Accounts...")
-			    Install-Module Az.Accounts -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
-			    exit
-		    }
+            if ($null -eq $azAccountModule) {
+                try {
+                    Write-Host("Installing Az.Accounts...")
+                    Install-Module Az.Accounts -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    exit
+                }
+            }
 
-		    try {
-			    Write-Host("Installing Az.Aks...")
-			    Install-Module Az.Aks -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-		    } catch {
-			    Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Repository PSGallery -Force'") -ForegroundColor Red 
-			    exit
-		    }	
+            if ($null -eq $azAksModule) {
+                try {
+                    Write-Host("Installing Az.Aks...")
+                    Install-Module Az.Aks -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Repository PSGallery -Force'") -ForegroundColor Red 
+                    exit
+                }
+            }
            
-	    }
-	    1 {
+        }
+        1 {
 
-          try {
-			    Import-Module Az.Resources -ErrorAction Stop
-		    } catch {
-			    Write-Host("Could not import Az.Resources...") -ForegroundColor Red
-			    Write-Host("Close other powershell logins and try installing the latest modules for Az.Resources in a new powershell window: eg. 'Install-Module Az.Resources -Repository PSGallery -Force'") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }
-
-		    try {
-			    Import-Module Az.Accounts -ErrorAction Stop
-		    } catch {
-			    Write-Host("Could not import Az.Accounts...") -ForegroundColor Red
-			    Write-Host("Close other powershell logins and try installing the latest modules for Az.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }
-		    try {
-			    Import-Module Az.Aks -ErrorAction Stop
-		    } catch {
-			    Write-Host("Could not import Az.Aks... Please reinstall this Module") -ForegroundColor Red
-			    Stop-Transcript
-			    exit
-		    }         
+            if ($null -eq $azResourcesModule) {
+                try {
+                    Import-Module Az.Resources -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.Resources...") -ForegroundColor Red
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Resources in a new powershell window: eg. 'Install-Module Az.Resources -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+            if ($null -eq $azAccountModule) {
+                try {
+                    Import-Module Az.Accounts -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.Accounts...") -ForegroundColor Red
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+            if ($null -eq $azAksModule) {
+                try {
+                    Import-Module Az.Aks -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.Aks... Please reinstall this Module") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }   
+            }      
 	
-	    }
-	    2 { 
-		    Write-Host("")
-		    Stop-Transcript
-		    exit
-	    }
+        }
+        2 { 
+            Write-Host("")
+            Stop-Transcript
+            exit
+        }
     }
 }
 
 try {
-	Write-Host("")
-	Write-Host("Trying to get the current Az login context...")
-	$account = Get-AzContext -ErrorAction Stop
-	Write-Host("Successfully fetched current AzContext context...") -ForegroundColor Green
-	Write-Host("")
-} catch {
-	Write-Host("")
-	Write-Host("Could not fetch AzContext..." ) -ForegroundColor Red
-	Write-Host("")
+    Write-Host("")
+    Write-Host("Trying to get the current Az login context...")
+    $account = Get-AzContext -ErrorAction Stop
+    Write-Host("Successfully fetched current AzContext context...") -ForegroundColor Green
+    Write-Host("")
+}
+catch {
+    Write-Host("")
+    Write-Host("Could not fetch AzContext..." ) -ForegroundColor Red
+    Write-Host("")
 }
 
 
 if ($account.Account -eq $null) {
-	try {
-		Write-Host("Please login...")
-		Connect-AzAccount -subscriptionid $SubscriptionId
-	} catch {
-		Write-Host("")
-		Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-		Write-Host("")
-		Stop-Transcript
-		exit
-	}
-} else {
-	if ($account.Subscription.Id -eq $SubscriptionId) {
-		Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
-		$account
-	} else {
-		try {
-			Write-Host("Current Subscription:")
-			$account
-			Write-Host("Changing to subscription: $SubscriptionId")
-			Set-AzContext -SubscriptionId $SubscriptionId
-		} catch {
-			Write-Host("")
-			Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-			Write-Host("")
-			Stop-Transcript
-			exit
-		}
-	}
+    try {
+        Write-Host("Please login...")
+        Connect-AzAccount -subscriptionid $SubscriptionId
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+}
+else {
+    if ($account.Subscription.Id -eq $SubscriptionId) {
+        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
+        $account
+    }
+    else {
+        try {
+            Write-Host("Current Subscription:")
+            $account
+            Write-Host("Changing to subscription: $SubscriptionId")
+            Set-AzContext -SubscriptionId $SubscriptionId
+        }
+        catch {
+            Write-Host("")
+            Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+            Write-Host("")
+            Stop-Transcript
+            exit
+        }
+    }
 }
 
 #
@@ -170,11 +193,11 @@ if ($account.Account -eq $null) {
 Write-Host("Checking aks cluster exists...")
 $cluster = Get-AzAks -ResourceGroupName $ResourceGroupName -Name $clusterName  -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent) {
-	Write-Host("")
-	Write-Host("Could not find Aks cluster. Please make sure that specified cluster exists: '" + $clusterName + "'is correct and you have access to the cluster") -ForegroundColor Red
-	Write-Host("")
-	Stop-Transcript
-	exit
+    Write-Host("")
+    Write-Host("Could not find Aks cluster. Please make sure that specified cluster exists: '" + $clusterName + "'is correct and you have access to the cluster") -ForegroundColor Red
+    Write-Host("")
+    Stop-Transcript
+    exit
 }
 Write-Host("Successfully checked specified cluster exists details...") -ForegroundColor Green
 
@@ -189,18 +212,20 @@ New-AzRoleAssignment -ApplicationId $servicePrincipalClientId -scope $clusterRes
 
 if ($assignmentError) {
 
-    if($assignmentError.Exception -match "role assignment already exists") {
-          
-          Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+    $roleAssignment = Get-AzRoleAssignment -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher" -ErrorVariable getAssignmentError -ErrorAction SilentlyContinue		
 
-       } else { 
+    if ($assignmentError.Exception -match "role assignment already exists" -or ( $roleAssignment -and $roleAssignment.ObjectType -like "ServicePrincipal" )) {           
+        Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+    }
+    else { 
         
-          Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
-     }
+        Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
+    }
 
-} else {
+}
+else {
 
-   Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
+    Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
    
 }
 
