@@ -16,7 +16,7 @@ Of the built-in roles, only Owner and User Access Administrator are granted acce
 ### For single AKS cluster using Azure CLI
 
 ``` sh
-curl -sL https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding.sh | bash -s <subscriptionId> <clusterResourceGroup> <clusterName>
+curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding.sh | bash -s <subscriptionId> <clusterResourceGroup> <clusterName>
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:
@@ -28,7 +28,7 @@ completed the role assignment
 ### For all AKS clusters in the specified subscription using Azure CLI
 
 ``` sh
-curl -sL https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s <subscriptionId>
+curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s <subscriptionId>
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:

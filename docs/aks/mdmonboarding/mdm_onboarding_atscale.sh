@@ -9,13 +9,13 @@
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 #           jq : sudo apt-get install jq
-#  curl -sL https://git.io/aks-mdm-onboarding-atscale | bash -s <subscriptionId>
+#  curl -sL https://git.io/aks-mdm-onboarding-atscale | bash -s subscriptionId
 #
-#  [Required]  ${1}  <subscriptionId>    subscriptionId  of the AKS cluster 
+#  [Required]  ${1}  subscriptionId    subscriptionId  of the AKS cluster 
 #
 #  For example:
 #
-#  curl -sL https://git.io/az-aks-mdm-onboarding | bash -s "00000000-0000-0000-0000-000000000000"
+#  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s "00000000-0000-0000-0000-000000000000"
 #
 
 echo "subscriptionId"= ${1}
@@ -45,3 +45,7 @@ for cluster in $(echo $CLUSTERS_LIST | jq -c '.[]'); do
 done
 
 echo "completed role assignments for all AKS clusters in subscription: ${1}"
+
+
+
+
