@@ -9,9 +9,9 @@
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 #           jq : sudo apt-get install jq
-#  curl -sL https://git.io/aks-mdm-onboarding-atscale | bash -s <subscriptionId>
+#  curl -sL https://git.io/aks-mdm-onboarding-atscale | bash -s subscriptionId
 #
-#  [Required]  ${1}  <subscriptionId>    subscriptionId  of the AKS cluster 
+#  [Required]  ${1}  subscriptionId    subscriptionId  of the AKS cluster 
 #
 #  For example:
 #
