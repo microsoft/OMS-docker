@@ -229,12 +229,12 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    dockerProviderVersion: "3.0.0-5"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod02212019"
+       image: "microsoft/oms:ciprod03122019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -332,12 +332,12 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    dockerProviderVersion: "3.0.0-5"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod02212019"
+       image: "microsoft/oms:ciprod03122019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
