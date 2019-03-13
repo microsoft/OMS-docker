@@ -2,7 +2,10 @@
 let endDateTime = now();
 let startDateTime = ago(1h);
 let trendBinSize = 1m;
+<<<<<<< HEAD
 let clusterName = 'YOURCLUSTERNAME';
+=======
+>>>>>>> 07b771b284433e19f03dcc5c308b41352a164221
 KubeNodeInventory
 | where TimeGenerated < endDateTime
 | where TimeGenerated >= startDateTime
