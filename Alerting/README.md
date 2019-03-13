@@ -9,7 +9,7 @@ For step by step procedures on how to create alert rules, please go [here.](http
 - [Node CPU and memory utilization exceeds your defined threshold](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-alerts#resource-utilization-log-search-queries)
 - [Pod CPU or memory utilization within a controller exceeds your defined threshold as compared to the set limit](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-alerts#resource-utilization-log-search-queries)
 - ["NotReady" Status Node counts](NotReadyQuery.md)
-- [Pod phase counts (Failed, Pending, Unknown, Running, Succeeded)](PendingPodCount.md)
+- [Pod phase counts (Failed, Pending, Unkown, Running, Succeeded)](PendingPodCount.md)
 
 #### *Note on the queries*
 - Make sure to change the cluster name to your cluster. 
