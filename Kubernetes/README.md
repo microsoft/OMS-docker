@@ -49,7 +49,8 @@ Copy file to your master node and run
    WSID:   36 bytes
    KEY:    88 bytes 
    ```
- 
+  - Copy the daemon-set yaml "omsagent-ds-secrets.yaml" to your host.
+
   - Create your omsagent daemon-set by running ``` kubectl create -f omsagent-ds-secrets.yaml ```
 
 2. Check to see whether the OMS Agent daemon-set is running fine. 
