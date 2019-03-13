@@ -15,7 +15,7 @@
 #
 # For example:
 #
-# curl -sL https://git.io/aks-mdm-onboarding | bash -s "00000000-0000-0000-0000-000000000000" "MyAKSClusterRG" "MyAKSCluster"
+# https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding.sh | bash -s "00000000-0000-0000-0000-000000000000" "MyAKSClusterRG" "MyAKSCluster"
 #
 
 echo "subscriptionId"= ${1}
@@ -44,3 +44,7 @@ az role assignment create --assignee $SP_ID --scope $CLUSTER_RESOURCE_ID --role 
 
 # completed the role assignment
 echo "completed the role assignment"
+
+
+
+

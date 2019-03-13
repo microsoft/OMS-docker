@@ -15,7 +15,7 @@
 #
 #  For example:
 #
-#  curl -sL https://git.io/az-aks-mdm-onboarding | bash -s "00000000-0000-0000-0000-000000000000"
+#  https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s "00000000-0000-0000-0000-000000000000"
 #
 
 echo "subscriptionId"= ${1}
@@ -45,3 +45,7 @@ for cluster in $(echo $CLUSTERS_LIST | jq -c '.[]'); do
 done
 
 echo "completed role assignments for all AKS clusters in subscription: ${1}"
+
+
+
+
