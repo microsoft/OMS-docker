@@ -8,13 +8,14 @@
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 # curl -sL https://git.io/aks-mdm-onboarding | bash -s subscriptionId clusterResourceGroup clusterName 
+#
 #   [Required]  ${1}  subscriptionId    subscriptionId  of the AKS cluster 
 #   [Required]  ${2}  clusterResourceGroup      resource group of the AKS cluster
 #   [Required]  ${3}  clusterName           name of the AKS cluster
 #
 # For example:
 #
-# https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding.sh | bash -s "00000000-0000-0000-0000-000000000000" "MyAKSClusterRG" "MyAKSCluster"
+# https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding.sh | bash -s "00000000-0000-0000-0000-000000000000" "MyAKSClusterRG" "MyAKSCluster"
 #
 
 echo "subscriptionId"= ${1}
@@ -43,6 +44,7 @@ az role assignment create --assignee $SP_ID --scope $CLUSTER_RESOURCE_ID --role 
 
 # completed the role assignment
 echo "completed the role assignment"
+
 
 
 

@@ -15,7 +15,7 @@
 #
 #  For example:
 #
-#  https://github.com/Microsoft/OMS-docker/blob/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s "00000000-0000-0000-0000-000000000000"
+#  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s "00000000-0000-0000-0000-000000000000"
 #
 
 echo "subscriptionId"= ${1}
