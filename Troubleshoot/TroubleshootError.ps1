@@ -29,6 +29,7 @@ Start-Transcript -path .\TroubleshootDump.txt -Force
 $DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
 $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
@@ -204,7 +205,7 @@ catch {
     exit
 }
 
-if ($ResourceDetailsArray -eq $null) {
+if ($null -eq $ResourceDetailsArray) {
     Write-Host("")
     Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
     Write-Host("")
@@ -217,11 +218,23 @@ else {
     foreach ($ResourceDetail in $ResourceDetailsArray) {
         if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
             #gangams: profile can be different casing so convert properties to lowecase and extract it
-            $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json
-            $omsagentconfig = $props.addonprofiles.omsagent.config
+            $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json;
+            Write-Host($props | Format-List | Out-String);
+            Write-Host($props.addonprofiles.omsagent.config);
+
+            if ($null -eq $props.addonprofiles.omsagent.config) {
+                Write-Host("Your cluster isn't onboarded to Azure monitor for containers. Please refer to the following documentation to onboard:") -ForegroundColor Red;
+                Write-Host($OptInLink) -ForegroundColor Red;
+                Write-Host("");
+                Stop-Transcript
+                exit
+            }
+
+            $omsagentconfig = $props.addonprofiles.omsagent.config;
+            
             #gangams - figure out betterway to do this
-            $omsagentconfig = $omsagentconfig.Trim("{", "}")
-            $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1]
+            $omsagentconfig = $omsagentconfig.Trim("{", "}");
+            $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1];
             $AKSClusterResourceId = $ResourceDetail.ResourceId
 			
             Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");  
@@ -231,7 +244,7 @@ else {
     }
 }
 
-if ($LogAnalyticsWorkspaceResourceID -eq $null) {
+if ($null -eq $LogAnalyticsWorkspaceResourceID) {
     Write-Host("")
     Write-Host("Onboarded  log analytics workspace to this cluster either deleted or moved.This requires Opt-out and Opt-in back to Monitoring") -ForegroundColor Red
     Write-Host("Please try to opt out of monitoring and opt-in following the instructions in below links:") -ForegroundColor Red
@@ -366,7 +379,88 @@ else {
         if ($WorkspacePricingTier -eq "Free") {
             Write-Host("Pricing tier of the configured LogAnalytics workspace is Free so you may need to upgrade to pricing tier to non-Free") -ForegroundColor Red
         }
-        else {
+        else {            
+
+            Write-Host("Now checking if the cluster is onboarded to Azure monitor for container custom metrics");
+
+            $MonitoringMetricsPublisherCandidates = Get-AzureRmRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $AKSClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
+
+            if ($notPresent) {
+                Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
+                Write-Host("");
+                Stop-Transcript
+                exit
+            }
+            else {
+                if ($MonitoringMetricsPublisherCandidates) {
+                    Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String);
+
+                    $totalCandidates = $MonitoringMetricsPublisherCandidates.ObjectId.Length;
+
+                    for ($index = 0; $index -lt $totalCandidates; $index++) {
+                        Write-Host($MonitoringMetricsPublisherCandidates.ObjectId[$index]);
+                    }
+                    Write-Host("");
+                    Stop-Transcript
+                    exit
+                }
+                else {
+                    Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal to the Monitoring Metrics Publisher role");
+                    $clusterDetails = Get-AzureRmAks -Id $AKSClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
+                    if ($clusterFetchError) {
+                        Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
+                        Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                        Write-Host("");
+                        Stop-Transcript
+                        exit
+                    }
+                    else {
+                        Write-Host($clusterDetails | Format-List | Out-String);
+                        $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId;
+
+                        if ($null -eq $clusterSPNClientID ) {
+                            Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
+                            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                            Write-Host("");
+                            Stop-Transcript
+                            exit
+                        }
+                        else {
+                            # Convert the client ID to the Object ID
+                            $clusterSPN = Get-AzureRmADServicePrincipal -ServicePrincipalName $clusterSPNClientID;
+                            $clusterSPNObjectID = $clusterSPN.Id;
+                            if ($null -eq $clusterSPNObjectID) {
+                                Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red;
+                                Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                                Write-Host("");
+                                Stop-Transcript
+                                exit
+                            }
+                            else {
+
+                                # Ask to onboard MDM here
+
+                                $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                                if ($assignmentFailed) {
+                                    Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
+                                    Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                                    Write-Host("");
+                                    Stop-Transcript
+                                    exit
+                                } else {
+                                    Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
+                                    Write-Host("");
+                                    Stop-Transcript
+                                    exit
+                                }
+                            }
+                        }
+                    }
+
+                    Write-Host("");
+                }
+            }
+
             Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
         }
     }
