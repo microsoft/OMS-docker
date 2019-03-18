@@ -31,6 +31,16 @@ $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/con
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
+$MdmCustomMetricAvailabilityLocations = (
+    'eastus',
+    'southcentralus',
+    'westcentralus',
+    'westus2',
+    'southeastasia',
+    'northeurope',
+    'westeurope'
+);
+
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
@@ -219,8 +229,6 @@ else {
         if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
             #gangams: profile can be different casing so convert properties to lowecase and extract it
             $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json;
-            Write-Host($props | Format-List | Out-String);
-            Write-Host($props.addonprofiles.omsagent.config);
 
             if ($null -eq $props.addonprofiles.omsagent.config) {
                 Write-Host("Your cluster isn't onboarded to Azure monitor for containers. Please refer to the following documentation to onboard:") -ForegroundColor Red;
@@ -245,89 +253,101 @@ else {
 }
 
 
-Write-Host("Now checking if the cluster is onboarded to Azure monitor for container custom metrics");
+Write-Host("Currently checking if the cluster is onboarded to custom metrics for Azure monitor for containers...");
 
-#Pre requisites - need cluster spn object Id
+#Pre requisite - need cluster spn object Id
 $clusterDetails = Get-AzureRmAks -Id $AKSClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
 if ($clusterFetchError) {
     Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
     Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
     Write-Host("");
-    Stop-Transcript
-    exit
-} else {
+}
+else {
     Write-Host($clusterDetails | Format-List | Out-String);
     $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId;
+    $clusterLocation = $clusterDetails.Location;
 
-    if ($null -eq $clusterSPNClientID ) {
-        Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
-        Write-Host("");
-        Stop-Transcript
-        exit
-    } else {
-        # Convert the client ID to the Object ID
-        $clusterSPN = Get-AzureRmADServicePrincipal -ServicePrincipalName $clusterSPNClientID;
-        $clusterSPNObjectID = $clusterSPN.Id;
-        if ($null -eq $clusterSPNObjectID) {
-            Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red;
+    if ($MdmCustomMetricAvailabilityLocations -contains $clusterLocation) {
+        Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green;
+        if ($null -eq $clusterSPNClientID ) {
+            Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
             Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
             Write-Host("");
-            Stop-Transcript
-            exit
         }
-    }
-}
-
-$MonitoringMetricsPublisherCandidates = Get-AzureRmRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $AKSClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
-
-if ($notPresent) {
-    Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
-    Write-Host("");
-    Stop-Transcript
-    exit
-} else {
-    if ($MonitoringMetricsPublisherCandidates) {
-        Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String);
-
-        $totalCandidates = $MonitoringMetricsPublisherCandidates.ObjectId.Length;
-        $metricsPublisherRoleAlreadyExists = "false";
-
-        for ($index = 0; $index -lt $totalCandidates; $index++) {
-            if ($MonitoringMetricsPublisherCandidates.ObjectId[$index] -eq $clusterSPNObjectID) {
-                $metricsPublisherRoleAlreadyExists = "true";
-            }
-        }
-        if ($metricsPublisherRoleAlreadyExists -eq "true") {
-            Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green;
-        } else {
-            #Ask to onboard MDM here
-            $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
-            if ($assignmentFailed) {
-                Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
+        else {
+            # Convert the client ID to the Object ID
+            $clusterSPN = Get-AzureRmADServicePrincipal -ServicePrincipalName $clusterSPNClientID;
+            $clusterSPNObjectID = $clusterSPN.Id;
+            if ($null -eq $clusterSPNObjectID) {
+                Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red;
                 Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
                 Write-Host("");
-                Stop-Transcript
-                exit
-            } else {
-                Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
+            }
+
+            $MonitoringMetricsPublisherCandidates = Get-AzureRmRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $AKSClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
+
+            if ($notPresent) {
+                Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
+                Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
                 Write-Host("");
+            }
+            else {
+                $TryToOnboardToCustomMetrics = "false";
+                if ($MonitoringMetricsPublisherCandidates) {
+                    Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String);
+
+                    $totalCandidates = $MonitoringMetricsPublisherCandidates.ObjectId.Length;
+                    $metricsPublisherRoleAlreadyExists = "false";
+
+                    for ($index = 0; $index -lt $totalCandidates; $index++) {
+                        if ($MonitoringMetricsPublisherCandidates.ObjectId[$index] -eq $clusterSPNObjectID) {
+                            $metricsPublisherRoleAlreadyExists = "true";
+                        }
+                    }
+
+                    if ($metricsPublisherRoleAlreadyExists -eq "true") {
+                        Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green;
+                    }
+                    else {
+                        $TryToOnboardToCustomMetrics = "true";
+                    }
+                }
+                else {
+                    Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal to the Monitoring Metrics Publisher role");
+                    $TryToOnboardToCustomMetrics = "true";
+                }
+                if ($TryToOnboardToCustomMetrics -eq "true") {
+                    $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation.";
+                    Write-Host($message);
+                    $question = " Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
+
+                    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+                    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
+                    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
+
+                    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0);
+
+                    if ($decision -eq 0) {
+                        $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                        if ($assignmentFailed) {
+                            Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
+                            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                            Write-Host("");
+                            Stop-Transcript
+                            exit
+                        }
+                        else {
+                            Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
+                            Write-Host("");
+                        }
+                    }
+                }
             }
         }
     }
     else {
-        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal to the Monitoring Metrics Publisher role");
-                    # Ask to onboard MDM here
-        $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
-        if ($assignmentFailed) {
-            Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
-            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
-            Write-Host("");
-            Stop-Transcript
-            exit
-        } else {
-            Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
-            Write-Host("");
-        }
+        Write-Host('Cluster is in a location where Custom metrics are not available') -ForegroundColor Red;
+        Write-Host("");
     }
 }
 
