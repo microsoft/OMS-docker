@@ -29,6 +29,7 @@ Start-Transcript -path .\TroubleshootDump.txt -Force
 $DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
 $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$PowershellDownloadLink = "https://docs.microsoft.com/en-us/powershell/scripting/install/installing-windows-powershell"
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 $MdmCustomMetricAvailabilityLocations = (
@@ -45,8 +46,9 @@ $MdmCustomMetricAvailabilityLocations = (
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 $azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
+$azureRmAks = Get-Module -ListAvailable -Name AzureRM.AKS;
 
-if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights)) {
+if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights) -or ($null -eq $azureRmAks)) {
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -61,7 +63,7 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
     
 
     $message = "This script will try to install the latest versions of the following Modules : `
-			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile using the command`
+			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile, AzureRM.AKS using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
     $question = "Do you want to Install the modules and run the script or just run the script?"
@@ -91,13 +93,21 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
                 exit
             }
-	
             try {
                 Write-Host("Installing AzureRM.OperationalInsights...")
                 Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
+                exit
+            }
+            try {
+                Write-Host("Installing AzureRM.AKS...");
+                Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            }
+            catch {
+                Write-Host("Please make sure you're running the latest version of powershell. Download it from here: " + $PowershellDownloadLink);
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.AKS in a new powershell window: eg: 'Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop'") -ForegroundColor Red;
                 exit
             }
         }
@@ -333,8 +343,6 @@ else {
                             Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
                             Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
                             Write-Host("");
-                            Stop-Transcript
-                            exit
                         }
                         else {
                             Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
