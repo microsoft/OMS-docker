@@ -343,7 +343,7 @@ try {
                         $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
                         if ($assignmentFailed) {
                             Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
-                            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                            Write-Host("You can find more information on this here: https://aka.ms/ci-enable-mdm") -ForegroundColor Red;
                             Write-Host("");
                         }
                         else {
