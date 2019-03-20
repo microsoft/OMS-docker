@@ -78,32 +78,40 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
     switch ($decision) {
         0 { 
             try {
-                Write-Host("Installing AzureRM.profile...")
-                Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmProfileModule) {
+                    Write-Host("Installing AzureRM.profile...")
+                    Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
                 exit
             }
             try {
-                Write-Host("Installing AzureRM.Resources...")
-                Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmResourcesModule) {
+                    Write-Host("Installing AzureRM.Resources...")
+                    Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
                 exit
             }
             try {
-                Write-Host("Installing AzureRM.OperationalInsights...")
-                Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmOperationalInsights) {
+                    Write-Host("Installing AzureRM.OperationalInsights...")
+                    Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
                 exit
             }
             try {
-                Write-Host("Installing AzureRM.AKS...");
-                Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmAks) {
+                    Write-Host("Installing AzureRM.AKS...");
+                    Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Please make sure you're running the latest version of powershell. Download it from here: " + $PowershellDownloadLink);
@@ -266,13 +274,8 @@ else {
 Write-Host("Currently checking if the cluster is onboarded to custom metrics for Azure monitor for containers...");
 
 #Pre requisite - need cluster spn object Id
-$clusterDetails = Get-AzureRmAks -Id $AKSClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
-if ($clusterFetchError) {
-    Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
-    Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
-    Write-Host("");
-}
-else {
+try {
+    $clusterDetails = Get-AzureRmAks -Id $AKSClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
     Write-Host($clusterDetails | Format-List | Out-String);
     $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId;
     $clusterLocation = $clusterDetails.Location;
@@ -281,7 +284,6 @@ else {
         Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green;
         if ($null -eq $clusterSPNClientID ) {
             Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
-            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
             Write-Host("");
         }
         else {
@@ -298,7 +300,7 @@ else {
 
             if ($notPresent) {
                 Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
-                Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                Write-Host($notPresent);
                 Write-Host("");
             }
             else {
@@ -357,6 +359,11 @@ else {
         Write-Host('Cluster is in a location where Custom metrics are not available') -ForegroundColor Red;
         Write-Host("");
     }
+}
+catch {
+    Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
+    Write-Host("Please check that you have access to the cluster: " + $AKSClusterName) -ForegroundColor Red;
+    Write-Host("");
 }
 
 if ($null -eq $LogAnalyticsWorkspaceResourceID) {
