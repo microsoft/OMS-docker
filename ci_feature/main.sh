@@ -91,94 +91,61 @@ dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 
+
+#telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
-    #start the fluent-bit(td-agent-bit) process in the background
-    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-    
-    telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
-else
-    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
-    telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
-fi 
+      /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+      telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
 
-dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-
-#telegraf requirements
-if [ -n "$AKS_RESOURCE_ID" ]; then
-      #set nodename from /etc/hostname
-      echo "AKS=true"
-      region=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['location']")
-      echo "region: $region"
-      if grep -Fx "${region,,}" /etc/opt/microsoft/docker-cimprov/custom_metrics_regions.conf
+      #set env vars used by telegraf
+      if [ "$AKS_RESOURCE_ID" = ""]
       then
-            echo "custom metric supported region: $region"
-            nodename=$(cat /hostfs/etc/hostname)
-            echo "nodename: $nodename"
-            echo "replacing nodename in config"
-            sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
-
-            #set nodeip
-            nodeip=$NODE_IP
-            echo "nodeip $nodeip"
-            echo "replacing nodeip in config"
-            sed -i -e "s/placeholder_nodeip/$nodeip/g" $telegrafConfFile
-
-            #set cluster SPN (only for AKS)
-            tid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['tenantId']")
-            cid=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientId']")
-            cse=$(python -c "import sys, json; filePtr = open('/hostfs/etc/kubernetes/azure.json', 'r'); obj = json.load(filePtr); filePtr.close(); print obj['aadClientSecret']")
-            rid=$AKS_RESOURCE_ID
-            
-
-            #sed -i -e "s/placeholder_azure_tenant_id/$tid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-            #sed -i -e "s/placeholder_azure_client_id/$cid/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-            #sed -i -e "s/placeholder_azure_client_secret/$cse/g" /etc/opt/microsoft/docker-cimprov/telegraf.conf
-
-            #there are only three characters that need to be escaped in the replacement string (escapes themselves, forward slash for end of statement and & for replace all
-            sed -i -e "s#placeholder_resource_id#$rid#g" $telegrafConfFile
-            sed -i -e "s/placeholder_region/$region/g" $telegrafConfFile
-            
-            export AZURE_TENANT_ID=$tid
-            echo  "export AZURE_TENANT_ID=$tid" >> ~/.bashrc
-            export AZURE_CLIENT_ID=$cid
-            echo  "export AZURE_CLIENT_ID=$cid" >> ~/.bashrc
-            export AZURE_CLIENT_SECRET=$cse
-            echo  "export AZURE_CLIENT_SECRET=$cse" >> ~/.bashrc
-
-            #echo "export nodename=$nodename" >> ~/.bashrc
-            export HOST_MOUNT_PREFIX=/hostfs
-            echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-            export HOST_PROC=/hostfs/proc
-            echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-            export HOST_SYS=/hostfs/sys
-            echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-            export HOST_ETC=/hostfs/etc
-            echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-            export HOST_VAR=/hostfs/var
-            echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-
-            k8sServiceHost=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT
-            export K8SSERVICEHOST=$k8sServiceHost
-            echo "export K8SSERVICEHOST=$k8sServiceHost" >> ~/.bashrc
-
-            aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
-            export APPLICATIONINSIGHTS_KEY=$aikey
-            echo "export APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
-            
-
-            #export | grep nodename
-            #export | grep HOST_
-            #export | grep AZURE_
-            source ~/.bashrc
-            
-            #start telegraf
-            if [ ! -e "/etc/config/kube.conf" ]; then
-                  /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-            else
-                  /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf-rs.conf &
-            fi
-            dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+            telemetry_aks_resource_id=""
+            telemetry_aks_region=""
+            telemetry_cluster_name=""
+            telemetry_acs_resource_name=$ACS_RESOURCE_NAME
+            telemetry_cluster_type="ACS"
+      else
+            telemetry_aks_resource_id=$AKS_RESOURCE_ID
+            telemetry_aks_region=$AKS_REGION
+            telemetry_cluster_name=$AKS_RESOURCE_ID
+            telemetry_acs_resource_name=""
+            telemetry_cluster_type="AKS"
       fi
+
+      echo "export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id" >> ~/.bashrc
+      echo "export TELEMETRY_AKS_REGION=$telemetry_aks_region" >> ~/.bashrc
+      echo "export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name" >> ~/.bashrc
+      echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bashrc
+      echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
+
+      nodename=$(cat /hostfs/etc/hostname)
+      echo "nodename: $nodename"
+      echo "replacing nodename in telegraf config"
+      sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
+
+      export HOST_MOUNT_PREFIX=/hostfs
+      echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+      export HOST_PROC=/hostfs/proc
+      echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+      export HOST_SYS=/hostfs/sys
+      echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+      export HOST_ETC=/hostfs/etc
+      echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+      export HOST_VAR=/hostfs/var
+      echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
+
+      aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
+      export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
+      echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
+      
+      source ~/.bashrc
+      
+      #start telegraf
+      /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
+      
+      dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
+      dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 fi
 
 
