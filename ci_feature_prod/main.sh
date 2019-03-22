@@ -19,6 +19,12 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
   #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 #fi
 
+# add permissions for omsagent user to access azure.json
+sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
+
+# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Invetigate why 
+sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
+
 DOCKER_SOCKET=/var/run/host/docker.sock
 DOCKER_GROUP=docker
 REGULAR_USER=omsagent
@@ -30,7 +36,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi 
+fi
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case

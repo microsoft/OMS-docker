@@ -79,6 +79,12 @@ data:
       log_level debug
      </source>
 
+     <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
+      type filter_inventory2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+      log_level info
+     </filter>
+
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
       log_level debug
@@ -151,8 +157,8 @@ data:
       max_retry_wait 9m
      </match>
 
-     <match oms.api.ContainerNodeInventory**>
-      type out_oms_api
+     <match oms.containerinsights.ContainerNodeInventory**>
+      type out_oms
       log_level debug
       buffer_chunk_limit 20m
       buffer_type file
@@ -177,6 +183,22 @@ data:
       retry_limit 10
       retry_wait 30s
       max_retry_wait 9m
+     </match>
+
+     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 20m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+      max_retry_wait 9m
+      retry_mdm_post_wait_minutes 60
      </match>
 metadata:
   name: omsagent-rs-config
@@ -207,12 +229,12 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-3"
+    dockerProviderVersion: "3.0.0-5"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod01092019"
+       image: "microsoft/oms:ciprod03122019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -222,6 +244,10 @@ spec:
          cpu: 50m
          memory: 150Mi
        env:
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        #- name: ACS_RESOURCE_NAME
        #  value: ""
@@ -259,6 +285,8 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/kubernetes/host
+          name: azure-json-path
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
@@ -303,6 +331,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: azure-json-path
+      hostPath:
+       path: /etc/kubernetes
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
@@ -325,12 +356,12 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-3"
+    dockerProviderVersion: "3.0.0-5"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod01092019"
+       image: "microsoft/oms:ciprod03122019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -340,6 +371,10 @@ spec:
          cpu: 50m
          memory: 100Mi
        env:
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        #- name: ACS_RESOURCE_NAME
        #  value: ""
@@ -377,6 +412,8 @@ spec:
           name: host-log
         - mountPath: /var/lib/docker/containers 
           name: containerlog-path
+        - mountPath: /etc/kubernetes/host
+          name: azure-json-path
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
           readOnly: true
@@ -418,6 +455,9 @@ spec:
     - name: containerlog-path
       hostPath:
        path: /var/lib/docker/containers
+    - name: azure-json-path
+      hostPath:
+       path: /etc/kubernetes
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
