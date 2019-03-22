@@ -118,10 +118,15 @@ if [ ! -e "/etc/config/kube.conf" ]; then
             telemetry_cluster_type="AKS"
       fi
 
+      export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id
       echo "export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id" >> ~/.bashrc
+      export TELEMETRY_AKS_REGION=$telemetry_aks_region
       echo "export TELEMETRY_AKS_REGION=$telemetry_aks_region" >> ~/.bashrc
+      export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name
       echo "export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name" >> ~/.bashrc
+      export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name
       echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bashrc
+      export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
       echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 
       nodename=$(cat /hostfs/etc/hostname)
