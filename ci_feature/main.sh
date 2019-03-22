@@ -104,7 +104,7 @@ if [ ! -e "/etc/config/kube.conf" ]; then
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
 
       #set env vars used by telegraf
-      if [ "$AKS_RESOURCE_ID" == ""]; then
+      if [ -z $AKS_RESOURCE_ID ]; then
             telemetry_aks_resource_id=""
             telemetry_aks_region=""
             telemetry_cluster_name=""
