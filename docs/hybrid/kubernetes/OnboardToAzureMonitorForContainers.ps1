@@ -27,7 +27,7 @@
        ----------------------------------------------------------------------------------------------------------------------------------------------
      2. Adds the ContainerInsights solution to the specified Log Analytics workspace if the solution doesn't exist     
      
-     3. Optinally, locks Managed Resource Group to prevent accidental deletion.
+     3. Optinally, adds the lock to Managed Resource Group to prevent accidental deletion.
      
      4. TODO - onboard the OMSAgent to the K8s cluster
 
@@ -57,9 +57,9 @@ param(
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
 $azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
-$azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
+$azOperationalInsights = Get-Module -ListAvailable -Name Az.OperationalInsights
 
-if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azureRmOperationalInsights)) {
+if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azOperationalInsights)) {
     
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 
@@ -74,7 +74,7 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
     }
 
     $message = "This script will try to install the latest versions of the following Modules : `
-			    Az.Resources and Az.Accounts  using the command`
+			    Az.Resources, Az.Accounts  and Az.OperationalInsights using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
     $question = "Do you want to Install the modules and run the script or just run the script?"
@@ -111,11 +111,11 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
                 }
             }
 
-            if ($null -eq $azureRmOperationalInsights) {
+            if ($null -eq $azOperationalInsights) {
                 try {
              
                     Write-Host("Installing AzureRM.OperationalInsights...")
-                    Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop                
+                    Install-Module Az.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop                
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
@@ -149,14 +149,16 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
                 }
             } 
             
-            try {
-                Import-Module AzureRM.OperationalInsights
+            if ($null -eq $azAccountModule) {
+                try {
+                    Import-Module Az.OperationalInsights
+                }
+                catch {
+                    Write-Host("Could not import Az.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }         
             }
-            catch {
-                Write-Host("Could not import AzureRM.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
-                Stop-Transcript
-                exit
-            }         
 	
         }
         2 { 
@@ -168,7 +170,7 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
 }
 
 if ([string]::IsNullOrEmpty($LogAnalyticsWorkspaceResourceId)) {   
-    Write-Host("LogAnalyticsWorkspaceResourceId shouldnot be NULL or empty") -ForegroundColor Red
+    Write-Host("LogAnalyticsWorkspaceResourceId should not be NULL or empty") -ForegroundColor Red
     exit
 }
 
@@ -204,9 +206,10 @@ try {
 }
 catch {
     Write-Host("")
-    Write-Host("Could not fetch AzContext..." ) -ForegroundColor Yellow
+    Write-Host("Could not fetch AzContext..." ) -ForegroundColor Red
     Write-Host("")
 }
+
 
 if ($null -eq $account.Account) {
     try {
@@ -221,23 +224,9 @@ if ($null -eq $account.Account) {
         exit
     }
 }
-
-if ($null -eq $account.Account) {
-    try {
-        Write-Host("Please login...")
-        Login-AzureRmAccount -subscriptionid $workspaceSubscriptionId
-    }
-    catch {
-        Write-Host("")
-        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-        Write-Host("")
-        Stop-Transcript
-        exit
-    }
-}
 else {
     if ($account.Subscription.Id -eq $workspaceSubscriptionId) {
-        Write-Host("Subscription: $workspaceSubscriptionId is already selected. Account details: ")
+        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
         $account
     }
     else {
@@ -245,7 +234,7 @@ else {
             Write-Host("Current Subscription:")
             $account
             Write-Host("Changing to subscription: $workspaceSubscriptionId")
-            Select-AzureRmSubscription -SubscriptionId $workspaceSubscriptionId
+            Set-AzContext -SubscriptionId $workspaceSubscriptionId
         }
         catch {
             Write-Host("")
@@ -261,10 +250,7 @@ else {
 Write-Host("Checking specified LogAnalyticsWorkspaceResourceId exists and got access...")
 
 try {
-    Write-Host("Checking workspace name's details...")
-    $WorkspaceInformation = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
-    Write-Host("Successfully fetched workspace name...") -ForegroundColor Green
-    Write-Host("")
+    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
 }
 catch {
     Write-Host("")
@@ -272,7 +258,9 @@ catch {
     Stop-Transcript
     exit
 }
-	
+
+Write-Host("Successfully verified specified LogAnalyticsWorkspaceResourceId valid and exists...") -ForegroundColor Green
+
 $WorkspaceLocation = $WorkspaceInformation.Location
 		
 if ($null -eq $WorkspaceLocation) {
@@ -284,7 +272,7 @@ if ($null -eq $WorkspaceLocation) {
 }
 
 try {
-    $WorkspaceIPDetails = Get-AzureRmOperationalInsightsIntelligencePacks -ResourceGroupName $workspaceResourceGroupName -WorkspaceName $workspaceName -ErrorAction Stop
+    $WorkspaceIPDetails = Get-AzOperationalInsightsIntelligencePacks -ResourceGroupName $workspaceResourceGroupName -WorkspaceName $workspaceName -ErrorAction Stop
     Write-Host("Successfully fetched workspace IP details...") -ForegroundColor Green
     Write-Host("")
 }
@@ -311,65 +299,49 @@ catch {
 $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
 	
 if ($false -eq $isSolutionOnboarded) {
-    #
-    # Check contributor access to WS
-    #
-    $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $workspaceName + "' in subscription '" + $workspaceSubscriptionId + "' IS NOT ONBOARDED with container insights solution.";
-    Write-Host($message)
-    $question = " Do you want to onboard container health to the workspace?"
+    
+    Write-Host("Deploying template to onboard Container Insights solution : Please wait...")            
 
-    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
+    $DeploymentName = "ContainerInsightsSolutionOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    $Parameters = @{}
+    $Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
+    $Parameters.Add("workspaceRegion", $WorkspaceLocation)
+    $Parameters
 
-    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
+    try {
+        New-AzResourceGroupDeployment -Name $DeploymentName `
+            -ResourceGroupName $workspaceResourceGroupName `
+            -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/templates/azuremonitor-containerSolution.json `
+            -TemplateParameterObject $Parameters -ErrorAction Stop`
+        Write-Host("")
+        
+        Write-Host("Successfully added Container Insights Solution") -ForegroundColor Green
 
-    if ($decision -eq 0) {
-        Write-Host("Deploying template to onboard container health : Please wait...")            
-                        
-        $DeploymentName = "ContainerInsightsSolutionOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-        $Parameters = @{}
-        $Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
-        $Parameters.Add("workspaceRegion", $WorkspaceLocation)
-        $Parameters
-
-        try {
-            New-AzureRmResourceGroupDeployment -Name $DeploymentName `
-                -ResourceGroupName $workspaceResourceGroupName `
-                -TemplateFile https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/templates/azuremonitor-containerSolution.json `
-                -TemplateParameterObject $Parameters -ErrorAction Stop`
-            Write-Host("")
-            Write-Host("Template deployment was successful. You will be able to see data flowing into your cluster in 10-15 mins.") -ForegroundColor Green
-            Write-Host("")
-        }
-        catch {
-            Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
-            Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
-        }
+        Write-Host("")
     }
-    else {
-        Write-Host("The container health solution isn't onboarded to your cluster. This required for the monitoring to work. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
-    }
+    catch {
+        Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
+        Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
+    }    
+    
 }
-
-Write-Host("Successfully verified specified LogAnalyticsWorkspaceResourceId exist...")
 
 #
 #   Check if there is already Managed Resource group exists with this name
 #
 
-$managedResourceGroup = "MG_" + $clusterName + "_" + $WorkspaceLocation + "_" + "AzureMonitor"
+$managedResourceGroup = "MG_" + $clusterName + "_" + $WorkspaceLocation + "_" + "AzureMonitorForContainers"
 Write-Host("Creating managed resource group : '" + $managedResourceGroup + "'")
 
-Get-AzureRmResourceGroup -Name $managedResourceGroup -ErrorVariable notPresent -ErrorAction SilentlyContinue
+Get-AzResourceGroup -Name $managedResourceGroup -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
 if ($notPresent) {
 
     Write-Host("creating resource group: '" + $managedResourceGroup + "' + in location : '" + $workspaceResource.Location + "' + ")
-    New-AzureRmResourceGroup -Name $clusterName -Location $workspaceResourceLocation
+    New-AzResourceGroup -Name $managedResourceGroup -Location $WorkspaceLocation
 }
 else { 
-    Write-Host("Manged Resource Group exists already with this name") -ForegroundColor Red
+    Write-Host("Managed Resource Group exists already with this name") -ForegroundColor Red
     Write-Host("")
     Stop-Transcript
     exit
@@ -379,7 +351,7 @@ Write-Host("Successfully created managed resource groups ...") -ForegroundColor 
 
 # attach tags to the managed resource group
 Write-Host("Attaching required tags to managed resource group: '" + $managedResourceGroup + "' ...")
-$rg = Get-AzureRmResourceGroup -ResourceGroupName $managedResourceGroup 
+$rg = Get-AzResourceGroup -ResourceGroupName $managedResourceGroup 
 
 $monitoringTags = @{ }
 
@@ -391,14 +363,17 @@ $monitoringTags.Add("clusterType", $clusterType)
 $monitoringTags.Add("creationsource", "azuremonitorforcontainers")
 $monitoringTags.Add("orchestrator", "kubernetes")
  
-Set-AzureRmResource -Tag $monitoringTags -ResourceId $rg.ResourceId -Force
+Set-AzResource -Tag $monitoringTags -ResourceId $rg.ResourceId -Force
 
 Write-Host("Successfully attached required tags to managed resource group: '" + $managedResourceGroup + "' ...")
 
 # locking the managed resource group to prevent accidental deletion or modifcation
 # locking the managed resource group
 Write-Host("Adding CanNotDelete lock to managed resource group: '" + $managedResourceGroup + "' to avoid accidental deletion...")
-New-AzureResourceLock -LockLevel CanNotDelete -LockName azuremonitorforcontainers -ResourceGroupName $managedResourceGroup -ErrorVariable lockError
+
+$Note = "This RG represents the cluster : '" + $clusterName + "' +  hosted in environment : '" + $hosteEnvironment + "' ";
+
+Set-AzResourceLock -LockLevel CanNotDelete -LockName azuremonitorforcontainers  -LockNotes $Note -ResourceGroupName $managedResourceGroup  -Force  -ErrorVariable lockError 
 
 if ($lockError) {
     Write-Host("Failed add the CanNotDelete lock to resource group: '" + $managedResourceGroup + "' ...")  -ForegroundColor Yellow
@@ -407,9 +382,9 @@ else {
     Write-Host("Successfully locked resource group: '" + $managedResourceGroup + "' to avoid accidental deletion...") 
 }
 
-Write-Host("Successfully onboarded cluster: '" + $clusterName + "' to  azure monitor for containers...") 
+Write-Host("Successfully onboarded cluster: '" + $clusterName + "' to  azure monitor for containers...")  -ForegroundColor Green
 
-Write-Host(" At this point of time, onboarding takes around 24 to 36 hours to apper the cluster in https://aka.ms/azmon-containers-hybrid") 
+Write-Host("At this point of time, onboarding of hyrid clusters takes around 24 to 36 hours. Please navigate to https://aka.ms/azmon-containers-hybrid to see the Monitoring UI for newly onboarded cluster") -ForegroundColor Green
 
 
 
