@@ -1,5 +1,5 @@
 version: 1.0-preview-1
 steps:
-  - build: -t {{.Run.Registry}}/test:{{.Run.Date}}-{{.Run.Commit}} .
+  - build: -t {{.Run.Registry}}/omstest:{{.Run.Date}}-{{.Run.Commit}} .
     workingDirectory: ci_feature
-  - push: ["{{.Run.Registry}}/test:{{.Run.Date}}-{{.Run.ID}}"]
+  - push: ["{{.Run.Registry}}/omstest:{{.Run.Date}}-{{.Run.ID}}"]
