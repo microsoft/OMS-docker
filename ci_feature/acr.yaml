@@ -1,0 +1,5 @@
+version: 1.0-preview-1
+steps:
+  - build: -t containerinsightstest:{{.Run.Date}}-{{.Run.Commit}} .
+    workingDirectory: ci_feature
+  - push: ["containerinsightstest:{{.Run.Date}}-{{.Run.ID}}"]
