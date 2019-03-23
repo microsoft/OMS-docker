@@ -6,7 +6,7 @@
       1. Creates the Managed Resource Group with required metadata in Azure Public Cloud to reprents the Kubernetes cluster hosted outside the Azure Public Cloud.
        Managed Resource Group created in same subscription as Azure Log Analytics Workspace and location of the RG is same as workspace.
 
-       Formate of the Managed Resource Group :  MG_<clusterName>_<workspaceLocation>_AzureMonitor
+       Formate of the Managed Resource Group :  MG_<clusterName>_<workspaceLocation>_AzureMonitorForContainers
 
        Following tags are attached to Managed Resource Group   
                       
