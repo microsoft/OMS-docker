@@ -1,5 +1,5 @@
 version: 1.0-preview-1
 steps:
   - build: -t {{.Run.Registry}}/prod/ciprod:{{.Run.Date}}-{{.Run.ID}} .
-    workingDirectory: ci_feature
+    workingDirectory: ci_feature_prod
   - push: ["{{.Run.Registry}}/prod/ciprod:{{.Run.Date}}-{{.Run.ID}}"]
