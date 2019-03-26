@@ -1,4 +1,4 @@
-## How to use the Kubernetes yaml files for Linux Server
+## How to use the Kubernetes yaml files for Linux Server 
 
 In this folder, we have 3 yaml files. 
 - Default OMS Agent Daemon-set which does not have secrets (omsagent.yaml)
