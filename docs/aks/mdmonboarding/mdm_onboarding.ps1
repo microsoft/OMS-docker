@@ -6,7 +6,7 @@
     .PARAMETER SubscriptionId
         Subscription Id that the AKS cluster is in
 
-    .PARAMETER ResourceGroupName
+    .PARAMETER ClusterResourceGroup
         Resource Group name that the AKS cluster is in
             
 	 .PARAMETER clusterName
@@ -17,7 +17,7 @@ param(
     [Parameter(mandatory = $true)]
     [string]$SubscriptionId,
     [Parameter(mandatory = $true)]
-    [string]$ResourceGroupName,
+    [string]$ClusterResourceGroup,
     [Parameter(mandatory = $true)]
     [string] $clusterName
 )
@@ -191,7 +191,7 @@ else {
 #   Check AKS cluster existance and access check
 #
 Write-Host("Checking aks cluster exists...")
-$cluster = Get-AzAks -ResourceGroupName $ResourceGroupName -Name $clusterName  -ErrorVariable notPresent -ErrorAction SilentlyContinue
+$cluster = Get-AzAks -ResourceGroupName $ClusterResourceGroup -Name $clusterName  -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent) {
     Write-Host("")
     Write-Host("Could not find Aks cluster. Please make sure that specified cluster exists: '" + $clusterName + "'is correct and you have access to the cluster") -ForegroundColor Red
