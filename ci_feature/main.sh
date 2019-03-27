@@ -47,6 +47,16 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
+#resourceid override for loganalytics data
+if [ -z $AKS_RESOURCE_ID ]; then
+      export custom-resourceId=$AKS_RESOURCE_ID
+      echo "export custom-resourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
+      source ~/.bashrc
+      echo "custom-resourceId:$custom-resourceId"
+else
+      echo "not setting custom-resourceId"
+fi
+
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
