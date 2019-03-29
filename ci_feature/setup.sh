@@ -9,14 +9,14 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.8.1-421.universal.x64.sh
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.8.1-422.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
 #wget https://github.com/Microsoft/Docker-Provider/releases/download/hotfix-01292019/docker-cimprov-3.0.0-8.universal.x86_64.sh
 
-wget "https://dockerprovider.blob.core.windows.net/dockercimprovresourcecentric/docker-cimprov-5.0.0-0.universal.x86_64.sh"
+wget "https://dockerprovider.blob.core.windows.net/dockercimprovresourcecentric/docker-cimprov-5.0.0-1.universal.x86_64.sh"
 
 chmod 775 $TMPDIR/*.sh
 

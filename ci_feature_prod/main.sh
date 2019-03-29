@@ -49,12 +49,12 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
 #resourceid override for loganalytics data
 if [ -z $AKS_RESOURCE_ID ]; then
-      echo "not setting custom-resourceId" 
+      echo "not setting customResourceId" 
 else
       export custom-resourceId=$AKS_RESOURCE_ID
-      echo "export custom-resourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
+      echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
       source ~/.bashrc
-      echo "custom-resourceId:$custom-resourceId"
+      echo "customResourceId:$customResourceId"
 fi
 
 #Commenting it for test. We do this in the installer now.
