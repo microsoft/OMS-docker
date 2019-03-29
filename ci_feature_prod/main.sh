@@ -51,7 +51,7 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 if [ -z $AKS_RESOURCE_ID ]; then
       echo "not setting customResourceId" 
 else
-      export custom-resourceId=$AKS_RESOURCE_ID
+      export customResourceId=$AKS_RESOURCE_ID
       echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
       source ~/.bashrc
       echo "customResourceId:$customResourceId"
