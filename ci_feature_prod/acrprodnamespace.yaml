@@ -1,0 +1,5 @@
+version: 1.0-preview-1
+steps:
+  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:{{.Run.Date}}-{{.Run.ID}} .
+    workingDirectory: ci_feature_prod
+  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:{{.Run.Date}}-{{.Run.ID}}"]

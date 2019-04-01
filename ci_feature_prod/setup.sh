@@ -9,7 +9,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.8.1.256/omsagent-1.8.1-256.universal.x64.sh
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.8.1-416.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
@@ -39,7 +39,13 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
+#download and install telegraf
+wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+sudo dpkg -i telegraf_1.10.1-1_amd64.deb
+
+service telegraf stop
+
+/$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
