@@ -1,5 +1,0 @@
-version: 1.0-preview-1
-steps:
-  - build: -t {{.Run.Registry}}/internal/citest:{{.Run.Date}}-{{.Run.ID}} .
-    workingDirectory: ci_feature
-  - push: ["{{.Run.Registry}}/internal/citest:{{.Run.Date}}-{{.Run.ID}}"]
