@@ -14,9 +14,7 @@ wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.8.1-422.un
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-#wget https://github.com/Microsoft/Docker-Provider/releases/download/hotfix-01292019/docker-cimprov-3.0.0-8.universal.x86_64.sh
-
-wget "https://dockerprovider.blob.core.windows.net/dockercimprovresourcecentric/docker-cimprov-5.0.0-1.universal.x86_64.sh"
+https://dockerprovider.blob.core.windows.net/dockercimprovtgf/docker-cimprov-4.0.0-0.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -41,7 +39,13 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-5.0.0-*.x86_64.sh --install
+#download and install telegraf
+wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+sudo dpkg -i telegraf_1.10.1-1_amd64.deb
+
+service telegraf stop
+
+/$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
