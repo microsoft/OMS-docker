@@ -65,7 +65,7 @@ fi
 #chmod 440 /etc/sudoers.d/omsagent
 
 #Disable dsc
-#/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
+/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
 if [ -z $INT ]; then
@@ -87,17 +87,12 @@ else
 #need to be added to omsagent.yaml.
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
-      echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
+        echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
 
 #start cron daemon for logrotate
 service cron start
-#copy config file and start telegraf service
-#cp /etc/opt/microsoft/docker-cimprov/telegraf.conf /etc/telegraf/telegraf.conf
-#service telegraf start
-#get telegraf service status
-#service telegraf status
 
 #check if agent onboarded successfully
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
@@ -108,67 +103,11 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 
 
-#telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
-      /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-      telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
-
-      #set env vars used by telegraf
-      if [ -z $AKS_RESOURCE_ID ]; then
-            telemetry_aks_resource_id=""
-            telemetry_aks_region=""
-            telemetry_cluster_name=""
-            telemetry_acs_resource_name=$ACS_RESOURCE_NAME
-            telemetry_cluster_type="ACS"
-      else
-            telemetry_aks_resource_id=$AKS_RESOURCE_ID
-            telemetry_aks_region=$AKS_REGION
-            telemetry_cluster_name=$AKS_RESOURCE_ID
-            telemetry_acs_resource_name=""
-            telemetry_cluster_type="AKS"
-      fi
-
-      export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id
-      echo "export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id" >> ~/.bashrc
-      export TELEMETRY_AKS_REGION=$telemetry_aks_region
-      echo "export TELEMETRY_AKS_REGION=$telemetry_aks_region" >> ~/.bashrc
-      export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name
-      echo "export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name" >> ~/.bashrc
-      export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name
-      echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bashrc
-      export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
-      echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
-
-      nodename=$(cat /hostfs/etc/hostname)
-      echo "nodename: $nodename"
-      echo "replacing nodename in telegraf config"
-      sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
-
-      export HOST_MOUNT_PREFIX=/hostfs
-      echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-      export HOST_PROC=/hostfs/proc
-      echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-      export HOST_SYS=/hostfs/sys
-      echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-      export HOST_ETC=/hostfs/etc
-      echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-      export HOST_VAR=/hostfs/var
-      echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-
-      aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
-      export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
-      echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
-      
-      source ~/.bashrc
-      
-      #start telegraf
-      /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-      
-      dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-      dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+    #start the fluent-bit(td-agent-bit) process in the background
+    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+    dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
 fi
-
-
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
