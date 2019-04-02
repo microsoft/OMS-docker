@@ -79,7 +79,7 @@ data:
       log_level debug
      </source>
 
-     #cadvisor perf- Windows nodes
+     #cadvisor perf- Windows nodes - build test comment
      <source>
       type wincadvisorperf
       tag oms.api.wincadvisorperf
