@@ -212,8 +212,8 @@ metadata:
 type: Opaque
 data:
   #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
-  WSID: ""
-  KEY: ""
+  WSID: "WSID"
+  KEY: "KEY"
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -249,8 +249,8 @@ spec:
        #- name: AKS_REGION
        #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-       #  value: ""
+       - name: ACS_RESOURCE_NAME
+         value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -258,7 +258,7 @@ spec:
        - name: NODE_IP
          valueFrom:
             fieldRef:
-              fieldPath: status.hostIP
+              fieldPath: status.hostIP  
        securityContext:
          privileged: true
        ports:
@@ -267,18 +267,6 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /hostfs/proc
-          name: host-proc
-          readOnly: true
-        - mountPath: /hostfs/sys
-          name: host-sys
-          readOnly: true
-        - mountPath: /hostfs/etc
-          name: host-etc
-          readOnly: true
-        - mountPath: /hostfs/var
-          name: host-var
-          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -307,18 +295,6 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
-    - name: host-proc
-      hostPath:
-       path: /proc
-    - name: host-sys
-      hostPath:
-       path: /sys
-    - name: host-etc
-      hostPath:
-       path: /etc
-    - name: host-var
-      hostPath:
-       path: /var
     - name: docker-sock 
       hostPath:
        path: /var/run
@@ -376,8 +352,8 @@ spec:
        #- name: AKS_REGION
        #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-       #  value: ""
+       - name: ACS_RESOURCE_NAME
+         value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -394,18 +370,6 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
-        - mountPath: /hostfs/proc
-          name: host-proc
-          readOnly: true
-        - mountPath: /hostfs/sys
-          name: host-sys
-          readOnly: true
-        - mountPath: /hostfs/etc
-          name: host-etc
-          readOnly: true
-        - mountPath: /hostfs/var
-          name: host-var
-          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -431,18 +395,6 @@ spec:
     beta.kubernetes.io/os: linux
     kubernetes.io/role: agent
    volumes:
-    - name: host-proc
-      hostPath:
-       path: /proc
-    - name: host-sys
-      hostPath:
-       path: /sys
-    - name: host-etc
-      hostPath:
-       path: /etc
-    - name: host-var
-      hostPath:
-       path: /var
     - name: docker-sock 
       hostPath:
        path: /var/run
