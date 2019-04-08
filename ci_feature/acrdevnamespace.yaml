@@ -1,5 +1,5 @@
 version: 1.0-preview-1
 steps:
-  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:{{.Run.Date}}-{{.Run.ID}} .
+  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:internaltestwindows-{{.Run.Date}}-{{.Run.ID}} .
     workingDirectory: ci_feature
-  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:{{.Run.Date}}-{{.Run.ID}}"]
+  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:internaltestwindows-{{.Run.Date}}-{{.Run.ID}}"]
