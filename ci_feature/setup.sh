@@ -41,12 +41,6 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-#download and install telegraf
-wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
-sudo dpkg -i telegraf_1.10.1-1_amd64.deb
-
-service telegraf stop
-
 /$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
