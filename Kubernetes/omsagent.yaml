@@ -255,6 +255,18 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
+     
+     <match oms.api.KubeHealth.AgentCollectionTime**>
+      type out_oms_api
+      log_level debug
+      buffer_chunk_limit 10m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_kubehealth*.buffer
+      buffer_queue_limit 10
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+     </match>
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
