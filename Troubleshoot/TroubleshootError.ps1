@@ -29,13 +29,26 @@ Start-Transcript -path .\TroubleshootDump.txt -Force
 $DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
 $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$PowershellDownloadLink = "https://docs.microsoft.com/en-us/powershell/scripting/install/installing-windows-powershell"
+$MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
+
+$MdmCustomMetricAvailabilityLocations = (
+    'eastus',
+    'southcentralus',
+    'westcentralus',
+    'westus2',
+    'southeastasia',
+    'northeurope',
+    'westeurope'
+);
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 $azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
+$azureRmAks = Get-Module -ListAvailable -Name AzureRM.AKS;
 
-if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights)) {
+if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights) -or ($null -eq $azureRmAks)) {
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -50,7 +63,7 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
     
 
     $message = "This script will try to install the latest versions of the following Modules : `
-			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile using the command`
+			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile, AzureRM.AKS using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
     $question = "Do you want to Install the modules and run the script or just run the script?"
@@ -65,28 +78,44 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -o
     switch ($decision) {
         0 { 
             try {
-                Write-Host("Installing AzureRM.profile...")
-                Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmProfileModule) {
+                    Write-Host("Installing AzureRM.profile...")
+                    Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
                 exit
             }
             try {
-                Write-Host("Installing AzureRM.Resources...")
-                Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmResourcesModule) {
+                    Write-Host("Installing AzureRM.Resources...")
+                    Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
                 exit
             }
-	
             try {
-                Write-Host("Installing AzureRM.OperationalInsights...")
-                Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                if ($null -eq $azureRmOperationalInsights) {
+                    Write-Host("Installing AzureRM.OperationalInsights...")
+                    Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
+                exit
+            }
+            try {
+                if ($null -eq $azureRmAks) {
+                    Write-Host("Installing AzureRM.AKS...");
+                    Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+            }
+            catch {
+                Write-Host("Please make sure you're running the latest version of powershell. Download it from here: " + $PowershellDownloadLink);
+                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.AKS in a new powershell window: eg: 'Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop'") -ForegroundColor Red;
                 exit
             }
         }
@@ -204,7 +233,7 @@ catch {
     exit
 }
 
-if ($ResourceDetailsArray -eq $null) {
+if ($null -eq $ResourceDetailsArray) {
     Write-Host("")
     Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
     Write-Host("")
@@ -217,11 +246,21 @@ else {
     foreach ($ResourceDetail in $ResourceDetailsArray) {
         if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
             #gangams: profile can be different casing so convert properties to lowecase and extract it
-            $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json
-            $omsagentconfig = $props.addonprofiles.omsagent.config
+            $props = ($ResourceDetail.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json;
+
+            if ($null -eq $props.addonprofiles.omsagent.config) {
+                Write-Host("Your cluster isn't onboarded to Azure monitor for containers. Please refer to the following documentation to onboard:") -ForegroundColor Red;
+                Write-Host($OptInLink) -ForegroundColor Red;
+                Write-Host("");
+                Stop-Transcript
+                exit
+            }
+
+            $omsagentconfig = $props.addonprofiles.omsagent.config;
+            
             #gangams - figure out betterway to do this
-            $omsagentconfig = $omsagentconfig.Trim("{", "}")
-            $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1]
+            $omsagentconfig = $omsagentconfig.Trim("{", "}");
+            $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1];
             $AKSClusterResourceId = $ResourceDetail.ResourceId
 			
             Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");  
@@ -231,7 +270,103 @@ else {
     }
 }
 
-if ($LogAnalyticsWorkspaceResourceID -eq $null) {
+
+Write-Host("Currently checking if the cluster is onboarded to custom metrics for Azure monitor for containers...");
+
+#Pre requisite - need cluster spn object Id
+try {
+    $clusterDetails = Get-AzureRmAks -Id $AKSClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
+    Write-Host($clusterDetails | Format-List | Out-String);
+    $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId;
+    $clusterLocation = $clusterDetails.Location;
+
+    if ($MdmCustomMetricAvailabilityLocations -contains $clusterLocation) {
+        Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green;
+        if ($null -eq $clusterSPNClientID ) {
+            Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
+            Write-Host("");
+        }
+        else {
+            # Convert the client ID to the Object ID
+            $clusterSPN = Get-AzureRmADServicePrincipal -ServicePrincipalName $clusterSPNClientID;
+            $clusterSPNObjectID = $clusterSPN.Id;
+            if ($null -eq $clusterSPNObjectID) {
+                Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red;
+                Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                Write-Host("");
+            }
+
+            $MonitoringMetricsPublisherCandidates = Get-AzureRmRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $AKSClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
+
+            if ($notPresent) {
+                Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
+                Write-Host($notPresent);
+                Write-Host("");
+            }
+            else {
+                $TryToOnboardToCustomMetrics = "false";
+                if ($MonitoringMetricsPublisherCandidates) {
+                    Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String);
+
+                    $totalCandidates = $MonitoringMetricsPublisherCandidates.ObjectId.Length;
+                    $metricsPublisherRoleAlreadyExists = "false";
+
+                    for ($index = 0; $index -lt $totalCandidates; $index++) {
+                        if ($MonitoringMetricsPublisherCandidates.ObjectId[$index] -eq $clusterSPNObjectID) {
+                            $metricsPublisherRoleAlreadyExists = "true";
+                        }
+                    }
+
+                    if ($metricsPublisherRoleAlreadyExists -eq "true") {
+                        Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green;
+                    }
+                    else {
+                        $TryToOnboardToCustomMetrics = "true";
+                    }
+                }
+                else {
+                    Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal to the Monitoring Metrics Publisher role");
+                    $TryToOnboardToCustomMetrics = "true";
+                }
+                if ($TryToOnboardToCustomMetrics -eq "true") {
+                    $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation.";
+                    Write-Host($message);
+                    $question = " Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
+
+                    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+                    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
+                    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
+
+                    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0);
+
+                    if ($decision -eq 0) {
+                        $AssignRoleAssignment = New-AzureRmRoleAssignment -ObjectId $clusterSPNObjectID -Scope $AKSClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                        if ($assignmentFailed) {
+                            Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
+                            Write-Host("You can find more information on this here: https://aka.ms/ci-enable-mdm") -ForegroundColor Red;
+                            Write-Host("");
+                        }
+                        else {
+                            Write-Host("Successfully onboarded to Azure monitor for containers custom metrics.") -ForegroundColor Green
+                            Write-Host("");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else {
+        Write-Host('Cluster is in a location where Custom metrics are not available') -ForegroundColor Red;
+        Write-Host("");
+    }
+}
+catch {
+    Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
+    Write-Host("Please check that you have access to the cluster: " + $AKSClusterName) -ForegroundColor Red;
+    Write-Host("");
+}
+
+if ($null -eq $LogAnalyticsWorkspaceResourceID) {
     Write-Host("")
     Write-Host("Onboarded  log analytics workspace to this cluster either deleted or moved.This requires Opt-out and Opt-in back to Monitoring") -ForegroundColor Red
     Write-Host("Please try to opt out of monitoring and opt-in following the instructions in below links:") -ForegroundColor Red

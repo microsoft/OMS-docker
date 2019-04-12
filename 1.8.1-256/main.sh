@@ -1,10 +1,6 @@
 #!/bin/bash
 
-if [ -e "/etc/config/kube.conf" ]; then
-    cat /etc/config/kube.conf > /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-else
-    sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-fi
+sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
 sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/syslog.conf
 sed -i -e 's/^exit 101$/exit 0/g' /usr/sbin/policy-rc.d
 
@@ -13,49 +9,27 @@ sed -i.bak "s/record\[\"Host\"\] = hostname/record\[\"Host\"\] = OMS::Common.get
 
 #using /var/opt/microsoft/docker-cimprov/state instead of /var/opt/microsoft/omsagent/state since the latter gets deleted during onboarding
 mkdir -p /var/opt/microsoft/docker-cimprov/state
-
-#if [ ! -e "/etc/config/kube.conf" ]; then
-  # add permissions for omsagent user to access docker.sock
-  #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
-#fi
-
-# add permissions for omsagent user to access azure.json
-sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
-
-# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Invetigate why 
-sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
-
-DOCKER_SOCKET=/var/run/host/docker.sock
-DOCKER_GROUP=docker
-REGULAR_USER=omsagent
-
-if [ -S ${DOCKER_SOCKET} ]; then
-    echo "getting gid for docker.sock"
-    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
-    echo "creating a local docker group"
-    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
-    echo "adding omsagent user to local docker group"
-    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi 
-
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	curl --unix-socket /var/run/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	#dump kubernetes version to a file for telemetry purpose
+	curl -v --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST/api/v1/nodes | python -c "import sys, json; data=json.load(sys.stdin); kubeletversion = data['items'][0]['status']['nodeInfo']['kubeletVersion']; print kubeletversion;" > /var/opt/microsoft/docker-cimprov/state/kubeletversion
+	cat /var/opt/microsoft/docker-cimprov/state/kubeletversion
 else
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	curl --unix-socket /var/run/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
-#resourceid override for loganalytics data
-if [ -z $AKS_RESOURCE_ID ]; then
-      echo "not setting customResourceId" 
-else
-      export customResourceId=$AKS_RESOURCE_ID
-      echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
-      source ~/.bashrc
-      echo "customResourceId:$customResourceId"
-fi
+#dump OMS agent Image tag for telemetry purpose
+#step-1 dump the oms agent container imageID
+ curl --unix-socket /var/run/docker.sock "http:/containers/json" | python -c "import sys, json; data=json.load(sys.stdin); omscontainer=[item for item in data if item['Image'].startswith('microsoft/oms@sha256:')]; print omscontainer[0]['ImageID'];" > /var/opt/microsoft/docker-cimprov/state/omscontainerimageid
+ cat /var/opt/microsoft/docker-cimprov/state/omscontainerimageid 
+#step-2 dump the oms agent repo tags from imageID to be picked up by telemetry
+ if [ -e "/var/opt/microsoft/docker-cimprov/state/omscontainerimageid" ]; then
+    curl --unix-socket /var/run/docker.sock "http:/images/json" | python -c "import sys, json; data=json.load(sys.stdin); imageID = open('/var/opt/microsoft/docker-cimprov/state/omscontainerimageid', 'r').read().encode('ascii','ignore'); omscontainer=[item for item in data if imageID.rstrip('\n') in item['Id']]; print omscontainer[0]['RepoTags'];" > /var/opt/microsoft/docker-cimprov/state/omscontainertag
+    cat /var/opt/microsoft/docker-cimprov/state/omscontainertag
+ fi
 
 #Commenting it for test. We do this in the installer now.
 #Setup sudo permission for containerlogtailfilereader
@@ -67,6 +41,10 @@ fi
 #Disable dsc
 /opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
+
+#service omid start
+/opt/omi/bin/omiserver -s
+/opt/omi/bin/omiserver --configfile=/etc/opt/omi/conf/omiserver.conf -d
 
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
@@ -83,13 +61,15 @@ if [ -z $INT ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
   fi
 else
-#To onboard to INT workspace - workspace-id (WSID-not base64 encoded), workspace-key (KEY-not base64 encoded), Domain(DOMAIN-int2.microsoftatlanta-int.com)
-#need to be added to omsagent.yaml.
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
-        echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
 fi
+
+#Hack for omi upgrade
+ 
+ /opt/omi/bin/omicli id
+ /opt/omi/bin/omicli ei root/cimv2 Container_HostInventory
 
 #start cron daemon for logrotate
 service cron start
@@ -98,18 +78,13 @@ service cron start
 /opt/microsoft/omsagent/bin/omsadmin.sh -l
 
 #get omsagent and docker-provider versions
+dpkg -l | grep omi | awk '{print $2 " " $3}'
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 
-
-if [ ! -e "/etc/config/kube.conf" ]; then
-    #start the fluent-bit(td-agent-bit) process in the background
-    /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-    dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}' 
-fi
-
 shutdown() {
+	/opt/omi/bin/service_control stop
 	/opt/microsoft/omsagent/bin/service_control stop
 	}
 

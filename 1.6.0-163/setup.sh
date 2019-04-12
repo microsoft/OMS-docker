@@ -9,16 +9,11 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.8.1-416.universal.x64.sh
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.6.0-163/omsagent-1.6.0-163.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
-
-#wget https://github.com/Microsoft/Docker-Provider/releases/download/hotfix-01292019/docker-cimprov-3.0.0-8.universal.x86_64.sh
-
-#wget "https://github.com/Microsoft/Docker-Provider/releases/download/3.0.0-4(2)/docker-cimprov-3.0.0-4.universal.x86_64.sh"
-wget https://diliprstorage.blob.core.windows.net/mycontainer/docker-cimprov-3.0.0-5.universal.x86_64.sh
-
+wget https://github.com/Microsoft/Docker-Provider/releases/download/1.0.0-35/docker-cimprov-1.0.0-35.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
@@ -35,20 +30,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
-
-#Assign permissions to omsagent user to access docker.sock
-sudo apt-get install acl
-
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
-
-#download and install fluent-bit(td-agent-bit)
-wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
-sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
-sudo apt-get update
-sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.1 libsqlite3-dev=3.11.0-1ubuntu1.1 -y
+/$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
 
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
