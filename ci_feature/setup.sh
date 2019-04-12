@@ -16,7 +16,7 @@ touch /etc/.omi_disable_service_control
 
 #wget https://github.com/Microsoft/Docker-Provider/releases/download/hotfix-01292019/docker-cimprov-3.0.0-8.universal.x86_64.sh
 
-wget "https://rashmi.blob.core.windows.net/rashmi-update-fb-buff/docker-cimprov-1.0.0-35.universal.x86_64.sh"
+wget "https://rashmi.blob.core.windows.net/update-fb-buff-1/docker-cimprov-1.0.0-35.universal.x86_64.sh"
 
 chmod 775 $TMPDIR/*.sh
 
