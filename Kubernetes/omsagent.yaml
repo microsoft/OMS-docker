@@ -242,7 +242,7 @@ spec:
          memory: 300Mi
         requests:
          cpu: 50m
-         memory: 150Mi
+         memory: 225Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
@@ -267,6 +267,9 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs
+          name: host-root
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -295,6 +298,9 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
+    - name: host-root
+      hostPath:
+       path: /
     - name: docker-sock 
       hostPath:
        path: /var/run
