@@ -9,7 +9,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.10.0-0.universal.x64.sh
+wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.10.0-1.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
@@ -28,10 +28,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
 #$TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
 
-#Install omsagent and omsconfig
+#Install omsagent
 
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
+#/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
 
 #Assign permissions to omsagent user to access docker.sock
 sudo apt-get install acl
