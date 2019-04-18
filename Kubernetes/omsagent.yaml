@@ -275,8 +275,8 @@ spec:
    labels:
     dsName: "omsagent-ds"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "4.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -333,7 +333,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -384,8 +384,8 @@ spec:
    labels:
     rsName: "omsagent-rs"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "4.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
