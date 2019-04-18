@@ -294,10 +294,10 @@ try {
     $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
 
     
-    #New-AzResourceGroupDeployment -Name $DeploymentName `
-    #    -ResourceGroupName $workspaceResourceGroupName `
-    #    -TemplateUri  C:\health\customOnboarding.json `
-    #    -TemplateParameterObject $Parameters -ErrorAction Stop`
+    New-AzResourceGroupDeployment -Name $DeploymentName `
+        -ResourceGroupName $workspaceResourceGroupName `
+        -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/customOnboarding.json `
+        -TemplateParameterObject $Parameters -ErrorAction Stop`
     Write-Host("")
         
     Write-Host("Successfully custom onboarded cluster to Monitoring") -ForegroundColor Green
@@ -311,6 +311,14 @@ catch {
 
 
 $desktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
+
+if (-not (test-path $desktopPath\deployments) ) {
+    Write-Host "$($desktopPath)\deployments doesn't exist, creating it"
+    mkdir $desktopPath\deployments|out-null
+} else {
+    Write-Host "$($desktopPath)\deployments exists, no need to create it"
+}
+
 
 try {
 
@@ -329,10 +337,10 @@ try {
     
     $key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
     $wsid = $WorkspaceInformation.CustomerId
-    Write-Host "key $($key) wsid $($wsid)"
     $base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
     $base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
-    (Get-Content -Path "C:\Users\dilipr\Desktop\deployments\omsagent-template.yaml" -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey  | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
+    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml
+    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey  | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl delete -f $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl apply -f $desktopPath\deployments\omsagent-$clusterName.yaml
 }

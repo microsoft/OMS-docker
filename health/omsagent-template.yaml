@@ -254,7 +254,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04172019-1"
+       image: "microsoft/oms:healthpreview04172019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -357,7 +357,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04172019-1"
+       image: "microsoft/oms:healthpreview04172019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
