@@ -4,6 +4,8 @@
         Name of the cluster configured on the OMSAgent
     .PARAMETER loganalyticsWorkspaceResourceId
         Azure ResourceId of the log analytics workspace Id
+    .PARAMETER aksResourceLocation
+        Resource location of the AKS cluster resource
 #>
 param(
     [Parameter(mandatory = $true)]
@@ -18,6 +20,7 @@ param(
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
 $azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
 $azOperationalInsights = Get-Module -ListAvailable -Name Az.OperationalInsights
+$azAks = Get-Module -ListAvailable -Name Az.Aks
 
 if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azOperationalInsights)) {
     
@@ -34,7 +37,7 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
     }
 
     $message = "This script will try to install the latest versions of the following Modules : `
-			    Az.Resources, Az.Accounts  and Az.OperationalInsights using the command`
+			    Az.Resources, Az.Accounts, Az.Aks and Az.OperationalInsights using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
     $question = "Do you want to Install the modules and run the script or just run the script?"
@@ -81,7 +84,19 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
                     Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
                     exit
                 }        
-            } 
+            }
+            if ($null -eq $azAks) {
+                try {
+             
+                    Write-Host("Installing Az.Aks...")
+                    Install-Module Az.Aks -Repository PSGallery -Force -AllowClobber -ErrorAction Stop                
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
+                    exit
+                }        
+            }
+
            
         }
         1 {
@@ -333,7 +348,7 @@ try {
     $clusterName = $aksResourceDetails[8].Trim()
     $clusterResourceGroupName = $aksResourceDetails[4].Trim()
 
-    az aks get-credentials -n $clusterName -g $clusterResourceGroupName
+    Import-AzAksCredential -Id $aksResourceId -Force
     
     $key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
     $wsid = $WorkspaceInformation.CustomerId
