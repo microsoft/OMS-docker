@@ -363,10 +363,11 @@ try {
     (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey  | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl delete -f $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl apply -f $desktopPath\deployments\omsagent-$clusterName.yaml
+    Write-Host "Upgraded omsagent"
 }
 catch {
     Write-Host ("Agent deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
 }
 
-Write-Host "Upgraded omsagent"
+
 
