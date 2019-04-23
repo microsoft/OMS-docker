@@ -1,9 +1,9 @@
 ## Overview
-The following documentation outlines the script required to upgrade an existing cluster onboarded to a Log Analytics workspace, to an agent running the workflow that generates health monitor signals into the same workspace. 
+The following documentation outlines the steps required to upgrade an existing cluster onboarded to a Log Analytics workspace running the omsagent, to an agent running the workflow that generates health monitor signals into the same workspace.
 
 * Do a custom off-boarding of the cluster from Monitoring 
 * Installing the new agent that generates health monitor signals
-* Please refer to the powershell script 
+* Please refer to the powershell [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/onboardHealth/health/HealthAgentOnboarding.ps1) for another way to perform the same steps on your cluster
 
 ## Prerequisites
 * Cluster that has already been onboarded to Monitoring using a Log Analytics workspace
