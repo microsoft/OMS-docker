@@ -1,5 +1,10 @@
 <# 
     .DESCRIPTION 
+    	Upgrades the Kubernetes cluster that has been onboarded to monitoring to a version of the agent 
+	that generates health monitor signals
+	1. Installs necessary powershell modules
+	2. Onboards Container Insights solution to the supplied LA workspace if not already onboarded
+	3. Updates the cluster metadata to link the LA workspace ID to the cluster
     .PARAMETER aksResourceId
         Name of the cluster configured on the OMSAgent
     .PARAMETER loganalyticsWorkspaceResourceId
