@@ -90,7 +90,7 @@ The VALUE_AKS_RESOURCE_ID (resource id of the cluster) can be found in the Prope
 * Select-AzSubscription -SubscriptionName <yourSubscriptionName>  
 * New-AzResourceGroupDeployment -Name opt-out -ResourceGroupName <ResourceGroupName> -TemplateFile .\HealthPreviewOnboarding.json -TemplateParameterFile .\HealthPreviewOnboardingParams.json  
 
-7. Copy the following content into a yaml file:
+7. Copy the following content into a yaml file: (You will use this file to do a kubectl apply on the kubernetes cluster) 
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -589,6 +589,5 @@ spec:
 * VALUE_KEY -- base 64 encoded Primary Shared Key of the workspace. To get this, go to the portal -- log analytics workspace -- Advanced Settings. REMEMBER: PASTE the base 64 encoded value of the key (which is base 64 encoded to start with)
 
 10. Set the context in your local machine to the AKS cluster
-az aks get-credentials -n <clusterName> -g <resourceGroupName>
-
+Import-AzAksCredential -ResourceGroupName <clusterResourceGroupName> -Name <clusterName>
 11. kubectl apply -f omsagent.yaml
