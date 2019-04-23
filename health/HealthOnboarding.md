@@ -595,3 +595,6 @@ spec:
 10. Set the context in your local machine to the AKS cluster
 Import-AzAksCredential -ResourceGroupName <clusterResourceGroupName> -Name <clusterName>
 11. kubectl apply -f omsagent.yaml
+
+Once the above steps are done, it can take upto 20 minutes for the health related data to show up which can be accessed using the following link:
+<https://aka.ms/clusterhealthpreview>
