@@ -291,11 +291,10 @@ if ($false -eq $isSolutionOnboarded) {
             -ResourceGroupName $workspaceResourceGroupName `
             -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/templates/azuremonitor-containerSolution.json `
             -TemplateParameterObject $Parameters -ErrorAction Stop`
-        Write-Host("")
+        
         
         Write-Host("Successfully added Container Insights Solution") -ForegroundColor Green
 
-        Write-Host("")
     }
     catch {
         Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
@@ -304,7 +303,7 @@ if ($false -eq $isSolutionOnboarded) {
     
 }
 
-Write-Host("Successfully added Container Insights Solution to workspace" + $workspaceName)  -ForegroundColor Green
+Write-Host("Successfully added Container Insights Solution to workspace " + $workspaceName)  -ForegroundColor Green
 
 try {
     $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
@@ -313,11 +312,13 @@ try {
     $Parameters.Add("aksResourceLocation", $aksResourceLocation)
     $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
 
-    
+    Write-Host " Onboarding cluster to provided LA workspace " 
+
     New-AzResourceGroupDeployment -Name $DeploymentName `
         -ResourceGroupName $workspaceResourceGroupName `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/customOnboarding.json `
         -TemplateParameterObject $Parameters -ErrorAction Stop`
+    
     Write-Host("")
         
     Write-Host("Successfully custom onboarded cluster to Monitoring") -ForegroundColor Green
