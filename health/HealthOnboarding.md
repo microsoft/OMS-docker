@@ -394,12 +394,12 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    dockerProviderVersion: "3.0.0-4"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04152019"
+       image: "microsoft/oms:healthpreview04262019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -407,15 +407,15 @@ spec:
          memory: 300Mi
         requests:
          cpu: 50m
-         memory: 150Mi
+         memory: 225Mi
        env:
        - name: AKS_RESOURCE_ID
          value: "VALUE_AKS_RESOURCE_ID"
        - name: AKS_REGION
          value: "VALUE_AKS_REGION"
-       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-         #value: "my_acs_cluster_name"
+      #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+      #  - name: ACS_RESOURCE_NAME
+      #    value: "aks-engine-health"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -432,6 +432,9 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs
+          name: host-root
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -448,7 +451,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -460,6 +463,9 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
+    - name: host-root
+      hostPath:
+       path: /
     - name: docker-sock 
       hostPath:
        path: /var/run
@@ -497,12 +503,12 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    dockerProviderVersion: "3.0.0-4"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04152019"
+       image: "microsoft/oms:healthpreview04262019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -518,9 +524,9 @@ spec:
          value: "VALUE_AKS_REGION"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
       #  - name: ACS_RESOURCE_NAME
-      #    value: "my_acs_cluster_name"
-      #  - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-      #    value: "true"
+      #    value: "aks-engine-health"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP

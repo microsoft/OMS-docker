@@ -86,10 +86,26 @@ data:
       run_interval 60s
       log_level debug
      </source>
+     
+     #cadvisor perf- Windows nodes
+     <source>
+      type wincadvisorperf
+      tag oms.api.wincadvisorperf
+      run_interval 60s
+      log_level debug
+     </source>
 
      <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
       type filter_inventory2mdm
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+      log_level info
+     </filter>
+
+     # custom_metrics_mdm filter plugin for perf data from windows nodes
+     <filter mdm.cadvisorperf**>
+      type filter_cadvisor2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
      </filter>
 
@@ -208,6 +224,37 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
+
+     <match oms.api.wincadvisorperf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 20m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+      max_retry_wait 9m
+     </match>
+
+     <match mdm.cadvisorperf**>
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 20m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 30s
+      max_retry_wait 9m
+      retry_mdm_post_wait_minutes 60
+     </match>
      
      <match oms.api.KubeHealth.AgentCollectionTime**>
       type out_oms_api
@@ -254,7 +301,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04172019"
+       image: "microsoft/oms:healthpreview04262019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -262,7 +309,7 @@ spec:
          memory: 300Mi
         requests:
          cpu: 50m
-         memory: 150Mi
+         memory: 225Mi
        env:
        - name: AKS_RESOURCE_ID
          value: "VALUE_AKS_RESOURCE_ID"
@@ -287,6 +334,9 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs
+          name: host-root
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -303,7 +353,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep main | grep -v "grep"
+         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -315,6 +365,9 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
+    - name: host-root
+      hostPath:
+       path: /
     - name: docker-sock 
       hostPath:
        path: /var/run
@@ -357,7 +410,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04172019"
+       image: "microsoft/oms:healthpreview04262019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -408,7 +461,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep main | grep -v "grep"
+         - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
