@@ -295,13 +295,13 @@ spec:
    labels:
     dsName: "omsagent-ds"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "4.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod03122019"
+       image: "microsoft/oms:ciprod04232019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -309,7 +309,7 @@ spec:
          memory: 300Mi
         requests:
          cpu: 50m
-         memory: 150Mi
+         memory: 225Mi
        env:
        - name: AKS_RESOURCE_ID
          value: "VALUE_AKS_RESOURCE_ID_VALUE"
@@ -334,6 +334,9 @@ spec:
        - containerPort: 25224
          protocol: UDP
        volumeMounts:
+        - mountPath: /hostfs
+          name: host-root
+          readOnly: true
         - mountPath: /var/run/host
           name: docker-sock
         - mountPath: /var/log 
@@ -350,7 +353,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -362,6 +365,9 @@ spec:
       value: "true"
       effect: "NoSchedule"     
    volumes:
+    - name: host-root
+      hostPath:
+       path: /
     - name: docker-sock 
       hostPath:
        path: /var/run
@@ -398,13 +404,13 @@ spec:
    labels:
     rsName: "omsagent-rs"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-5"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "4.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod03122019"
+       image: "microsoft/oms:ciprod04232019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:

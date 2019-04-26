@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/Microsoft/Docker-Provider/releases/download/healthpreview04152019/docker-cimprov-3.0.0-6.universal.x86_64.sh
+wget https://github.com/Microsoft/Docker-Provider/releases/download/healthpreview04262019/docker-cimprov-4.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -28,10 +28,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
 #$TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
 
-#Install omsagent and omsconfig
+#Install omsagent
 
 /usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
+#/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
 
 #Assign permissions to omsagent user to access docker.sock
 sudo apt-get install acl
@@ -39,7 +39,13 @@ sudo apt-get install acl
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
-/$TMPDIR/docker-cimprov-3.0.0-*.x86_64.sh --install
+#download and install telegraf
+wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+sudo dpkg -i telegraf_1.10.1-1_amd64.deb
+
+service telegraf stop
+
+/$TMPDIR/docker-cimprov-4.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
