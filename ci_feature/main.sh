@@ -38,6 +38,9 @@ if [ -S ${DOCKER_SOCKET} ]; then
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
 fi 
 
+#Run inotify as a daemon to track changes to the mounted configmap 
+inotifywait /etc/config/ --daemon --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
+
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
