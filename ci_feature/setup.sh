@@ -36,6 +36,10 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Assign permissions to omsagent user to access docker.sock
 sudo apt-get install acl
 
+#download inotify tools for watching configmap changes
+sudo apt-get update
+sudo apt-get install inotify-tools
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
