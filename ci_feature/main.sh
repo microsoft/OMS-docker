@@ -113,6 +113,15 @@ else
     echo "export LOG_TAIL_PATH=$LOG_PATH" >> ~/.bashrc
 fi
 
+#set the right environment variable for kube-system log collection based on config map settings
+if [ -z $COLLECT_KUBE_SYSTEM_LOGS ]; then
+    export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true
+    echo "DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true" >> ~/.bashrc
+else
+    export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false
+    echo "DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false" >> ~/.bashrc
+fi
+
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
