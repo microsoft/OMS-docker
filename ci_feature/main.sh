@@ -107,8 +107,10 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 #set the right environment variable for container log path based on config map settings
 if [ -z $LOG_PATH ]; then
     export LOG_TAIL_PATH=/var/log/containers/*.log
+    echo "export LOG_TAIL_PATH=/var/log/containers/*.log" >> ~/.bashrc
 else
     export LOG_TAIL_PATH=$LOG_PATH
+    echo "export LOG_TAIL_PATH=$LOG_PATH" >> ~/.bashrc
 fi
 
 #telegraf & fluentbit requirements
