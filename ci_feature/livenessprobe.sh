@@ -2,11 +2,11 @@
 
 #test to exit non zero value
 (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
-if [ -s "inotifyoutput.txt" ]
+if [ $? -eq 0 ] && [ ! -s "inotifyoutput.txt" ]
 then
-        exit 1
-        # do something as file has data
+  # inotifyoutput file is empty and the grep commands for omsagent and td-agent-bit succeeded
+  exit 0
 else
-        exit 0
-        # do something as file is empty
+  # inotifyoutput file has data(config map was applied) and the grep commands for omsagent or td-agent-bit failed
+  exit 1
 fi
