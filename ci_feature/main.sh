@@ -104,7 +104,12 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
-
+#set the right environment variable for container log path based on config map settings
+if [ -z $LOG_PATH ]; then
+    export LOG_TAIL_PATH=/var/log/containers/*.log
+else
+    export LOG_TAIL_PATH=$LOG_PATH
+fi
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
