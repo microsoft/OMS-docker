@@ -114,7 +114,7 @@ else
 fi
 
 #set the right environment variable for kube-system log collection based on config map settings
-if [ -z $COLLECT_KUBE_SYSTEM_LOGS ]; then
+if [ -z $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ]; then
     export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true
     echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true" >> ~/.bashrc
 else
