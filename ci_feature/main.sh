@@ -132,6 +132,9 @@ elif [ $DISABLE_STD_OUT_LOG_COLLECTION ]; then
 elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
     export LOG_COLLECTION_REGEX_PATTERN="/(^((?!\"stream\":\"stderr\").)*$)/igm"
     echo "export LOG_COLLECTION_REGEX_PATTERN=\"/(^((?!\"stream\":\"stderr\").)*$)/igm\"" >> ~/.bashrc
+else
+    export LOG_COLLECTION_REGEX_PATTERN="/./igm"
+    echo "export LOG_COLLECTION_REGEX_PATTERN=\"/./igm\"" >> ~/.bashrc
 fi
 
 #telegraf & fluentbit requirements
