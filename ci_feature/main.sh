@@ -134,15 +134,15 @@ if [ $DISABLE_STD_OUT_LOG_COLLECTION ] && [ $DISABLE_STD_OUT_LOG_COLLECTION = tr
 elif [ $DISABLE_STD_OUT_LOG_COLLECTION ] && [ $DISABLE_STD_OUT_LOG_COLLECTION = true]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stdout"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"" >> ~/.bashrc
-    echo "stdout log collection disabled  using config map"
+    echo "stdout log collection disabled using config map"
 elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]&& [ $DISABLE_STD_ERR_LOG_COLLECTION = true ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stderr"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"" >> ~/.bashrc
-    echo "stderr log collection disabled  using config map"
+    echo "stderr log collection disabled using config map"
 fi
 
 if [ $AZMON_CLUSTER_COLLECT_ENV ] && [ $AZMON_CLUSTER_COLLECT_ENV = false]; then
-    echo "cluster level environment variable collection disabled  using config map"
+    echo "cluster level environment variable collection disabled using config map"
 fi
 
 #telegraf & fluentbit requirements
