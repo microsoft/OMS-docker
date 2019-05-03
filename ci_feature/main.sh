@@ -141,6 +141,10 @@ elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
     echo "stderr log collection disabled  using config map"
 fi
 
+if [ $AZMON_CLUSTER_COLLECT_ENV == false]; then
+    echo "cluster level environment variable collection disabled  using config map"
+fi
+
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
