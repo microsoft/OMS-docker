@@ -141,7 +141,7 @@ elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]&& [ $DISABLE_STD_ERR_LOG_COLLECTION = t
     echo "stderr log collection disabled using config map"
 fi
 
-if [ $AZMON_CLUSTER_COLLECT_ENV ] && [ $AZMON_CLUSTER_COLLECT_ENV = false]; then
+if [ $DISABLE_AZMON_CLUSTER_ENV_COLLECTION ] && [ $DISABLE_AZMON_CLUSTER_ENV_COLLECTION = true]; then
     echo "cluster level environment variable collection disabled using config map"
 fi
 
