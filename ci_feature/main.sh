@@ -105,7 +105,7 @@ dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 #set the right environment variable for container log path based on config map settings
-if [ -z $AZMON_DISABLE_LOG_COLLECTION ] || [ $AZMON_DISABLE_LOG_COLLECTION = false]; then
+if [ -z $AZMON_DISABLE_LOG_COLLECTION ] || [ $AZMON_DISABLE_LOG_COLLECTION = false ]; then
     export LOG_TAIL_PATH=/var/log/containers/*.log
     echo "export LOG_TAIL_PATH=/var/log/containers/*.log" >> ~/.bashrc
     echo "Log collection enabled"
@@ -127,11 +127,11 @@ else
 fi
 
 #set the right environment variable for stdout stderr log collection regex pattern based on config map settings
-if [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION = true ]; then
+if [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true ] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION = true ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stderr|stdout"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"" >> ~/.bashrc
     echo "stdout and stderr log collection disabled using config map"
-elif [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true]; then
+elif [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stdout"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"" >> ~/.bashrc
     echo "stdout log collection disabled using config map"
@@ -141,7 +141,7 @@ elif [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION ]&& [ $AZMON_DISABLE_STD_ERR_LOG_CO
     echo "stderr log collection disabled using config map"
 fi
 
-if [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION ] && [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION = true]; then
+if [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION ] && [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION = true ]; then
     echo "cluster level environment variable collection disabled using config map"
 fi
 
