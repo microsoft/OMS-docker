@@ -116,7 +116,7 @@ else
 fi
 
 #set the right environment variable for kube-system log collection based on config map settings
-if [ -z $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ] || [ $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ]; then
+if [ -z $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ] || [ "$DISABLE_KUBE_SYSTEM_LOG_COLLECTION" = true ]; then
     export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true
     echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true" >> ~/.bashrc
     echo "Kube-System log collection disabled"
@@ -141,7 +141,7 @@ elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
     echo "stderr log collection disabled  using config map"
 fi
 
-if [ $AZMON_CLUSTER_COLLECT_ENV == false]; then
+if [ "$AZMON_CLUSTER_COLLECT_ENV" = false]; then
     echo "cluster level environment variable collection disabled  using config map"
 fi
 
