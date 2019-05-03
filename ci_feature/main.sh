@@ -108,30 +108,37 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 if [ -z $LOG_PATH ]; then
     export LOG_TAIL_PATH=/var/log/containers/*.log
     echo "export LOG_TAIL_PATH=/var/log/containers/*.log" >> ~/.bashrc
+    echo "Log collection enabled"
 else
     export LOG_TAIL_PATH=$LOG_PATH
     echo "export LOG_TAIL_PATH=$LOG_PATH" >> ~/.bashrc
+    echo "Log collection disabled using config map"
 fi
 
 #set the right environment variable for kube-system log collection based on config map settings
-if [ -z $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ]; then
+if [ -z $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ] || [ $DISABLE_KUBE_SYSTEM_LOG_COLLECTION ]; then
     export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true
     echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true" >> ~/.bashrc
+    echo "Kube-System log collection disabled"
 else
     export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false
     echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false" >> ~/.bashrc
+    echo "Kube-System log collection enabled using config map"
 fi
 
 #set the right environment variable for stdout stderr log collection regex pattern based on config map settings
 if [ $DISABLE_STD_OUT_LOG_COLLECTION ] && [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stderr|stdout"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"" >> ~/.bashrc
+    echo "stdout and stderr log collection disabled using config map"
 elif [ $DISABLE_STD_OUT_LOG_COLLECTION ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stdout"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"" >> ~/.bashrc
+    echo "stdout log collection disabled  using config map"
 elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
     export LOG_EXCLUSION_REGEX_PATTERN="stderr"
     echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"" >> ~/.bashrc
+    echo "stderr log collection disabled  using config map"
 fi
 
 #telegraf & fluentbit requirements
