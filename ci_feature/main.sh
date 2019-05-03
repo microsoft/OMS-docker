@@ -124,14 +124,14 @@ fi
 
 #set the right environment variable for stdout stderr log collection regex pattern based on config map settings
 if [ $DISABLE_STD_OUT_LOG_COLLECTION ] && [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
-    export LOG_EXCLUSION_REGEX_PATTERN=stderr|stdout
-    echo "export LOG_EXCLUSION_REGEX_PATTERN=stderr|stdout" >> ~/.bashrc
+    export LOG_EXCLUSION_REGEX_PATTERN="stderr|stdout"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"" >> ~/.bashrc
 elif [ $DISABLE_STD_OUT_LOG_COLLECTION ]; then
-    export LOG_EXCLUSION_REGEX_PATTERN=stdout
-    echo "export LOG_EXCLUSION_REGEX_PATTERN=stdout" >> ~/.bashrc
+    export LOG_EXCLUSION_REGEX_PATTERN="stdout"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"" >> ~/.bashrc
 elif [ $DISABLE_STD_ERR_LOG_COLLECTION ]; then
-    export LOG_EXCLUSION_REGEX_PATTERN=stderr
-    echo "export LOG_EXCLUSION_REGEX_PATTERN=stderr" >> ~/.bashrc
+    export LOG_EXCLUSION_REGEX_PATTERN="stderr"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"" >> ~/.bashrc
 fi
 
 #telegraf & fluentbit requirements
