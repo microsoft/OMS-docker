@@ -39,7 +39,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
 fi 
 
 #Run inotify as a daemon to track changes to the mounted configmap 
-inotifywait /etc/config/ --daemon --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
+inotifywait /etc/config/ --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
@@ -104,7 +104,46 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+#set the right environment variable for container log path based on config map settings
+if [ -z $AZMON_DISABLE_LOG_COLLECTION ] || [ $AZMON_DISABLE_LOG_COLLECTION = false ]; then
+    export LOG_TAIL_PATH=/var/log/containers/*.log
+    echo "export LOG_TAIL_PATH=/var/log/containers/*.log" >> ~/.bashrc
+    echo "Log collection enabled"
+else
+    export LOG_TAIL_PATH=/opt/nolog*.log
+    echo "export LOG_TAIL_PATH=/opt/nolog*.log" >> ~/.bashrc
+    echo "Log collection disabled using config map"
+fi
 
+#set the right environment variable for kube-system log collection based on config map settings
+if [ -z $AZMON_DISABLE_KUBE_SYSTEM_LOG_COLLECTION ] || [ $AZMON_DISABLE_KUBE_SYSTEM_LOG_COLLECTION = true ]; then
+    export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true
+    echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=true" >> ~/.bashrc
+    echo "Kube-System log collection disabled"
+else
+    export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false
+    echo "export DISABLE_KUBE_SYSTEM_LOG_COLLECTION=false" >> ~/.bashrc
+    echo "Kube-System log collection enabled using config map"
+fi
+
+#set the right environment variable for stdout stderr log collection regex pattern based on config map settings
+if [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true ] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION = true ]; then
+    export LOG_EXCLUSION_REGEX_PATTERN="stderr|stdout"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"" >> ~/.bashrc
+    echo "stdout and stderr log collection disabled using config map"
+elif [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION ] && [ $AZMON_DISABLE_STD_OUT_LOG_COLLECTION = true ]; then
+    export LOG_EXCLUSION_REGEX_PATTERN="stdout"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"" >> ~/.bashrc
+    echo "stdout log collection disabled using config map"
+elif [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION ]&& [ $AZMON_DISABLE_STD_ERR_LOG_COLLECTION = true ]; then
+    export LOG_EXCLUSION_REGEX_PATTERN="stderr"
+    echo "export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"" >> ~/.bashrc
+    echo "stderr log collection disabled using config map"
+fi
+
+if [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION ] && [ $AZMON_DISABLE_CLUSTER_ENV_COLLECTION = true ]; then
+    echo "cluster level environment variable collection disabled using config map"
+fi
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
