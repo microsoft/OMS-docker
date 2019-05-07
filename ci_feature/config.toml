@@ -1,0 +1,16 @@
+# Config map for omsagent settings
+# Version - 0.0
+
+title = "Config Map for omsagent"
+
+[log_collection_settings]
+	[log_collection_settings.stdout]
+		enabled = "true"
+		exclude_namespaces = []
+
+	[log_collection_settings.stdout]
+		enabled = "true"
+		exclude_namespaces = []
+
+	[log_collection_settings.env_var]
+		enabled = "true"
