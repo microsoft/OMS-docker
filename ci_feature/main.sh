@@ -104,6 +104,7 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+#Parse the configmap to set the right environment variables
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
 cat config_env_var.txt | while read line; do
