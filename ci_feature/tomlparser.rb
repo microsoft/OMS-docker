@@ -11,6 +11,34 @@ require_relative "tomlrb"
 @stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
 
+configMapSettings = parseConfigMap
+if !configMapSettings.nil?
+  populateSettingValuesFromConfigMap(configMapSettings)
+end
+
+# Write the settings to file, so that they can be set as environment variables
+file = File.open("config_env_var.txt", "w")
+
+if !file.nil?
+  # This will be used in td-agent-bit.conf file to filter out logs
+  if (!@collectStdoutLogs && !@collectStderrLogs)
+    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"\n")
+  elsif !@collectStdoutLogs
+    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"\n")
+  elsif !@collectStderrLogs
+    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
+  end
+  #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
+  file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
+  #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
+  file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
+  file.write("export AZMON_CLUSTER_COLLECT_ENV_VAR=#{@collectClusterEnvVariables}\n")
+  # Close file after writing all environment variables
+  file.close
+else
+  puts "Exception while opening file for writing config environment variables"
+end
+
 # Use parser to parse the configmap toml file to a ruby structure
 def parseConfigMap
   begin
@@ -18,6 +46,7 @@ def parseConfigMap
     if (File.file?(@configMapMountPath))
       puts "config map for settings mounted, parsing values"
       parsedConfig = Tomlrb.load_file(@configMapMountPath, symbolize_keys: true)
+      puts "Successfully parsed mounted config map"
       return parsedConfig
     else
       puts "config map for settings not mounted, using defaults"
@@ -76,32 +105,4 @@ def populateSettingValuesFromConfigMap(parsedConfig)
       puts "Exception while reading config settings for cluster level environment variable collection - #{errorStr}, using defaults"
     end
   end
-end
-
-configMapSettings = parseConfigMap
-if !configMapSettings.nil?
-  populateSettingValuesFromConfigMap(configMapSettings)
-end
-
-# Write the settings to file, so that they can be set as environment variables
-file = File.open("config_env_var.txt", "w")
-
-if !file.nil?
-  # This will be used in td-agent-bit.conf file to filter out logs
-  if (!@collectStdoutLogs && !@collectStderrLogs)
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"\n")
-  elsif !@collectStdoutLogs
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"\n")
-  elsif !@collectStderrLogs
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
-  end
-  #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
-  file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
-  #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
-  file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
-  file.write("export AZMON_CLUSTER_COLLECT_ENV_VAR=#{@collectClusterEnvVariables}\n")
-  # Close file after writing all environment variables
-  file.close
-else
-  puts "Exception while opening file for writing config environment variables"
 end
