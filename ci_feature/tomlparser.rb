@@ -6,9 +6,9 @@ require_relative "tomlrb"
 @configMapMountPath = "/etc/config/settings/omsagent-settings"
 # Setting default values which will be used in case they are not set in the configmap or if configmap doesnt exist
 @collectStdoutLogs = true
-@stdoutExcludeNamespaces = ["kube-system"]
+@stdoutExcludeNamespaces = []
 @collectStdErrLogs = true
-@stderrExcludeNamespaces = ["kube-system"]
+@stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
 
 # Use parser to parse the configmap toml file to a ruby structure
@@ -38,8 +38,12 @@ def populateSettingValuesFromConfigMap(parsedConfig)
         @collectStdoutLogs = parsedconfig[:log_collection_settings][:stdout][:enabled]
         #file.write("export AZMON_COLLECT_STDOUT_LOGS=#{collectStdoutLogs}\n")
         puts "Using config map setting for stdout log collection"
-        if parsedconfig[:log_collection_settings][:stdout][:enabled] && !parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces].nil?
-          @stdoutExcludeNamespaces = parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]
+        stdoutNamespaces = parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]
+        if parsedconfig[:log_collection_settings][:stdout][:enabled] && !stdoutNamespaces.nil?
+          stdoutNamespaces.each do |namespace|
+            @stdoutExcludeNamespaces.push(namespace)
+          end
+          #@stdoutExcludeNamespaces = parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]
           #file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]}\n")
           puts "Using config map setting for stdout log collection to exclude namespace"
         end
@@ -53,8 +57,12 @@ def populateSettingValuesFromConfigMap(parsedConfig)
       if !parsedconfig[:log_collection_settings][:stderr].nil? && !parsedconfig[:log_collection_settings][:stderr][:enabled].nil?
         @collectStdErrLogs = parsedconfig[:log_collection_settings][:stderr][:enabled]
         puts "Using config map setting for stderr log collection"
-        if parsedconfig[:log_collection_settings][:stderr][:enabled] && !parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces].nil?
-          @stderrExcludeNamespaces = parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces]
+        stderrNamespaces = parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces]
+        if parsedconfig[:log_collection_settings][:stderr][:enabled] && !stderrNamespaces.nil?
+          stdoutNamespaces.each do |namespace|
+            @stderrExcludeNamespaces.push(namespace)
+          end
+          #   @stderrExcludeNamespaces = parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces]
           puts "Using config map setting for stderr log collection to exclude namespace"
         end
       end
@@ -84,7 +92,6 @@ end
 file = File.open("config_env_var.txt", "w")
 
 if !file.nil?
-  file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
   # This will be used in td-agent-bit.conf file to filter out logs
   if (!@collectStdoutLogs && !@collectStderrLogs)
     file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"\n")
@@ -93,9 +100,9 @@ if !file.nil?
   else
     file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
   end
-
+  #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
   file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
-  file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
+  #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
   file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
   file.write("export AZMON_CLUSTER_COLLECT_ENV_VAR=#{@collectClusterEnvVariables}\n")
 else
