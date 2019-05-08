@@ -60,7 +60,7 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
-#Commenting it for test. We do this in the installer now.
+#Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
 #echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
