@@ -66,6 +66,7 @@ fi
 cat config_env_var.txt | while read line; do
     $line
     echo $line >> ~/.bashrc
+    source ~/.bashrc
 done
 
 #Commenting it for test. We do this in the installer now
