@@ -39,7 +39,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
 fi 
 
 #Run inotify as a daemon to track changes to the mounted configmap 
-inotifywait /etc/config/ --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
+inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
@@ -104,6 +104,7 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
+#Parse the configmap to set the right environment variables
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
 cat config_env_var.txt | while read line; do

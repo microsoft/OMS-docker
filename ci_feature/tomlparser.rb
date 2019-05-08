@@ -28,24 +28,29 @@ if !file.nil?
       if !parsedconfig[:log_collection_settings][:stdout].nil? && !parsedconfig[:log_collection_settings][:stdout][:enabled].nil?
         collectStdoutLogs = parsedconfig[:log_collection_settings][:stdout][:enabled]
         #file.write("export AZMON_COLLECT_STDOUT_LOGS=#{collectStdoutLogs}\n")
+		puts "Using config map setting for stdout log collection"
         if parsedconfig[:log_collection_settings][:stdout][:enabled] && !parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces].nil?
           stdoutExcludeNamespaces = parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]
           #file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{parsedconfig[:log_collection_settings][:stdout][:exclude_namespaces]}\n")
+		  puts "Using config map setting for stdout log collection to exclude namespace"
         end
       end
       #Get stderr log config settings
       if !parsedconfig[:log_collection_settings][:stderr].nil? && !parsedconfig[:log_collection_settings][:stderr][:enabled].nil?
         collectStdErrLogs = parsedconfig[:log_collection_settings][:stderr][:enabled]
         #file.write("export AZMON_COLLECT_STDERR_LOGS=#{parsedconfig[:log_collection_settings][:stderr][:enabled]}\n")
+		 puts "Using config map setting for stderr log collection"
         if parsedconfig[:log_collection_settings][:stderr][:enabled] && !parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces].nil?
           stderrExcludeNamespaces = parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces]
           #file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{parsedconfig[:log_collection_settings][:stderr][:exclude_namespaces]}\n")
+		   puts "Using config map setting for stderr log collection to exclude namespace"
         end
       end
       #Get environment variables log config settings
       if !parsedconfig[:log_collection_settings][:env_var].nil? && !parsedconfig[:log_collection_settings][:env_var][:enabled].nil?
         collectClusterEnvVariables = parsedconfig[:log_collection_settings][:env_var][:enabled]
-        #file.write("export AZMON_COLLECT_ENV_VAR=#{parsedconfig[:log_collection_settings][:env_var][:enabled]}\n")
+        #file.write("export AZMON_CLUSTER_COLLECT_ENV_VAR=#{parsedconfig[:log_collection_settings][:env_var][:enabled]}\n")
+		puts "Using config map setting for cluster level environment variable collection"
       end
       # Close file after writing all environment variables
       file.close
