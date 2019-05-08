@@ -38,7 +38,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
 fi 
 
-#Run inotify as a daemon to track changes to the mounted configmap 
+#Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
