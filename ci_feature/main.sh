@@ -60,6 +60,14 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
+#Parse the configmap to set the right environment variables
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
+
+cat config_env_var.txt | while read line; do
+    $line
+    echo $line >> ~/.bashrc
+done
+
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
@@ -103,14 +111,6 @@ service cron start
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
-
-#Parse the configmap to set the right environment variables
-/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
-
-cat config_env_var.txt | while read line; do
-    $line
-    echo $line >> ~/.bashrc
-done
 
 #set the right environment variable for container log path based on config map settings
 #if [ -z $AZMON_DISABLE_LOG_COLLECTION ] || [ $AZMON_DISABLE_LOG_COLLECTION = false ]; then
