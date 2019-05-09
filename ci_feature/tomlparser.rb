@@ -39,7 +39,6 @@ def populateSettingValuesFromConfigMap(parsedConfig)
     begin
       if !parsedConfig[:log_collection_settings][:stdout].nil? && !parsedConfig[:log_collection_settings][:stdout][:enabled].nil?
         @collectStdoutLogs = parsedConfig[:log_collection_settings][:stdout][:enabled]
-        puts "@collectStdoutLogs: #{@collectStdoutLogs}"
         puts "Using config map setting for stdout log collection"
         stdoutNamespaces = parsedConfig[:log_collection_settings][:stdout][:exclude_namespaces]
         if @collectStdoutLogs && !stdoutNamespaces.nil?
@@ -103,7 +102,7 @@ if !file.nil?
   end
   #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
   file.write("export AZMON_LOG_TAIL_PATH=#{@logTailPath}\n")
-  file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=#{@logExclusionRegexPattern}\n")
+  file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"#{@logExclusionRegexPattern}\"\n")
   file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
   #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
   file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
