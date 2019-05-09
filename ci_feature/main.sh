@@ -61,7 +61,7 @@ else
 fi
 
 #Parse the configmap to set the right environment variables
-#/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
 export AZMON_LOG_TAIL_PATH="/var/log/containers/*.log"
 export AZMON_LOG_EXCLUSION_REGEX_PATTERN=stdout
@@ -69,11 +69,11 @@ export AZMON_LOG_EXCLUSION_REGEX_PATTERN=stdout
 echo "export AZMON_LOG_TAIL_PATH=\"/var/log/containers/*.log\"" > ~/.bashrc
 echo "export AZMON_LOG_EXCLUSION_REGEX_PATTERN=stdout" > ~/.bashrc
 
-#cat config_env_var.txt | while read line; do
-#    echo $line
-#    echo $line >> ~/.bashrc
-#done
-#source ~/.bashrc
+cat config_env_var | while read line; do
+    #echo $line
+    echo $line >> ~/.bashrc
+done
+source config_env_var
 
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
