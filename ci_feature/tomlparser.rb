@@ -7,7 +7,7 @@ require_relative "tomlrb"
 # Setting default values which will be used in case they are not set in the configmap or if configmap doesnt exist
 @collectStdoutLogs = true
 @stdoutExcludeNamespaces = []
-@collectStdErrLogs = true
+@collectStderrLogs = true
 @stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
 @logTailPath = "/var/log/containers/*.log"
@@ -55,10 +55,10 @@ def populateSettingValuesFromConfigMap(parsedConfig)
     #Get stderr log config settings
     begin
       if !parsedConfig[:log_collection_settings][:stderr].nil? && !parsedConfig[:log_collection_settings][:stderr][:enabled].nil?
-        @collectStdErrLogs = parsedConfig[:log_collection_settings][:stderr][:enabled]
+        @collectStderrLogs = parsedConfig[:log_collection_settings][:stderr][:enabled]
         puts "Using config map setting for stderr log collection"
         stderrNamespaces = parsedConfig[:log_collection_settings][:stderr][:exclude_namespaces]
-        if @collectStdErrLogs && !stderrNamespaces.nil?
+        if @collectStderrLogs && !stderrNamespaces.nil?
           stdoutNamespaces.each do |namespace|
             @stderrExcludeNamespaces.push(namespace)
           end
