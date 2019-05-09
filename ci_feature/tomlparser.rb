@@ -6,9 +6,9 @@ require_relative "tomlrb"
 @configMapMountPath = "/etc/config/settings/omsagent-settings"
 # Setting default values which will be used in case they are not set in the configmap or if configmap doesnt exist
 @collectStdoutLogs = true
-@stdoutExcludeNamespaces = ["kube-system"]
+@stdoutExcludeNamespaces = "kube-system"
 @collectStderrLogs = true
-@stderrExcludeNamespaces = ["kube-system"]
+@stderrExcludeNamespaces = "kube-system"
 @collectClusterEnvVariables = true
 @logTailPath = "/var/log/containers/*.log"
 @logExclusionRegexPattern = "(^((?!stdout|stderr).)*$)"
@@ -49,7 +49,7 @@ def populateSettingValuesFromConfigMap(parsedConfig)
               #Empty the array to use the values from configmap
               @stdoutExcludeNamespaces.clear
               stdoutNamespaces.each do |namespace|
-                @stdoutExcludeNamespaces.push(namespace)
+                @stdoutExcludeNamespaces.concat("," + namespace)
               end
               puts "Using config map setting for stdout log collection to exclude namespace"
             end
@@ -73,7 +73,7 @@ def populateSettingValuesFromConfigMap(parsedConfig)
               #Empty the array to use the values from configmap
               @stderrExcludeNamespaces.clear
               stderrNamespaces.each do |namespace|
-                @stderrExcludeNamespaces.push(namespace)
+                @stderrExcludeNamespaces.concat("," + namespace)
               end
               puts "Using config map setting for stderr log collection to exclude namespace"
             end
