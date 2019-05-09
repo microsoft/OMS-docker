@@ -48,7 +48,12 @@ def populateSettingValuesFromConfigMap(parsedConfig)
               #Empty the array to use the values from configmap
               @stdoutExcludeNamespaces.clear
               stdoutNamespaces.each do |namespace|
-                @stdoutExcludeNamespaces.concat("," + namespace)
+                if namespace.empty?
+                  # To not append , for the first element
+                  @stdoutExcludeNamespaces.concat(namespace)
+                else
+                  @stdoutExcludeNamespaces.concat("," + namespace)
+                end
               end
               puts "Using config map setting for stdout log collection to exclude namespace"
             end
@@ -72,7 +77,12 @@ def populateSettingValuesFromConfigMap(parsedConfig)
               #Empty the array to use the values from configmap
               @stderrExcludeNamespaces.clear
               stderrNamespaces.each do |namespace|
-                @stderrExcludeNamespaces.concat("," + namespace)
+                if namespace.empty?
+                  # To not append , for the first element
+                  @stderrExcludeNamespaces.concat(namespace)
+                else
+                  @stderrExcludeNamespaces.concat("," + namespace)
+                end
               end
               puts "Using config map setting for stderr log collection to exclude namespace"
             end
