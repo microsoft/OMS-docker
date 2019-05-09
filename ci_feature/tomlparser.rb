@@ -11,6 +11,7 @@ require_relative "tomlrb"
 @stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
 @logTailPath = "/var/log/containers/*.log"
+@logExclusionRegexPattern = ""
 
 # Use parser to parse the configmap toml file to a ruby structure
 def parseConfigMap
@@ -95,12 +96,13 @@ if !file.nil?
     #Stop log tailing completely
     @logTailPath = "/opt/nolog*.log"
   elsif !@collectStdoutLogs
-    file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"\n")
+    @logExclusionRegexPattern = "stdout"
   elsif !@collectStderrLogs
-    file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
+    @logExclusionRegexPattern = "stderr"
   end
   #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
   file.write("export AZMON_LOG_TAIL_PATH=#{@logTailPath}\n")
+  file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=#{@logExclusionRegexPattern}\n")
   file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
   #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
   file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
