@@ -6,9 +6,9 @@ require_relative "tomlrb"
 @configMapMountPath = "/etc/config/settings/omsagent-settings"
 # Setting default values which will be used in case they are not set in the configmap or if configmap doesnt exist
 @collectStdoutLogs = true
-@stdoutExcludeNamespaces = []
+@stdoutExcludeNamespaces = ["kube-system"]
 @collectStderrLogs = true
-@stderrExcludeNamespaces = []
+@stderrExcludeNamespaces = ["kube-system"]
 @collectClusterEnvVariables = true
 @logTailPath = "/var/log/containers/*.log"
 @logExclusionRegexPattern = "(^((?!stdout|stderr).)*$)"
@@ -41,11 +41,19 @@ def populateSettingValuesFromConfigMap(parsedConfig)
         @collectStdoutLogs = parsedConfig[:log_collection_settings][:stdout][:enabled]
         puts "Using config map setting for stdout log collection"
         stdoutNamespaces = parsedConfig[:log_collection_settings][:stdout][:exclude_namespaces]
+
         if @collectStdoutLogs && !stdoutNamespaces.nil?
-          stdoutNamespaces.each do |namespace|
-            @stdoutExcludeNamespaces.push(namespace)
+          if stdoutNamespaces.kind_of?(Array)
+            # Checking only for the first element to be string because toml enforces the arrays to contain elements of same type
+            if stdoutNamespaces.length > 0 && stdoutNamespaces[0].kind_of?(String)
+              #Empty the array to use the values from configmap
+              @stdoutExcludeNamespaces.clear
+              stdoutNamespaces.each do |namespace|
+                @stdoutExcludeNamespaces.push(namespace)
+              end
+              puts "Using config map setting for stdout log collection to exclude namespace"
+            end
           end
-          puts "Using config map setting for stdout log collection to exclude namespace"
         end
       end
     rescue => errorStr
@@ -59,10 +67,17 @@ def populateSettingValuesFromConfigMap(parsedConfig)
         puts "Using config map setting for stderr log collection"
         stderrNamespaces = parsedConfig[:log_collection_settings][:stderr][:exclude_namespaces]
         if @collectStderrLogs && !stderrNamespaces.nil?
-          stdoutNamespaces.each do |namespace|
-            @stderrExcludeNamespaces.push(namespace)
+          if stderrNamespaces.kind_of?(Array)
+            # Checking only for the first element to be string because toml enforces the arrays to contain elements of same type
+            if stderrNamespaces.length > 0 && stderrNamespaces[0].kind_of?(String)
+              #Empty the array to use the values from configmap
+              @stderrExcludeNamespaces.clear
+              stderrNamespaces.each do |namespace|
+                @stderrExcludeNamespaces.push(namespace)
+              end
+              puts "Using config map setting for stderr log collection to exclude namespace"
+            end
           end
-          puts "Using config map setting for stderr log collection to exclude namespace"
         end
       end
     rescue => errorStr
@@ -100,11 +115,11 @@ if !file.nil?
   elsif !@collectStderrLogs
     @logExclusionRegexPattern = "stderr"
   end
-  #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
+  file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
   file.write("export AZMON_LOG_TAIL_PATH=#{@logTailPath}\n")
   file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"#{@logExclusionRegexPattern}\"\n")
   file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
-  #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
+  file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
   file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
   file.write("export AZMON_CLUSTER_COLLECT_ENV_VAR=#{@collectClusterEnvVariables}\n")
   # Close file after writing all environment variables
