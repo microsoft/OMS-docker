@@ -38,9 +38,10 @@ def populateSettingValuesFromConfigMap(parsedConfig)
     begin
       if !parsedConfig[:log_collection_settings][:stdout].nil? && !parsedConfig[:log_collection_settings][:stdout][:enabled].nil?
         @collectStdoutLogs = parsedConfig[:log_collection_settings][:stdout][:enabled]
+        puts "@collectStdoutLogs: #{@collectStdoutLogs}"
         puts "Using config map setting for stdout log collection"
         stdoutNamespaces = parsedConfig[:log_collection_settings][:stdout][:exclude_namespaces]
-        if parsedConfig[:log_collection_settings][:stdout][:enabled] && !stdoutNamespaces.nil?
+        if @collectStdoutLogs && !stdoutNamespaces.nil?
           stdoutNamespaces.each do |namespace|
             @stdoutExcludeNamespaces.push(namespace)
           end
@@ -57,7 +58,7 @@ def populateSettingValuesFromConfigMap(parsedConfig)
         @collectStdErrLogs = parsedConfig[:log_collection_settings][:stderr][:enabled]
         puts "Using config map setting for stderr log collection"
         stderrNamespaces = parsedConfig[:log_collection_settings][:stderr][:exclude_namespaces]
-        if parsedConfig[:log_collection_settings][:stderr][:enabled] && !stderrNamespaces.nil?
+        if @collectStdErrLogs && !stderrNamespaces.nil?
           stdoutNamespaces.each do |namespace|
             @stderrExcludeNamespaces.push(namespace)
           end
