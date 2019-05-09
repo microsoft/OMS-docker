@@ -10,6 +10,7 @@ require_relative "tomlrb"
 @collectStdErrLogs = true
 @stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
+@logTailPath = "/var/log/containers/*.log"
 
 # Use parser to parse the configmap toml file to a ruby structure
 def parseConfigMap
@@ -90,13 +91,15 @@ file = File.open("config_env_var.txt", "w")
 if !file.nil?
   # This will be used in td-agent-bit.conf file to filter out logs
   if (!@collectStdoutLogs && !@collectStderrLogs)
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr|stdout\"\n")
+    #Stop log tailing completely
+    @logTailPath = "/opt/nolog*.log"
   elsif !@collectStdoutLogs
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"\n")
+    file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"stdout\"\n")
   elsif !@collectStderrLogs
-    file.write("export LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
+    file.write("export AZMON_LOG_EXCLUSION_REGEX_PATTERN=\"stderr\"\n")
   end
   #   file.write("export AZMON_COLLECT_STDOUT_LOGS=#{@collectStdoutLogs}\n")
+  file.write("export AZMON_LOG_TAIL_PATH=#{@logTailPath}\n")
   file.write("export AZMON_STDOUT_EXCLUDED_NAMESPACES=#{@stdoutExcludeNamespaces}\n")
   #   file.write("export AZMON_COLLECT_STDERR_LOGS=#{@collectStderrLogs}\n")
   file.write("export AZMON_STDERR_EXCLUDED_NAMESPACES=#{@stderrExcludeNamespaces}\n")
