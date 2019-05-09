@@ -11,7 +11,7 @@ require_relative "tomlrb"
 @stderrExcludeNamespaces = []
 @collectClusterEnvVariables = true
 @logTailPath = "/var/log/containers/*.log"
-@logExclusionRegexPattern = ""
+@logExclusionRegexPattern = "(^((?!stdout|stderr).)*$)"
 
 # Use parser to parse the configmap toml file to a ruby structure
 def parseConfigMap
@@ -95,6 +95,7 @@ if !file.nil?
   if (!@collectStdoutLogs && !@collectStderrLogs)
     #Stop log tailing completely
     @logTailPath = "/opt/nolog*.log"
+    @logExclusionRegexPattern = "stdout|stderr"
   elsif !@collectStdoutLogs
     @logExclusionRegexPattern = "stdout"
   elsif !@collectStderrLogs
