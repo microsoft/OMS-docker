@@ -64,7 +64,7 @@ fi
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
 cat config_env_var.txt | while read line; do
-    $line
+    echo $line
     echo $line >> ~/.bashrc
 done
 source ~/.bashrc
