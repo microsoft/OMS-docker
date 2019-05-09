@@ -1,5 +1,4 @@
 #!/usr/local/bin/ruby
-# frozen_string_literal: true
 
 require_relative "tomlrb"
 
