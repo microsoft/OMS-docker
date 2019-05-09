@@ -67,6 +67,7 @@ cat config_env_var.txt | while read line; do
     $line
     echo $line >> ~/.bashrc
 done
+source ~/.bashrc
 
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
