@@ -19,10 +19,10 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
   #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 #fi
 
-# add permissions for omsagent user to access azure.json
+# add permissions for omsagent user to access azure.json.
 sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
 
-# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Invetigate why 
+# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Investigate why 
 sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
 
 DOCKER_SOCKET=/var/run/host/docker.sock
@@ -38,7 +38,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
 fi 
 
-#Run inotify as a daemon to track changes to the mounted configmap 
+#Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
@@ -50,7 +50,7 @@ fi
 #check if file was written successfully
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
-#resourceid override for loganalytics data
+#resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
       echo "not setting customResourceId" 
 else
@@ -60,7 +60,15 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
-#Commenting it for test. We do this in the installer now.
+#Parse the configmap to set the right environment variables
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
+
+cat config_env_var.txt | while read line; do
+    $line
+    echo $line >> ~/.bashrc
+done
+
+#Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
 #echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
@@ -103,14 +111,6 @@ service cron start
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
-
-#Parse the configmap to set the right environment variables
-/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
-
-cat config_env_var.txt | while read line; do
-    $line
-    echo $line >> ~/.bashrc
-done
 
 #set the right environment variable for container log path based on config map settings
 #if [ -z $AZMON_DISABLE_LOG_COLLECTION ] || [ $AZMON_DISABLE_LOG_COLLECTION = false ]; then
