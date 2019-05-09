@@ -87,7 +87,7 @@ if !configMapSettings.nil?
 end
 
 # Write the settings to file, so that they can be set as environment variables
-file = File.open("config_env_var.txt", "w")
+file = File.open("config_env_var", "w")
 
 if !file.nil?
   # This will be used in td-agent-bit.conf file to filter out logs
