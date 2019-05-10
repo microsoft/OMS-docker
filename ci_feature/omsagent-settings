@@ -1,0 +1,23 @@
+# Config map for omsagent settings
+# Version - 0.0
+
+[log_collection_settings]
+	[log_collection_settings.stdout]
+		# Default value is true
+		enabled = true
+		# exclude_namespaces setting holds good only if enabled is set to true
+		# kube-system log collection is disabled by default in the absence of 'log_collection_settings.stdout' setting. If you want to enable kube-system, remove it from the following setting.
+		# If you want to continue to disable kube-system log collection keep this namespace in the following setting and add any other namespace you want to disable log collection to the array.
+		exclude_namespaces = ["kube-system"]
+
+	[log_collection_settings.stderr]
+		# Default value is true
+		enabled = true
+		# exclude_namespaces setting holds good only if enabled is set to true
+		# kube-system log collection is disabled by default in the absence of 'log_collection_settings.stderr' setting. If you want to enable kube-system, remove it from the following setting.
+		# If you want to continue to disable kube-system log collection keep this namespace in the following setting and add any other namespace you want to disable log collection to the array.
+		exclude_namespaces = ["kube-system"]
+
+	[log_collection_settings.env_var]
+		# Default value is true
+		enabled = true
