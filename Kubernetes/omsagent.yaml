@@ -298,8 +298,6 @@ spec:
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
          value: "my_acs_cluster_name"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: NODE_IP
