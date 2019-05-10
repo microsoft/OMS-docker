@@ -47,7 +47,7 @@ if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
-#check if file was written successfully
+#check if file was written successfully.
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #resourceid override for loganalytics data.
