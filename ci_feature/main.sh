@@ -60,7 +60,7 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
-#Parse the configmap to set the right environment variables
+#Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
 cat config_env_var | while read line; do
