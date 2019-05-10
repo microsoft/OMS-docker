@@ -281,7 +281,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod04232019"
+       image: "microsoft/oms:internal-config-map-1"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -327,13 +327,15 @@ spec:
           name: azure-json-path
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
           readOnly: true
        livenessProbe:
         exec:
          command:
          - /bin/bash
          - -c
-         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
+         - /opt/livenessprobe.sh
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -366,6 +368,10 @@ spec:
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
+    - name: settings-vol-config
+      configMap:
+        name: settings-config
+        optional: true
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -390,7 +396,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:ciprod04232019"
+       image: "microsoft/oms:internal-config-map-1"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -436,6 +442,8 @@ spec:
           readOnly: true
         - mountPath : /etc/config
           name: omsagent-rs-config
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
        livenessProbe:
         exec:
          command:
@@ -468,5 +476,9 @@ spec:
        secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
-        name: omsagent-rs-config    
+        name: omsagent-rs-config
+    - name: settings-vol-config
+      configMap:
+        name: settings-config
+        optional: true
 
