@@ -7,6 +7,14 @@ then
   # inotifyoutput file is empty and the grep commands for omsagent and td-agent-bit succeeded
   exit 0
 else
-  # inotifyoutput file has data(config map was applied) and the grep commands for omsagent or td-agent-bit failed
-  exit 1
+  if [ -s "inotifyoutput.txt" ]
+  then
+    # inotifyoutput file has data(config map was applied)
+    echo "config changed" > /dev/termination-log
+    exit 1
+  else
+    # grep commands for omsagent or td-agent-bit failed
+    echo "agent or fluentbit not running" > /dev/termination-log
+    exit 1
+  fi
 fi

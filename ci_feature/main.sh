@@ -60,6 +60,37 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
+#set agent config schema version
+if [  -e "/etc/config/settings/schema-version" ] && [  -s "/etc/config/settings/schema-version" ]; then
+      #trim
+      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)" 
+      #remove all spaces
+      config_schema_version="${config_schema_version//[[:space:]]/}"
+      #take first 10 characters
+      config_schema_version="$(echo $config_schema_version| cut -c1-10)"
+
+      export AZMON_AGENT_CFG_SCHEMA_VERSION=$config_schema_version
+      echo "export AZMON_AGENT_CFG_SCHEMA_VERSION=$config_schema_version" >> ~/.bashrc
+      source ~/.bashrc
+      echo "AZMON_AGENT_CFG_SCHEMA_VERSION:$AZMON_AGENT_CFG_SCHEMA_VERSION"
+fi
+
+#set agent config file version
+if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/config-version" ]; then
+      #trim
+      config_file_version="$(cat /etc/config/settings/config-version | xargs)"
+      #remove all spaces
+      config_file_version="${config_file_version//[[:space:]]/}"
+      #take first 10 characters
+      config_file_version="$(echo $config_file_version| cut -c1-10)"
+
+      export AZMON_AGENT_CFG_FILE_VERSION=$config_file_version
+      echo "export AZMON_AGENT_CFG_FILE_VERSION=$config_file_version" >> ~/.bashrc
+      source ~/.bashrc
+      echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
+fi
+
+
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
