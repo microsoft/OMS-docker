@@ -2,7 +2,7 @@
 
 require_relative "tomlrb"
 
-@configMapMountPath = "/etc/config/settings/omsagent-settings"
+@configMapMountPath = "/etc/config/settings/log-data-collection-settings"
 @configVersion = ""
 @configSchemaVersion = ""
 # Setting default values which will be used in case they are not set in the configmap or if configmap doesnt exist
