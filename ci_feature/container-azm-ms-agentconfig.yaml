@@ -2,10 +2,10 @@ kind: ConfigMap
 apiVersion: v1
 data:
   schema-version: 
-    #used by agent to parse config. supported versions are {v1}. Configs with other versions will be rejected by the agent.
+    #string.used by agent to parse config. supported versions are {v1}. Configs with other schema versions will be rejected by the agent.
     v1
   config-version:
-    #used by customer to keep track of this config file's version in their soure control/repository (max allowed 10 chars, other chars will be truncated)
+    #string.used by customer to keep track of this config file's version in their source control/repository (max allowed 10 chars, other chars will be truncated)
     ver1
   log-data-collection-settings: |-
     # Log data collection settings container-azm-ms-agent settings
