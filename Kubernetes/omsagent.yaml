@@ -11,7 +11,9 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
-  verbs: ["list"]
+  verbs: ["list", "get", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -402,7 +404,7 @@ spec:
          memory: 500Mi
         requests:
          cpu: 50m
-         memory: 100Mi
+         memory: 175Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
