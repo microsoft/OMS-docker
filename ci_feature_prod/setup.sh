@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/Microsoft/Docker-Provider/releases/download/4.0.0-0/docker-cimprov-4.0.0-0.universal.x86_64.sh
+wget https://rashmi.blob.core.windows.net/rashmi-config-map-1/docker-cimprov-4.0.0-2.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -36,11 +36,15 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Assign permissions to omsagent user to access docker.sock
 sudo apt-get install acl
 
+#download inotify tools for watching configmap changes
+sudo apt-get update
+sudo apt-get install inotify-tools -y
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
 #download and install telegraf
-wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
 sudo dpkg -i telegraf_1.10.1-1_amd64.deb
 
 service telegraf stop
