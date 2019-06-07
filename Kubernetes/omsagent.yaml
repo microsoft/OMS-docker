@@ -278,7 +278,7 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "4.0.0-0"
+    dockerProviderVersion: "5.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -391,7 +391,7 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "4.0.0-0"
+    dockerProviderVersion: "5.0.0-0"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -413,8 +413,6 @@ spec:
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
          value: "my_acs_cluster_name"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP
