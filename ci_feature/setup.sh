@@ -9,12 +9,12 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://dockerprovider.blob.core.windows.net/omsagent/omsagent-1.9.2-41.universal.x64.sh
+wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.10.0-1/omsagent-1.10.0-1.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://dockerprovider.blob.core.windows.net/prometheus/docker-cimprov-5.0.0-2.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-5.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -36,16 +36,20 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Assign permissions to omsagent user to access docker.sock
 sudo apt-get install acl
 
+#download inotify tools for watching configmap changes
+sudo apt-get update
+sudo apt-get install inotify-tools -y
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
 #download and install telegraf
-wget wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
 sudo dpkg -i telegraf_1.10.1-1_amd64.deb
 
 service telegraf stop
 
-wget https://dockerprovider.blob.core.windows.net/telegraf/telegraf
+wget https://dockerprovider.blob.core.windows.net/cifeature/telegraf
 
 chmod 777 /opt/telegraf
 

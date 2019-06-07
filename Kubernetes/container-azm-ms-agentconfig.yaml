@@ -1,0 +1,34 @@
+kind: ConfigMap
+apiVersion: v1
+data:
+  schema-version: 
+    #string.used by agent to parse config. supported versions are {v1}. Configs with other schema versions will be rejected by the agent.
+    v1
+  config-version:
+    #string.used by customer to keep track of this config file's version in their source control/repository (max allowed 10 chars, other chars will be truncated)
+    ver1
+  log-data-collection-settings: |-
+    # Log data collection settings container-azm-ms-agent settings
+    [log_collection_settings]
+       [log_collection_settings.stdout]
+          # Default value is true
+          enabled = true
+          # exclude_namespaces setting holds good only if enabled is set to true
+          # kube-system log collection is disabled by default in the absence of 'log_collection_settings.stdout' setting. If you want to enable kube-system, remove it from the following setting.
+          # If you want to continue to disable kube-system log collection keep this namespace in the following setting and add any other namespace you want to disable log collection to the array.
+          exclude_namespaces = ["kube-system"]
+
+       [log_collection_settings.stderr]
+          # Default value is true
+          enabled = true
+          # exclude_namespaces setting holds good only if enabled is set to true
+          # kube-system log collection is disabled by default in the absence of 'log_collection_settings.stderr' setting. If you want to enable kube-system, remove it from the following setting.
+          # If you want to continue to disable kube-system log collection keep this namespace in the following setting and add any other namespace you want to disable log collection to the array.
+          exclude_namespaces = ["kube-system"]
+
+       [log_collection_settings.env_var]
+          # Default value is true
+          enabled = true
+metadata:
+  name: container-azm-ms-agentconfig
+  namespace: kube-system
