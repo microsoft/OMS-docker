@@ -179,7 +179,11 @@ echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bas
 export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
 echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 
-nodename=$(cat /hostfs/etc/hostname)
+if [ ! -e "/etc/config/kube.conf" ]; then
+   nodename=$(cat /hostfs/etc/hostname)
+else
+   nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+fi
 echo "nodename: $nodename"
 echo "replacing nodename in telegraf config"
 sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
