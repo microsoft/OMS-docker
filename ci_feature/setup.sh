@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://dockerprovider.blob.core.windows.net/cifeature/docker-cimprov-5.0.0-1.universal.x86_64.sh
+wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0-0/docker-cimprov-5.0.0-0.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -44,12 +44,12 @@ sudo apt-get install inotify-tools -y
 #Use downloaded docker-provider instead of the bundled one
 
 #download and install telegraf
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
-sudo dpkg -i telegraf_1.10.1-1_amd64.deb
+#wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.1-1_amd64.deb
+#sudo dpkg -i telegraf_1.10.1-1_amd64.deb
 
-service telegraf stop
+#service telegraf stop
 
-wget https://dockerprovider.blob.core.windows.net/cifeature/telegraf
+wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0-0/telegraf
 
 chmod 777 /opt/telegraf
 
