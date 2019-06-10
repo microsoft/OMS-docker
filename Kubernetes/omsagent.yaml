@@ -279,18 +279,19 @@ spec:
    annotations:
     agentVersion: "1.10.0.1"
     dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:internal-config-map-1"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod06092019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
          memory: 300Mi
         requests:
-         cpu: 50m
+         cpu: 75m
          memory: 225Mi
        env:
        #- name: AKS_RESOURCE_ID
@@ -392,11 +393,12 @@ spec:
    annotations:
     agentVersion: "1.10.0.1"
     dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:internal-config-map-1"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod06092019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
