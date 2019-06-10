@@ -279,6 +279,7 @@ spec:
    annotations:
     agentVersion: "1.10.0.1"
     dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
@@ -392,6 +393,7 @@ spec:
    annotations:
     agentVersion: "1.10.0.1"
     dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
