@@ -291,7 +291,7 @@ spec:
          cpu: 150m
          memory: 300Mi
         requests:
-         cpu: 50m
+         cpu: 75m
          memory: 225Mi
        env:
        #- name: AKS_RESOURCE_ID
