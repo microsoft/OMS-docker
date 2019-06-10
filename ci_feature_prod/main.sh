@@ -19,10 +19,10 @@ mkdir -p /var/opt/microsoft/docker-cimprov/state
   #sudo setfacl -m user:omsagent:rw /var/run/host/docker.sock
 #fi
 
-# add permissions for omsagent user to access azure.json
+# add permissions for omsagent user to access azure.json.
 sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
 
-# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Invetigate why 
+# add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Investigate why.
 sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
 
 DOCKER_SOCKET=/var/run/host/docker.sock
@@ -36,7 +36,10 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi
+fi 
+
+#Run inotify as a daemon to track changes to the mounted configmap.
+inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case
@@ -44,10 +47,10 @@ if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
-#check if file was written successfully
+#check if file was written successfully.
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
-#resourceid override for loganalytics data
+#resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
       echo "not setting customResourceId" 
 else
@@ -57,7 +60,47 @@ else
       echo "customResourceId:$customResourceId"
 fi
 
-#Commenting it for test. We do this in the installer now.
+#set agent config schema version
+if [  -e "/etc/config/settings/schema-version" ] && [  -s "/etc/config/settings/schema-version" ]; then
+      #trim
+      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)" 
+      #remove all spaces
+      config_schema_version="${config_schema_version//[[:space:]]/}"
+      #take first 10 characters
+      config_schema_version="$(echo $config_schema_version| cut -c1-10)"
+
+      export AZMON_AGENT_CFG_SCHEMA_VERSION=$config_schema_version
+      echo "export AZMON_AGENT_CFG_SCHEMA_VERSION=$config_schema_version" >> ~/.bashrc
+      source ~/.bashrc
+      echo "AZMON_AGENT_CFG_SCHEMA_VERSION:$AZMON_AGENT_CFG_SCHEMA_VERSION"
+fi
+
+#set agent config file version
+if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/config-version" ]; then
+      #trim
+      config_file_version="$(cat /etc/config/settings/config-version | xargs)"
+      #remove all spaces
+      config_file_version="${config_file_version//[[:space:]]/}"
+      #take first 10 characters
+      config_file_version="$(echo $config_file_version| cut -c1-10)"
+
+      export AZMON_AGENT_CFG_FILE_VERSION=$config_file_version
+      echo "export AZMON_AGENT_CFG_FILE_VERSION=$config_file_version" >> ~/.bashrc
+      source ~/.bashrc
+      echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
+fi
+
+
+#Parse the configmap to set the right environment variables.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
+
+cat config_env_var | while read line; do
+    #echo $line
+    echo $line >> ~/.bashrc
+done
+source config_env_var
+
+#Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
 #echo "#run containerlogtailfilereader.rb for docker-provider" >> /etc/sudoers.d/omsagent
@@ -101,67 +144,77 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
-
-
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
-
-      #set env vars used by telegraf
-      if [ -z $AKS_RESOURCE_ID ]; then
-            telemetry_aks_resource_id=""
-            telemetry_aks_region=""
-            telemetry_cluster_name=""
-            telemetry_acs_resource_name=$ACS_RESOURCE_NAME
-            telemetry_cluster_type="ACS"
-      else
-            telemetry_aks_resource_id=$AKS_RESOURCE_ID
-            telemetry_aks_region=$AKS_REGION
-            telemetry_cluster_name=$AKS_RESOURCE_ID
-            telemetry_acs_resource_name=""
-            telemetry_cluster_type="AKS"
-      fi
-
-      export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id
-      echo "export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id" >> ~/.bashrc
-      export TELEMETRY_AKS_REGION=$telemetry_aks_region
-      echo "export TELEMETRY_AKS_REGION=$telemetry_aks_region" >> ~/.bashrc
-      export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name
-      echo "export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name" >> ~/.bashrc
-      export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name
-      echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bashrc
-      export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
-      echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
-
-      nodename=$(cat /hostfs/etc/hostname)
-      echo "nodename: $nodename"
-      echo "replacing nodename in telegraf config"
-      sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
-
-      export HOST_MOUNT_PREFIX=/hostfs
-      echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
-      export HOST_PROC=/hostfs/proc
-      echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
-      export HOST_SYS=/hostfs/sys
-      echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
-      export HOST_ETC=/hostfs/etc
-      echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
-      export HOST_VAR=/hostfs/var
-      echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
-
-      aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
-      export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
-      echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
-      
-      source ~/.bashrc
-      
-      #start telegraf
-      /usr/bin/telegraf --config /etc/opt/microsoft/docker-cimprov/telegraf.conf &
-      
-      dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-      dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+else
+      #/opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
+      telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
 fi
+
+#set env vars used by telegraf
+if [ -z $AKS_RESOURCE_ID ]; then
+      telemetry_aks_resource_id=""
+      telemetry_aks_region=""
+      telemetry_cluster_name=""
+      telemetry_acs_resource_name=$ACS_RESOURCE_NAME
+      telemetry_cluster_type="ACS"
+else
+      telemetry_aks_resource_id=$AKS_RESOURCE_ID
+      telemetry_aks_region=$AKS_REGION
+      telemetry_cluster_name=$AKS_RESOURCE_ID
+      telemetry_acs_resource_name=""
+      telemetry_cluster_type="AKS"
+fi
+
+export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id
+echo "export TELEMETRY_AKS_RESOURCE_ID=$telemetry_aks_resource_id" >> ~/.bashrc
+export TELEMETRY_AKS_REGION=$telemetry_aks_region
+echo "export TELEMETRY_AKS_REGION=$telemetry_aks_region" >> ~/.bashrc
+export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name
+echo "export TELEMETRY_CLUSTER_NAME=$telemetry_cluster_name" >> ~/.bashrc
+export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name
+echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bashrc
+export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
+echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
+
+if [ ! -e "/etc/config/kube.conf" ]; then
+   nodename=$(cat /hostfs/etc/hostname)
+else
+   nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+fi
+echo "nodename: $nodename"
+echo "replacing nodename in telegraf config"
+sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
+
+export HOST_MOUNT_PREFIX=/hostfs
+echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
+export HOST_PROC=/hostfs/proc
+echo "export HOST_PROC=/hostfs/proc" >> ~/.bashrc
+export HOST_SYS=/hostfs/sys
+echo "export HOST_SYS=/hostfs/sys" >> ~/.bashrc
+export HOST_ETC=/hostfs/etc
+echo "export HOST_ETC=/hostfs/etc" >> ~/.bashrc
+export HOST_VAR=/hostfs/var
+echo "export HOST_VAR=/hostfs/var" >> ~/.bashrc
+
+aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
+export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
+echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
+
+source ~/.bashrc
+
+#start telegraf
+#/usr/bin/telegraf --config $telegrafConfFile &
+if [ ! -e "/etc/config/kube.conf" ]; then
+   /opt/telegraf --config $telegrafConfFile &
+   /opt/telegraf --version
+   dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
+fi
+
+
+#dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 
 
 
