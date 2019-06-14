@@ -5,7 +5,7 @@ Following metrics are collected into `InsightsMetrics` by Azure monitor for Cont
  - Metrics are collected every 60 secs (1 min) into `InsightsMetrics` table
  - `Tags` field will have tags/dimensions for the corresponding metric
  - `Computer` field will give the computer/host of the agent thats collecting the metric
-	 - Computer/host for which the metric is applicable will be available as `hostName`in the `Tags` field
+	 - Computer/host for which the metric is applicable will be available as `hostName` tag in the `Tags` field
 
 ### Disk metrics
 
