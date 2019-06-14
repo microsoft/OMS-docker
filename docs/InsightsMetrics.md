@@ -1,6 +1,6 @@
 
 ## InsightsMetrics - Azure Monitor for containers
-Following metrics are collected by default by the Azure monitor for Containers agent
+Following metrics are collected into `InsightsMetrics` by Azure monitor for Containers agent
 
  - Metrics are collected every 60 secs (1 min) into `InsightsMetrics` table
  - `Tags` field will have tags/dimensions for the corresponding metric
