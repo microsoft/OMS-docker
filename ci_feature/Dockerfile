@@ -5,7 +5,7 @@ com.microsoft.product="OMS Container Docker Provider" \
 com.microsoft.version="5.0.0-1"
 ENV tmpdir /opt
 ENV APPLICATIONINSIGHTS_AUTH OTQzNWI0M2YtOTdkNS00ZGVkLThkOTAtYjA0Nzk1OGU2ZTg3
-ENV AGENT_VERSION ciprod06142019
+ENV AGENT_VERSION promcustomccp
 ENV HOST_MOUNT_PREFIX /hostfs
 ENV HOST_PROC /hostfs/proc
 ENV HOST_SYS /hostfs/sys

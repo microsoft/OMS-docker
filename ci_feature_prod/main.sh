@@ -149,7 +149,7 @@ if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
 else
-      #/opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
+      /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
 fi
 
@@ -207,11 +207,11 @@ source ~/.bashrc
 
 #start telegraf
 #/usr/bin/telegraf --config $telegrafConfFile &
-if [ ! -e "/etc/config/kube.conf" ]; then
+#if [ ! -e "/etc/config/kube.conf" ]; then
    /opt/telegraf --config $telegrafConfFile &
    /opt/telegraf --version
    dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-fi
+#fi
 
 
 #dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
