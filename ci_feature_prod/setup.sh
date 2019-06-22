@@ -59,7 +59,7 @@ chmod 777 /opt/telegraf
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
 sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
 sudo apt-get update
-sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.1 libsqlite3-dev=3.11.0-1ubuntu1.1 -y
+sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.2 libsqlite3-dev=3.11.0-1ubuntu1.2 -y
 
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
