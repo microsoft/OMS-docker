@@ -11,6 +11,8 @@
         Azure ResourceId of the log analytics workspace Id
     .PARAMETER aksResourceLocation
         Resource location of the AKS cluster resource
+    .PARAMETER isAksEngine
+        Whether this is an AKS-Engine Cluster
 #>
 param(
     [Parameter(mandatory = $true)]
@@ -18,8 +20,22 @@ param(
     [Parameter(mandatory = $true)]
     [string]$aksResourceLocation,
     [Parameter(mandatory = $true)]
-    [string]$logAnalyticsWorkspaceResourceId
+    [string]$logAnalyticsWorkspaceResourceId,
+    [Parameter(mandatory = $true)]
+    [string]$isAksEngineCluster,
+    [Parameter(mandatory = $false)]
+    [string]$acsResourceName
+
 )
+
+
+if ($isAksEngineCluster) {
+    if ($null -eq $acsResourceName) {
+        Write-Host("acsResourceName cannot be null if aksEngineCluster is true") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+}
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
@@ -281,7 +297,7 @@ $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
 if ($false -eq $isSolutionOnboarded) {
 
     $DeploymentName = "ContainerInsightsSolutionOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    $Parameters = @{}
+    $Parameters = @{ }
     $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceID)
     $Parameters.Add("workspaceRegion", $WorkspaceLocation)
     $Parameters
@@ -306,8 +322,10 @@ if ($false -eq $isSolutionOnboarded) {
 Write-Host("Successfully added Container Insights Solution to workspace " + $workspaceName)  -ForegroundColor Green
 
 try {
+    $aksResourceDetails = $aksResourceId.Split("/")
+    $clusterResourceGroupName = $aksResourceDetails[4].Trim()
     $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    $Parameters = @{}
+    $Parameters = @{ }
     $Parameters.Add("aksResourceId", $aksResourceId)
     $Parameters.Add("aksResourceLocation", $aksResourceLocation)
     $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
@@ -315,7 +333,7 @@ try {
     Write-Host " Onboarding cluster to provided LA workspace " 
 
     New-AzResourceGroupDeployment -Name $DeploymentName `
-        -ResourceGroupName $workspaceResourceGroupName `
+        -ResourceGroupName $clusterResourceGroupName `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/customOnboarding.json `
         -TemplateParameterObject $Parameters -ErrorAction Stop`
     
@@ -335,8 +353,9 @@ $desktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFo
 
 if (-not (test-path $desktopPath\deployments) ) {
     Write-Host "$($desktopPath)\deployments doesn't exist, creating it"
-    mkdir $desktopPath\deployments|out-null
-} else {
+    mkdir $desktopPath\deployments | out-null
+}
+else {
     Write-Host "$($desktopPath)\deployments exists, no need to create it"
 }
 
@@ -360,9 +379,16 @@ try {
     $wsid = $WorkspaceInformation.CustomerId
     $base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
     $base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
-    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml
-    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey  | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
+    if ($isAksEngineCluster -eq $true) {
+        Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/omsagent-template-aks-engine.yaml -OutFile $desktopPath\omsagent-template.yaml
+    }
+    else {
+        Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml   
+    }
+
+    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl delete -f $desktopPath\deployments\omsagent-$clusterName.yaml
+    sleep 10
     kubectl apply -f $desktopPath\deployments\omsagent-$clusterName.yaml
     Write-Host "Upgraded omsagent"
 }
