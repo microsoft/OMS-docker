@@ -11,7 +11,12 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
   verbs: ["list"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -31,6 +36,12 @@ apiVersion: v1
 data:
   kube.conf: |- 
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+     #fluent forward plugin
+     <source>
+      type forward
+      port 25235
+      bind 0.0.0.0
+     </source>
 
      #Kubernetes pod inventory
      <source>
@@ -82,7 +93,7 @@ data:
      #Kubernetes health
      <source>
       type kubehealth
-      tag oms.api.KubeHealth.AgentCollectionTime
+      tag oms.api.KubeHealth.ReplicaSet
       run_interval 60s
       log_level debug
      </source>
@@ -107,6 +118,10 @@ data:
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
+     </filter>
+     #health model aggregation filter
+     <filter oms.api.KubeHealth**>
+      type filter_health_model_builder
      </filter>
 
      <match oms.containerinsights.KubePodInventory**>
@@ -282,6 +297,67 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+  - protocol: TCP
+    port: 25235
+    targetPort: in-rs-tcp
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=1000
+parameters:
+  skuName: Standard_LRS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-cloud-provider
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile
+  namespace: kube-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 10Mi
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -295,20 +371,21 @@ spec:
    labels:
     dsName: "omsagent-ds"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "5.0.0-1"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04262019"
+       image: "rdilip83/healthpreview06252019-1"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
          memory: 300Mi
         requests:
-         cpu: 50m
+         cpu: 75m
          memory: 225Mi
        env:
        - name: AKS_RESOURCE_ID
@@ -347,13 +424,15 @@ spec:
           name: azure-json-path
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
           readOnly: true
        livenessProbe:
         exec:
          command:
          - /bin/bash
          - -c
-         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
+         - /opt/livenessprobe.sh
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -386,6 +465,10 @@ spec:
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -404,13 +487,14 @@ spec:
    labels:
     rsName: "omsagent-rs"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "5.0.0-1"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04262019"
+       image: "rdilip83/healthpreview06252019-1"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -418,7 +502,7 @@ spec:
          memory: 500Mi
         requests:
          cpu: 50m
-         memory: 100Mi
+         memory: 175Mi
        env:
        - name: AKS_RESOURCE_ID
          value: "VALUE_AKS_RESOURCE_ID"
@@ -442,6 +526,9 @@ spec:
          protocol: TCP 
        - containerPort: 25224
          protocol: UDP
+       - containerPort: 25235
+         protocol: TCP
+         name: in-rs-tcp         
        volumeMounts:
         - mountPath: /var/run/host
           name: docker-sock
@@ -456,6 +543,11 @@ spec:
           readOnly: true
         - mountPath : /etc/config
           name: omsagent-rs-config
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
+          readOnly: true
+        - mountPath: "/mnt/azure"
+          name: azurefile-pv
        livenessProbe:
         exec:
          command:
@@ -489,4 +581,10 @@ spec:
     - name: omsagent-rs-config
       configMap:
         name: omsagent-rs-config    
-
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true
+    - name: azurefile-pv
+      persistentVolumeClaim:
+        claimName: azurefile
