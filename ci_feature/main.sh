@@ -214,16 +214,22 @@ source ~/.bashrc
 
 #If the config parsing was successful, a new file with environment variable for custom settings is created
 if [ -e "/opt/prom_config_env_var" ]; then
-   /opt/telegraf --config /opt/prom_config_env_var -test
-   if [ $? -eq 0 ]; then
-      #If exit code is 0, telegraf was started successfully with the custom setting values
-      cat prom_config_env_var | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source prom_config_env_var
-   else
-      useDefaults=true #set this to true if telegraf exited with non zero exit code in test mode
-   fi
+      #Run telegraf in test mode to check if config settings are valid
+      if [ ! -e "/etc/config/kube.conf" ]; then
+            /opt/telegraf --config /opt/telegraf-test.conf -test
+      else
+            /opt/telegraf --config /opt/telegraf-test-rs.conf -test
+      fi
+
+      if [ $? -eq 0 ]; then
+            #If exit code is 0, telegraf was started successfully with the custom setting values
+            cat prom_config_env_var | while read line; do
+                  echo $line >> ~/.bashrc
+            done
+            source prom_config_env_var
+      else
+            useDefaults=true #set this to true if telegraf exited with non zero exit code in test mode
+      fi
 else
       useDefaults=true #set this to true if no file with env variabled for custom settings was created
 fi
