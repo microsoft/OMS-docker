@@ -37,7 +37,7 @@ data:
         # Cluster level scrape endpoint(s). These metrics will be scraped from agent's Replicaset (singleton)
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
-        interval: "1m"
+        interval = "1m"
 
         fieldpass = ["kubelet_docker_operations", "kubelet_docker_operations_errors"]
         fielddrop = ["metric_to_drop"]
