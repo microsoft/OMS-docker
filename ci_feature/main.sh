@@ -237,12 +237,12 @@ fi
 if [ "$useDefaults" = true ] ; then
       if [ ! -e "/etc/config/kube.conf" ]; then
             cat defaultpromenvvariables | while read line; do
-            echo $line >> ~/.bashrc
+                  echo $line >> ~/.bashrc
             done
             source defaultpromenvvariables
       else
             cat defaultpromenvvariables-rs | while read line; do
-            echo $line >> ~/.bashrc
+                  echo $line >> ~/.bashrc
             done
             source defaultpromenvvariables-rs
       fi
