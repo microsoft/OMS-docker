@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://rashmi.blob.core.windows.net/prom-custom-metrics/docker-cimprov-5.0.0-1.universal.x86_64.sh
+wget https://rashmi.blob.core.windows.net/prom-custom-metrics-1/docker-cimprov-5.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
