@@ -33,11 +33,11 @@ data:
           enabled = true
   prometheus-data-collection-settings: |-
     # Custom Prometheus metrics data collection settings
-    [prometheus-data-collection-settings.cluster]
+    [prometheus_data_collection_settings.cluster]
         # Cluster level scrape endpoint(s). These metrics will be scraped from agent's Replicaset (singleton)
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
-        interval: "1m"
+        interval = "1m"
 
         fieldpass = ["kubelet_docker_operations", "kubelet_docker_operations_errors"]
         fielddrop = ["metric_to_drop"]
@@ -56,7 +56,7 @@ data:
         # - prometheus.io/port: If port is not 9102 use this annotation
         monitor_kubernetes_pods = false
     
-    [prometheus-data-collection-settings.node]
+    [prometheus_data_collection_settings.node]
         # Node level scrape endpoint(s). These metrics will be scraped from agent's DaemonSet running in every node in the cluster
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.

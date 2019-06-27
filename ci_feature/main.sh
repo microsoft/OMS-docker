@@ -208,9 +208,52 @@ source ~/.bashrc
 #start telegraf
 #/usr/bin/telegraf --config $telegrafConfFile &
 #if [ ! -e "/etc/config/kube.conf" ]; then
-   /opt/telegraf --config $telegrafConfFile &
-   /opt/telegraf --version
-   dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
+#Changes to source the right environment variable file for prometheus custom settings
+#Parse the prometheus configmap to create a file with new custom settings.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
+
+#If the config parsing was successful, a new file with environment variable for custom settings is created
+if [ -e "/opt/prom_config_env_var" ]; then
+      #Run telegraf in test mode to check if config settings are valid
+      echo "Running telegraf in test mode"
+      if [ ! -e "/etc/config/kube.conf" ]; then
+            /opt/telegraf --config /opt/telegraf-test.conf -test
+      else
+            /opt/telegraf --config /opt/telegraf-test-rs.conf -test
+      fi
+
+      if [ $? -eq 0 ]; then
+            #If exit code is 0, telegraf was started successfully with the custom setting values
+            echo "Running telegraf in test mode succeeded, sourcing custom setting environment variable file"
+            cat prom_config_env_var | while read line; do
+                  echo $line >> ~/.bashrc
+            done
+            source prom_config_env_var
+      else
+            echo "Running telegraf in test mode failed, sourcing default environment variable file"
+            useDefaults=true #set this to true if telegraf exited with non zero exit code in test mode
+      fi
+else
+      useDefaults=true #set this to true if no file with env variabled for custom settings was created
+fi
+
+if [ "$useDefaults" = true ] ; then
+      if [ ! -e "/etc/config/kube.conf" ]; then
+            cat defaultpromenvvariables | while read line; do
+                  echo $line >> ~/.bashrc
+            done
+            source defaultpromenvvariables
+      else
+            cat defaultpromenvvariables-rs | while read line; do
+                  echo $line >> ~/.bashrc
+            done
+            source defaultpromenvvariables-rs
+      fi
+fi
+
+/opt/telegraf --config $telegrafConfFile &
+/opt/telegraf --version
+dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 #fi
 
 

@@ -450,7 +450,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - /opt/livenessprobe.sh
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
