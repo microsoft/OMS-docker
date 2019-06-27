@@ -234,7 +234,6 @@ if [ -e "/opt/prom_config_env_var" ]; then
             useDefaults=true #set this to true if telegraf exited with non zero exit code in test mode
       fi
 else
-      echo "Custom config for prometheus unset/improper, sourcing default environment variable file"
       useDefaults=true #set this to true if no file with env variabled for custom settings was created
 fi
 
