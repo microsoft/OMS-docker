@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://rashmi.blob.core.windows.net/rashmi-prom-custom-config/docker-cimprov-6.0.0-1.universal.x86_64.sh
+wget https://rashmi.blob.core.windows.net/prom-custom-metrics/docker-cimprov-5.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -53,7 +53,7 @@ wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0.0/tele
 
 chmod 777 /opt/telegraf
 
-/$TMPDIR/docker-cimprov-6.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-5.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
