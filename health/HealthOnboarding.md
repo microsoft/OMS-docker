@@ -613,4 +613,4 @@ Once the above steps are done, it can take upto 20 minutes for the health relate
 3. Set the current k8s context to be your AKS Engine cluster
 4. Download the [omsagent-template-aks-engine.yaml](https://github.com/microsoft/OMS-docker/blob/dilipr/kubeHealth/health/omsagent-template-aks-engine.yaml) file to your local machine
 5. Update the Values of VALUE_ACS_RESOURCE_NAME, VALUE_WSID {base 64 encoded workspace id} and VALUE_KEY {base 64 encoded workspace key}. See [here](https://github.com/Azure/aks-engine/blob/master/examples/addons/container-monitoring/README.md) on instructions to get the Workspace ID and Key of the file downloaded in Step 5 above
-6. Run kubectl apply on the file {kubectl apply -f <filename>}
+6. Run kubectl apply on the file {kubectl apply -f path_to_file_in_step_4}
