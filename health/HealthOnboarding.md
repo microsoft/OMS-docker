@@ -604,3 +604,13 @@ Import-AzAksCredential -ResourceGroupName <clusterResourceGroupName> -Name <clus
 
 Once the above steps are done, it can take upto 20 minutes for the health related data to show up which can be accessed using the following link:
 <https://aka.ms/clusterhealthpreview>
+
+
+
+### AKS Engine Onboarding
+1. Add Container Insights Solution to your workspace using the instructions [here] (http://aka.ms/coinhelmdoc)
+2. Tag your AKS-Engine cluster appropriately using the instructions [here] (http://aka.ms/coin-acs-tag-doc)
+3. Set the current k8s context to be your AKS Engine cluster
+4. Download the [omsagent-template-aks-engine.yaml] (https://github.com/microsoft/OMS-docker/blob/dilipr/kubeHealth/health/omsagent-template-aks-engine.yaml) file to your local machine
+5. Update the Values of VALUE_ACS_RESOURCE_NAME, VALUE_WSID {base 64 encoded workspace id} and VALUE_KEY {base 64 encoded workspace key}. See [here] (https://github.com/Azure/aks-engine/blob/master/examples/addons/container-monitoring/README.md) on instructions to get the Workspace ID and Key of the file downloaded in Step 5 above
+6. Run kubectl apply on the file {kubectl apply -f <filename>}
