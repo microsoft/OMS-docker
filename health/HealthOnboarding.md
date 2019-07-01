@@ -16,13 +16,15 @@ We have a handy script which can onboards your AKS clusters to a version of the 
 * Installs the new agent that generates health monitor signals (using kubectl)
 
 #### Script Execution
-* Download the script from [here](https://github.com/Microsoft/OMS-docker/blob/dilipr/onboardHealth/health/HealthAgentOnboarding.ps1)
+* Download the script from [here](https://github.com/Microsoft/OMS-docker/blob/dilipr/kubeHealth/health/HealthAgentOnboarding.ps1)
 * Run the script:  
  .\HealthAgentOnboarding.ps1 -aksResourceId <AKS_RESOURCE_ID> -aksResourceLocation <AKS_RESOURCE_LOCATION) -logAnalyticsWorkspaceResourceId (LOG_ANALYTICS_WS_RESOURCE_ID) (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
+* Please make sure the right location of the AKS cluster is passed in to the script (without spaces e.g. eastus, southcentralus)
 
 #### Viewing the health model
 * Navigate to <https://aka.ms/clusterhealthpreview>
 * There should be a new tab named "Health" in Cluster Insights 
+* Note: It might take about 15-20 min after the script runs for the data to show up in the Insights Page of the Cluster
 
 ## Manual Steps
 
