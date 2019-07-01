@@ -1,18 +1,26 @@
 ## Overview
 The following documentation outlines the steps required to upgrade an existing cluster onboarded to a Log Analytics workspace running the omsagent, to an agent running the workflow that generates health monitor signals into the same workspace.
 
-* Do a custom off-boarding of the cluster from Monitoring 
-* Installing the new agent that generates health monitor signals
-* Please refer to the powershell [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/onboardHealth/health/HealthAgentOnboarding.ps1) for another way to perform the same steps on your cluster. The script basically does the following:
-	* Installs necessary powershell modules
- 	* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
-	* Updates the cluster metadata to link the LA workspace ID to the cluster
-	* __Script Pre-reqs:__
-	  * kubectl should have been installed and be present in the path
-	  * script should run in an elevated command prompt
-  
+## Script Prerequisites
+* script should run in an elevated command prompt
+* kubectl should have been installed and be present in the path
 
-## Prerequisites
+## What does the script do:
+* Do a custom off-boarding of the cluster from Monitoring 
+* Installs necessary powershell modules
+* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
+* Updates the cluster metadata to link the LA workspace ID to the cluster
+* Installs the new agent that generates health monitor signals
+
+## Script Execution
+* Download the script from [here](https://github.com/Microsoft/OMS-docker/blob/dilipr/onboardHealth/health/HealthAgentOnboarding.ps1)
+* Run the script:  
+ .\HealthAgentOnboarding.ps1 -aksResourceId <AKS_RESOURCE_ID> -aksResourceLocation <AKS_RESOURCE_LOCATION) -logAnalyticsWorkspaceResourceId (LOG_ANALYTICS_WS_RESOURCE_ID) (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
+
+
+## Manual Steps
+
+#### Prerequisites
 * Cluster that has already been onboarded to Monitoring using a Log Analytics workspace
 * kubectl should be intalled and should be available in the path
 * Powershell with the following modules installed (Else the onboarding script will install those for you)
@@ -22,7 +30,7 @@ The following documentation outlines the steps required to upgrade an existing c
   * Az.Aks
 * Run in an elevated powershell window
 
-## Steps
+#### Steps
 1. Copy and paste the following JSON into a file. 
 
 ```json
@@ -98,7 +106,7 @@ The VALUE_AKS_RESOURCE_ID (resource id of the cluster) can be found in the Prope
 * Select-AzSubscription -SubscriptionName <yourSubscriptionName>  
 * New-AzResourceGroupDeployment -Name opt-out -ResourceGroupName <ResourceGroupName> -TemplateFile .\HealthPreviewOnboarding.json -TemplateParameterFile .\HealthPreviewOnboardingParams.json  
 
-7. Copy the following content into a yaml file: (You will use this file to do a kubectl apply on the kubernetes cluster) 
+7. Copy the following content into a yaml file: (You will use this file to do a kubectl apply on the kubernetes cluster). This file is also available [here](https://raw.githubusercontent.com/microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml)
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -113,7 +121,12 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
+  verbs: ["list", "get", "watch"]
+- apiGroups: ["extensions"]
+  resources: ["deployments"]
   verbs: ["list"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -133,6 +146,12 @@ apiVersion: v1
 data:
   kube.conf: |- 
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+     #fluent forward plugin
+     <source>
+      type forward
+      port 25235
+      bind 0.0.0.0
+     </source>
 
      #Kubernetes pod inventory
      <source>
@@ -184,7 +203,7 @@ data:
      #Kubernetes health
      <source>
       type kubehealth
-      tag oms.api.KubeHealth.AgentCollectionTime
+      tag oms.api.KubeHealth.ReplicaSet
       run_interval 60s
       log_level debug
      </source>
@@ -209,6 +228,11 @@ data:
       custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
+     </filter>
+
+     #health model aggregation filter
+     <filter oms.api.KubeHealth**>
+      type filter_health_model_builder
      </filter>
 
      <match oms.containerinsights.KubePodInventory**>
@@ -397,31 +421,30 @@ spec:
    labels:
     dsName: "omsagent-ds"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04262019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview06272019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
          memory: 300Mi
         requests:
-         cpu: 50m
+         cpu: 75m
          memory: 225Mi
        env:
        - name: AKS_RESOURCE_ID
-         value: "VALUE_AKS_RESOURCE_ID"
+         value: "VALUE_AKS_RESOURCE_ID_VALUE"
        - name: AKS_REGION
-         value: "VALUE_AKS_REGION"
-      #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-      #  - name: ACS_RESOURCE_NAME
-      #    value: "aks-engine-health"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
+         value: "VALUE_AKS_REGION_VALUE"
+       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+       #- name: ACS_RESOURCE_NAME
+         #value: "my_acs_cluster_name"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: NODE_IP
@@ -449,13 +472,15 @@ spec:
           name: azure-json-path
         - mountPath: /etc/omsagent-secret
           name: omsagent-secret
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
           readOnly: true
        livenessProbe:
         exec:
          command:
          - /bin/bash
          - -c
-         - (ps -ef | grep omsagent | grep -v "grep") && (ps -ef | grep td-agent-bit | grep -v "grep")
+         - /opt/livenessprobe.sh
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -488,6 +513,10 @@ spec:
     - name: omsagent-secret
       secret:
        secretName: omsagent-secret
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -506,13 +535,14 @@ spec:
    labels:
     rsName: "omsagent-rs"
    annotations:
-    agentVersion: "1.8.1.256"
-    dockerProviderVersion: "3.0.0-4"
+    agentVersion: "1.10.0.1"
+    dockerProviderVersion: "5.0.0-0"
+    schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "microsoft/oms:healthpreview04262019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview06272019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -520,17 +550,15 @@ spec:
          memory: 500Mi
         requests:
          cpu: 50m
-         memory: 100Mi
+         memory: 175Mi
        env:
-       - name: AKS_RESOURCE_ID
-         value: "VALUE_AKS_RESOURCE_ID"
-       - name: AKS_REGION
-         value: "VALUE_AKS_REGION"
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-      #  - name: ACS_RESOURCE_NAME
-      #    value: "aks-engine-health"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
+       - name: ACS_RESOURCE_NAME
+         value: "my_acs_cluster_name"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP
@@ -558,6 +586,11 @@ spec:
           readOnly: true
         - mountPath : /etc/config
           name: omsagent-rs-config
+        - mountPath: /etc/config/settings
+          name: settings-vol-config
+          readOnly: true
+        - mountPath: "/mnt/azure"
+          name: azurefile-pv
        livenessProbe:
         exec:
          command:
@@ -590,7 +623,75 @@ spec:
        secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
-        name: omsagent-rs-config    
+        name: omsagent-rs-config
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true
+    - name: azurefile-pv
+      persistentVolumeClaim:
+        claimName: azurefile
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: repliceset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+  - protocol: TCP
+    port: 25235
+    targetPort: in-rs-tcp
+    nodePort: 25235
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=1000
+parameters:
+  skuName: Standard_LRS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-cloud-provider
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 10Mi 
 ```
 
 8. save this file as omsagent.yaml
