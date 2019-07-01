@@ -7,16 +7,20 @@ The following documentation outlines the steps required to upgrade an existing c
 	* Installs necessary powershell modules
  	* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
 	* Updates the cluster metadata to link the LA workspace ID to the cluster
+	* Script Pre-reqs:
+	 * kubectl should have been installed and be present in the path
+	 * script should run in an elevated command prompt
   
 
 ## Prerequisites
 * Cluster that has already been onboarded to Monitoring using a Log Analytics workspace
-* kubectl
-* Powershell with the following modules installed
+* kubectl should be intalled and should be available in the path
+* Powershell with the following modules installed (Else the onboarding script will install those for you)
   * Az.Accounts
   * Az.Resources
   * Az.OperationalInsights
   * Az.Aks
+* Run in an elevated powershell window
 
 ## Steps
 1. Copy and paste the following JSON into a file. 
