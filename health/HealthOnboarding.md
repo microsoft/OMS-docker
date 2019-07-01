@@ -1,6 +1,9 @@
 ## Overview
 The following documentation outlines the steps required to upgrade an existing cluster onboarded to a Log Analytics workspace running the omsagent, to an agent running the workflow that generates health monitor signals into the same workspace.
 
+## Script
+We have a handy script which can onboards your AKS clusters to a version of the agent that can generate the health model. Read on to find out more
+
 #### Script Prerequisites
 * script should run in an elevated command prompt
 * kubectl should have been installed and be present in the path
