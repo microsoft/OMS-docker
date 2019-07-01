@@ -20,6 +20,9 @@ We have a handy script which can onboards your AKS clusters to a version of the 
 * Run the script:  
  .\HealthAgentOnboarding.ps1 -aksResourceId <AKS_RESOURCE_ID> -aksResourceLocation <AKS_RESOURCE_LOCATION) -logAnalyticsWorkspaceResourceId (LOG_ANALYTICS_WS_RESOURCE_ID) (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
 
+#### Viewing the health model
+* Navigate to <https://aka.ms/clusterhealthpreview>
+* There should be a new tab named "Health" in Cluster Insights 
 
 ## Manual Steps
 
