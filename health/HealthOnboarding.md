@@ -7,9 +7,9 @@ The following documentation outlines the steps required to upgrade an existing c
 	* Installs necessary powershell modules
  	* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
 	* Updates the cluster metadata to link the LA workspace ID to the cluster
-	* Script Pre-reqs:
-	 * kubectl should have been installed and be present in the path
-	 * script should run in an elevated command prompt
+	* __Script Pre-reqs:__
+	  * kubectl should have been installed and be present in the path
+	  * script should run in an elevated command prompt
   
 
 ## Prerequisites
