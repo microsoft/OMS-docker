@@ -11,8 +11,6 @@
         Azure ResourceId of the log analytics workspace Id
     .PARAMETER aksResourceLocation
         Resource location of the AKS cluster resource
-    .PARAMETER isAksEngine
-        Whether this is an AKS-Engine Cluster
 #>
 param(
     [Parameter(mandatory = $true)]
@@ -20,22 +18,9 @@ param(
     [Parameter(mandatory = $true)]
     [string]$aksResourceLocation,
     [Parameter(mandatory = $true)]
-    [string]$logAnalyticsWorkspaceResourceId,
-    [Parameter(mandatory = $true)]
-    [string]$isAksEngineCluster,
-    [Parameter(mandatory = $false)]
-    [string]$acsResourceName
-
+    [string]$logAnalyticsWorkspaceResourceId
 )
 
-
-if ($isAksEngineCluster) {
-    if ($null -eq $acsResourceName) {
-        Write-Host("acsResourceName cannot be null if aksEngineCluster is true") -ForegroundColor Red
-        Stop-Transcript
-        exit
-    }
-}
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
@@ -229,7 +214,7 @@ else {
         try {
             Write-Host("Current Subscription:")
             $account
-            Write-Host("Changing to subscription: $workspaceSubscriptionId")
+            Write-Host("Changing to workspace subscription: $workspaceSubscriptionId")
             Set-AzContext -SubscriptionId $workspaceSubscriptionId
         }
         catch {
@@ -240,20 +225,26 @@ else {
             exit
         }
     }
+
+    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
+    $key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
+    $wsid = $WorkspaceInformation.CustomerId
+    $base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
+    $base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
 }
 
 # validate specified logAnalytics workspace exists and got access permissions
-Write-Host("Checking specified logAnalyticsWorkspaceResourceId exists and got access...")
+#Write-Host("Checking specified logAnalyticsWorkspaceResourceId exists and got access...")
 
-try {
-    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
-}
-catch {
-    Write-Host("")
-    Write-Host("Could not fetch details for the workspace : '" + $workspaceName + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red        
-    Stop-Transcript
-    exit
-}
+# try {
+    
+# }
+# catch {
+#     Write-Host("")
+#     Write-Host("Could not fetch details for the workspace : '" + $workspaceName + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red        
+#     Stop-Transcript
+#     exit
+# }
 
 Write-Host("Successfully verified specified logAnalyticsWorkspaceResourceId valid and exists...") -ForegroundColor Green
 
@@ -324,15 +315,44 @@ Write-Host("Successfully added Container Insights Solution to workspace " + $wor
 try {
     $aksResourceDetails = $aksResourceId.Split("/")
     $clusterResourceGroupName = $aksResourceDetails[4].Trim()
-    $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    $clusterSubscriptionId = $aksResourceDetails[2].Trim()
+    $clusterName = $aksResourceDetails[8].Trim()
     $Parameters = @{ }
     $Parameters.Add("aksResourceId", $aksResourceId)
     $Parameters.Add("aksResourceLocation", $aksResourceLocation)
-    $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
+    $Parameters
 
     Write-Host " Onboarding cluster to provided LA workspace " 
 
-    New-AzResourceGroupDeployment -Name $DeploymentName `
+    if ($account.Subscription.Id -eq $clusterSubscriptionId) {
+        Write-Host("Subscription: $clusterSubscriptionId is already selected. Account details: ")
+        $account
+    }
+    else {
+        try {
+            Write-Host("Current Subscription:")
+            $account
+            Write-Host("Changing to subscription: $clusterSubscriptionId")
+            Set-AzContext -SubscriptionId $clusterSubscriptionId
+        }
+        catch {
+            Write-Host("")
+            Write-Host("Could not select subscription with ID : " + $workspaceSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+            Write-Host("")
+            Stop-Transcript
+            exit
+        }
+    }
+
+    Write-Host("Disabling Monitoring using template deployment")
+    
+    $DeploymentName = "OptOutMonitoring-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    New-AzResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $clusterResourceGroupName -TemplateUri https://raw.githubusercontent.com/microsoft/OMS-docker/dilipr/kubeHealth/health/optouttemplate.json -TemplateParameterObject $Parameters -ErrorAction Stop
+
+    Write-Host("Enabling Custom Monitoring using template deployment")
+    $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
+    New-AzResourceGroupDeployment -Name  $DeploymentName `
         -ResourceGroupName $clusterResourceGroupName `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/customOnboarding.json `
         -TemplateParameterObject $Parameters -ErrorAction Stop`
@@ -345,6 +365,7 @@ try {
 }
 catch {
     Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
+    exit
     #Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
 }  
 
@@ -375,17 +396,8 @@ try {
 
     Import-AzAksCredential -Id $aksResourceId -Force
     
-    $key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
-    $wsid = $WorkspaceInformation.CustomerId
-    $base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
-    $base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
-    if ($isAksEngineCluster -eq $true) {
-        Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/omsagent-template-aks-engine.yaml -OutFile $desktopPath\omsagent-template.yaml
-    }
-    else {
-        Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml   
-    }
-
+    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml   
+    
     (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl delete -f $desktopPath\deployments\omsagent-$clusterName.yaml
     sleep 10
