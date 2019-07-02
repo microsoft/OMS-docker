@@ -238,6 +238,14 @@ else
       source defaultpromenvvariables-rs
 fi
 
+#Sourcing telemetry environment variable file if it exists
+if [ -e "telemetry_prom_config_env_var" ]; then
+      cat telemetry_prom_config_env_var | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source telemetry_prom_config_env_var
+fi
+
 #start telegraf
 /opt/telegraf --config $telegrafConfFile &
 /opt/telegraf --version
