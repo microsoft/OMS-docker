@@ -25,14 +25,15 @@ Prequisites:
 - Run powershell as an administrator
 - Use 'Get-ExecutionPolicy' to get the current execution policy and store it in a file
 - Type the following command 'Set-ExecutionPolicy Unrestricted' before running the script
+- latest version of PowerShellGet Module 
 
 
 # Azure Kubernetes Service (AKS)
 
-You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
+You can use the troubleshooting script provided [here](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Steps:
-- Download [TroubleshootError.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
+- Download [TroubleshootError.ps1](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
 - Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
 - Use the following command to run the script : `.\TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
@@ -41,10 +42,10 @@ Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respon
 
 # Aks-Engine Kubernetes
 
-You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1) to diagnose the problem.
+You can use the troubleshooting script provided [here](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1) to diagnose the problem.
 
 Steps:
-- Download [TroubleshootError_AcsEngine.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
+- Download [TroubleshootError_AcsEngine.ps1](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1), [ContainerInsightsSolution.json](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
 - Collect Subscription ID, Resource group name of the Aks-Engine Kubernetes cluster
 - Use the following command to run the script : `.\TroubleshootError_AcsEngine.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName>`.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
