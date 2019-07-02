@@ -211,17 +211,21 @@ source ~/.bashrc
 #If config parsing was successful, a copy of the conf file with replaced custom settings file is created
 if [ ! -e "/etc/config/kube.conf" ]; then
             if [ -e "/opt/telegraf-test.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
                   /opt/telegraf --config /opt/telegraf-test.conf -test
                   if [ $? -eq 0 ]; then
                         mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
                   fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
             fi
 else
       if [ -e "/opt/telegraf-test-rs.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
                   /opt/telegraf --config /opt/telegraf-test-rs.conf -test
                   if [ $? -eq 0 ]; then
                         mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
                   fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
       fi
 fi
 
