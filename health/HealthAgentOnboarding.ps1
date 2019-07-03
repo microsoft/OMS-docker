@@ -22,6 +22,8 @@ param(
 )
 
 
+$OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
+
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
 $azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
@@ -169,12 +171,15 @@ if ($workspaceResourceDetails.Length -ne 9) {
 
 $workspaceSubscriptionId = $workspaceResourceDetails[2]
 $workspaceSubscriptionId = $workspaceSubscriptionId.Trim()
-
 $workspaceResourceGroupName = $workspaceResourceDetails[4]
 $workspaceResourceGroupName = $workspaceResourceGroupName.Trim()
-
 $workspaceName = $workspaceResourceDetails[8]
 $workspaceResourceGroupName = $workspaceResourceGroupName.Trim()
+
+$aksResourceDetails = $aksResourceId.Split("/")
+$clusterResourceGroupName = $aksResourceDetails[4].Trim()
+$clusterSubscriptionId = $aksResourceDetails[2].Trim()
+$clusterName = $aksResourceDetails[8].Trim()
 
 Write-Host("LogAnalytics Workspace SubscriptionId : '" + $workspaceSubscriptionId + "' ") -ForegroundColor Green
 
@@ -195,7 +200,29 @@ catch {
 if ($null -eq $account.Account) {
     try {
         Write-Host("Please login...")
-        Connect-AzAccount -subscriptionid $workspaceSubscriptionId
+        Connect-AzAccount -subscriptionid $clusterSubscriptionId
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not select subscription with ID : " + $clusterSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+}
+
+Write-Host("Checking if cluster is onboarded to Container Monitoring")
+if ($account.Subscription.Id -eq $clusterSubscriptionId) {
+    Write-Host("Subscription: $clusterSubscriptionId is already selected. Account details: ")
+    $account
+}
+else {
+    try {
+        Write-Host("Current Subscription:")
+        $account
+        Write-Host("Changing to workspace subscription: $clusterSubscriptionId")
+        Set-AzContext -SubscriptionId $clusterSubscriptionId
+
     }
     catch {
         Write-Host("")
@@ -205,49 +232,65 @@ if ($null -eq $account.Account) {
         exit
     }
 }
-else {
-    if ($account.Subscription.Id -eq $workspaceSubscriptionId) {
-        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
-        $account
+
+try {
+    $resources = Get-AzResource -ResourceGroupName $clusterResourceGroupName -Name $clusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+    $clusterResource = $resources[0]
+
+    $props = ($clusterResource.Properties | ConvertTo-Json).toLower() | ConvertFrom-Json
+
+    if ($true -eq $props.addonprofiles.omsagent.enabled -and $null -ne $props.addonprofiles.omsagent.config) {
+        Write-Host("Your cluster is already onboarded to Azure monitor for containers. Please refer to the following documentation to opt-out and re-run this script again:") -ForegroundColor Red;
+        Write-Host("")
+        Write-Host($OptOutLink) -ForegroundColor Red
+        Write-Host("")
+        throw
+    }
+
+    Write-Host("Setting context to the current cluster")
+    Import-AzAksCredential -Id $aksResourceId -Force
+    $omsagentCount = kubectl get pods -n kube-system | Select-String omsagent
+    if ($null -eq $omsagentCount) {
+        Write-Host ("OmsAgent is not running. Proceeding to do custom onboarding for Health Agent")
     }
     else {
-        try {
-            Write-Host("Current Subscription:")
-            $account
-            Write-Host("Changing to workspace subscription: $workspaceSubscriptionId")
-            Set-AzContext -SubscriptionId $workspaceSubscriptionId
-        }
-        catch {
-            Write-Host("")
-            Write-Host("Could not select subscription with ID : " + $workspaceSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-            Write-Host("")
-            Stop-Transcript
-            exit
-        }
+        Write-Host ("Cluster is not enabled for Monitoring. But detected omsagent pods. Please wait for 30 min to ensure that omsagent containers are completely stopped and re-run this script") -ForegroundColor Red
+        Stop-Transcript
+        exit
     }
-
-    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
-    $key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
-    $wsid = $WorkspaceInformation.CustomerId
-    $base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
-    $base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
+}
+catch {
+    Write-Host("Error when checking if cluster is already onboarded")
+    exit
 }
 
-# validate specified logAnalytics workspace exists and got access permissions
-#Write-Host("Checking specified logAnalyticsWorkspaceResourceId exists and got access...")
 
-# try {
-    
-# }
-# catch {
-#     Write-Host("")
-#     Write-Host("Could not fetch details for the workspace : '" + $workspaceName + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red        
-#     Stop-Transcript
-#     exit
-# }
+if ($account.Subscription.Id -eq $workspaceSubscriptionId) {
+    Write-Host("Subscription: $workspaceSubscriptionId is already selected. Account details: ")
+    $account
+}
+else {
+    try {
+        Write-Host("Current Subscription:")
+        $account
+        Write-Host("Changing to workspace subscription: $workspaceSubscriptionId")
+        Set-AzContext -SubscriptionId $workspaceSubscriptionId
+    }
+    catch {
+        Write-Host("")
+        Write-Host("Could not select subscription with ID : " + $workspaceSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+        Write-Host("")
+        Stop-Transcript
+        exit
+    }
+}
 
+$WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
+$key = (Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName).PrimarySharedKey
+$wsid = $WorkspaceInformation.CustomerId
+$base64EncodedKey = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($key))
+$base64EncodedWsId = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($wsid))
 Write-Host("Successfully verified specified logAnalyticsWorkspaceResourceId valid and exists...") -ForegroundColor Green
-
 $WorkspaceLocation = $WorkspaceInformation.Location
 		
 if ($null -eq $WorkspaceLocation) {
@@ -313,13 +356,11 @@ if ($false -eq $isSolutionOnboarded) {
 Write-Host("Successfully added Container Insights Solution to workspace " + $workspaceName)  -ForegroundColor Green
 
 try {
-    $aksResourceDetails = $aksResourceId.Split("/")
-    $clusterResourceGroupName = $aksResourceDetails[4].Trim()
-    $clusterSubscriptionId = $aksResourceDetails[2].Trim()
-    $clusterName = $aksResourceDetails[8].Trim()
     $Parameters = @{ }
     $Parameters.Add("aksResourceId", $aksResourceId)
     $Parameters.Add("aksResourceLocation", $aksResourceLocation)
+    $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
+    $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
     $Parameters
 
     Write-Host " Onboarding cluster to provided LA workspace " 
@@ -344,14 +385,7 @@ try {
         }
     }
 
-    Write-Host("Disabling Monitoring using template deployment")
-    
-    $DeploymentName = "OptOutMonitoring-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    New-AzResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $clusterResourceGroupName -TemplateUri https://raw.githubusercontent.com/microsoft/OMS-docker/dilipr/kubeHealth/health/optouttemplate.json -TemplateParameterObject $Parameters -ErrorAction Stop
-
     Write-Host("Enabling Custom Monitoring using template deployment")
-    $DeploymentName = "ClusterHealthOnboarding-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    $Parameters.Add("workspaceResourceId", $logAnalyticsWorkspaceResourceId)
     New-AzResourceGroupDeployment -Name  $DeploymentName `
         -ResourceGroupName $clusterResourceGroupName `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/onboardHealth/health/customOnboarding.json `
@@ -369,9 +403,7 @@ catch {
     #Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
 }  
 
-
 $desktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-
 if (-not (test-path $desktopPath\deployments) ) {
     Write-Host "$($desktopPath)\deployments doesn't exist, creating it"
     mkdir $desktopPath\deployments | out-null
@@ -379,34 +411,22 @@ if (-not (test-path $desktopPath\deployments) ) {
 else {
     Write-Host "$($desktopPath)\deployments exists, no need to create it"
 }
-
-
 try {
 
     $aksResourceDetails = $aksResourceId.Split("/")
-    
-
     if ($aksResourceDetails.Length -ne 9) { 
         Write-Host("aksResourceDetails should be valid Azure Resource Id format") -ForegroundColor Red
         exit
     }
-
     $clusterName = $aksResourceDetails[8].Trim()
     $clusterResourceGroupName = $aksResourceDetails[4].Trim()
-
     Import-AzAksCredential -Id $aksResourceId -Force
-    
     Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml   
     
-    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksRegion -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
-    kubectl delete -f $desktopPath\deployments\omsagent-$clusterName.yaml
-    sleep 10
+    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksResourceLocation -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
     kubectl apply -f $desktopPath\deployments\omsagent-$clusterName.yaml
-    Write-Host "Upgraded omsagent"
+    Write-Host "Successfully onboarded to health model omsagent" -ForegroundColor Green
 }
 catch {
     Write-Host ("Agent deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
 }
-
-
-
