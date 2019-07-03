@@ -9,7 +9,6 @@ We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kub
 * kubectl should have been installed and be present in the path
 
 #### What does the script do:
-* Do a custom off-boarding of the cluster from Monitoring 
 * Installs necessary powershell modules
 * Onboards Container Insights solution to the supplied LA workspace if not already onboarded
 * Updates the cluster metadata to link the LA workspace ID to the cluster
@@ -22,9 +21,6 @@ We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kub
  -logAnalyticsWorkspaceResourceId <LOG_ANALYTICS_WS_RESOURCE_ID> (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
  * Please make sure the right location of the AKS cluster is passed in to the script (without spaces e.g. eastus, southcentralus)
 
-#### Notes
-* After running the script, if there is more than one version of the omsagent DaemonSet running on a node (you can figure this out by running __kubecetl get pods -n kube-system -o wide__), [disable monitoring](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout) and re-run the onboarding script
-
 #### Viewing the health model
 * Navigate to <https://aka.ms/clusterhealthpreview>
 * There should be a new tab named "Health" in Cluster Insights 
@@ -32,6 +28,8 @@ We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kub
 
 
 ### AKS Engine Onboarding
+Before proceeding with the onboarding steps, opt out of monitoring using the steps outlined [here]
+
 1. Add Container Insights Solution to your workspace using the instructions [here](http://aka.ms/coinhelmdoc)
 2. Tag your AKS-Engine cluster appropriately using the instructions [here](http://aka.ms/coin-acs-tag-doc)
 3. Set the current k8s context to be your AKS Engine cluster (the kube-config should refer to your AKS-Engine cluster)
