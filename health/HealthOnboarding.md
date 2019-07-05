@@ -28,8 +28,7 @@ We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kub
 
 
 ### AKS Engine Onboarding
-Before proceeding with the onboarding steps, opt out of monitoring using the steps outlined [here]
-
+If your cluster is already onboarded to Monitoring, proceed directly to step 4 and continue from there on. 
 1. Add Container Insights Solution to your workspace using the instructions [here](http://aka.ms/coinhelmdoc)
 2. Tag your AKS-Engine cluster appropriately using the instructions [here](http://aka.ms/coin-acs-tag-doc)
 3. Set the current k8s context to be your AKS Engine cluster (the kube-config should refer to your AKS-Engine cluster)
