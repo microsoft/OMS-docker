@@ -90,6 +90,26 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
 fi
 
+# Check for internet connectivity
+RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
+if [ $RET -eq 200 ]; then 
+      echo "LA Onboarding:Internet-Connectivity-Check:Succeeded"
+      # Check for workspace existence
+      if [ -e "/etc/omsagent-secret/WSID" ]; then
+            workspaceId=$(cat /etc/omsagent-secret/WSID)
+            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
+            if [ $? -eq 0 ]; then
+                  echo "LA Onboarding:Workspace-Check:Able to resolve workspace"
+            else
+                  echo "LA Onboarding:Workspace-Check:Unable to resolve workspace, might be deleted"
+            fi
+      else
+            echo "LA Onboarding:Workspace Id not mounted"
+      fi
+else 
+      echo "LA Onboarding:Internet-Connectivity-Check:Failed"
+fi
+
 
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
