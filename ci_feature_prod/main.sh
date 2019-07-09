@@ -90,6 +90,26 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
 fi
 
+# Check for internet connectivity
+RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
+if [ $RET -eq 200 ]; then 
+      echo "LA Onboarding:Internet-Connectivity-Check:Succeeded"
+      # Check for workspace existence
+      if [ -e "/etc/omsagent-secret/WSID" ]; then
+            workspaceId=$(cat /etc/omsagent-secret/WSID)
+            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
+            if [ $? -eq 0 ]; then
+                  echo "LA Onboarding:Workspace-Check:Able to resolve workspace"
+            else
+                  echo "LA Onboarding:Workspace-Check:Unable to resolve workspace, might be deleted"
+            fi
+      else
+            echo "LA Onboarding:Workspace Id not mounted"
+      fi
+else 
+      echo "LA Onboarding:Internet-Connectivity-Check:Failed"
+fi
+
 
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
@@ -205,18 +225,57 @@ echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
 
 source ~/.bashrc
 
-#start telegraf
-#/usr/bin/telegraf --config $telegrafConfFile &
-#if [ ! -e "/etc/config/kube.conf" ]; then
-   /opt/telegraf --config $telegrafConfFile &
-   /opt/telegraf --version
-   dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
-#fi
+#Parse the prometheus configmap to create a file with new custom settings.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
 
+#If config parsing was successful, a copy of the conf file with replaced custom settings file is created
+if [ ! -e "/etc/config/kube.conf" ]; then
+            if [ -e "/opt/telegraf-test.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+            fi
+else
+      if [ -e "/opt/telegraf-test-rs.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test-rs.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+      fi
+fi
+
+#Setting default environment variables to be used in any case of failure in the above steps
+if [ ! -e "/etc/config/kube.conf" ]; then
+      cat defaultpromenvvariables | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables
+else
+      cat defaultpromenvvariables-rs | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables-rs
+fi
+
+#Sourcing telemetry environment variable file if it exists
+if [ -e "telemetry_prom_config_env_var" ]; then
+      cat telemetry_prom_config_env_var | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source telemetry_prom_config_env_var
+fi
+
+#start telegraf
+/opt/telegraf --config $telegrafConfFile &
+/opt/telegraf --version
+dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
 #dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
-
-
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
