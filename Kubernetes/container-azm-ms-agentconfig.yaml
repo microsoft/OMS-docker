@@ -39,14 +39,19 @@ data:
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
         interval = "1m"
 
-        fieldpass = ["kubelet_docker_operations", "kubelet_docker_operations_errors"]
-        fielddrop = ["metric_to_drop"]
+        #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
+        fieldpass = []
+        
+        #fielddrop = ["metric_to_drop"]
+        fielddrop = []
         
         # An array of urls to scrape metrics from.
-        urls = ["http://myurl:9101/metrics"]
+        # urls = ["http://myurl:9101/metrics"]
+        urls = []
 
         # An array of Kubernetes services to scrape metrics from.
-        kubernetes_services = ["http://my-service-dns.my-namespace:9102/metrics"]
+        # kubernetes_services = ["http://my-service-dns.my-namespace:9102/metrics"]
+        kubernetes_services = []
 
         # When monitor_kubernetes_pods = true, replicaset will scrape Kubernetes pods for the following prometheus annotations:
         # - prometheus.io/scrape: Enable scraping for this pod
@@ -63,10 +68,14 @@ data:
         interval: "1m"
 
         # An array of urls to scrape metrics from. $NODE_IP (all upper case) will substitute of running Node's IP address
-        urls = ["http://$NODE_IP:9103/metrics"]
+        # urls = ["http://$NODE_IP:9103/metrics"]
+        urls = []
 
-        fieldpass = ["kubelet_docker_operations", "kubelet_docker_operations_errors"]
-        fielddrop = ["metric_to_drop"]
+        #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
+        fieldpass = []
+
+        #fielddrop = ["metric_to_drop"]
+        fielddrop = []
 
 
 metadata:
