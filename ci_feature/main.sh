@@ -107,7 +107,6 @@ else
       echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
 fi
 
-
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
