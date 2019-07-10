@@ -8,7 +8,7 @@ data:
     #string.used by customer to keep track of this config file's version in their source control/repository (max allowed 10 chars, other chars will be truncated)
     ver1
   log-data-collection-settings: |-
-    # Log data collection settings container-azm-ms-agent settings
+    # Log data collection settings
     [log_collection_settings]
        [log_collection_settings.stdout]
           # In the absense of this configmap, default value for enabled is true
@@ -31,6 +31,53 @@ data:
        [log_collection_settings.env_var]
           # In the absense of this configmap, default value for enabled is true
           enabled = true
+  prometheus-data-collection-settings: |-
+    # Custom Prometheus metrics data collection settings
+    [prometheus_data_collection_settings.cluster]
+        # Cluster level scrape endpoint(s). These metrics will be scraped from agent's Replicaset (singleton)
+
+        #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
+        interval = "1m"
+
+        #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
+        fieldpass = []
+        
+        #fielddrop = ["metric_to_drop"]
+        fielddrop = []
+        
+        # An array of urls to scrape metrics from.
+        # urls = ["http://myurl:9101/metrics"]
+        urls = []
+
+        # An array of Kubernetes services to scrape metrics from.
+        # kubernetes_services = ["http://my-service-dns.my-namespace:9102/metrics"]
+        kubernetes_services = []
+
+        # When monitor_kubernetes_pods = true, replicaset will scrape Kubernetes pods for the following prometheus annotations:
+        # - prometheus.io/scrape: Enable scraping for this pod
+        # - prometheus.io/scheme: If the metrics endpoint is secured then you will need to
+        #     set this to `https` & most likely set the tls config.
+        # - prometheus.io/path: If the metrics path is not /metrics, define it with this annotation.
+        # - prometheus.io/port: If port is not 9102 use this annotation
+        monitor_kubernetes_pods = false
+    
+    [prometheus_data_collection_settings.node]
+        # Node level scrape endpoint(s). These metrics will be scraped from agent's DaemonSet running in every node in the cluster
+
+        #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
+        interval: "1m"
+
+        # An array of urls to scrape metrics from. $NODE_IP (all upper case) will substitute of running Node's IP address
+        # urls = ["http://$NODE_IP:9103/metrics"]
+        urls = []
+
+        #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
+        fieldpass = []
+
+        #fielddrop = ["metric_to_drop"]
+        fielddrop = []
+
+
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
