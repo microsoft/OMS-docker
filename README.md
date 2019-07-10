@@ -44,7 +44,7 @@ This set up is not for ACS Mesosphere DC/OS or ACS Kubernetes.
 This set up provides a containerized Container Solution Agent (OMS Agent for Linux). If you are interested in a full OMS Agent for linux with Container Solution, please go [here.](https://github.com/Microsoft/OMS-Agent-for-Linux)
 
 
-### To use OMS for all containers on a container host
+### To use OMS for all containers on a container host.
 
 - Start the OMS container:
 ```
