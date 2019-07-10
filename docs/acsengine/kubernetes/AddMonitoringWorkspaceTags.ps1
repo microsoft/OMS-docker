@@ -33,6 +33,7 @@ param(
 	[string]$ResourceGroupName,
 	[Parameter(mandatory=$true)]
 	[string]$LogAnalyticsWorkspaceResourceId,
+	[Parameter(mandatory=$true)]
 	[string] $clusterName
 )
 
@@ -41,7 +42,7 @@ param(
 $azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
 $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
 
-if (($azureRmProfileModule -eq $null) -or ($azureRmResourcesModule -eq $null)) {
+if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
 
 
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -126,7 +127,7 @@ try {
 }
 
 
-if ($account.Account -eq $null) {
+if ($null -eq $account.Account) {
 	try {
 		Write-Host("Please login...")
 		Login-AzureRmAccount -subscriptionid $SubscriptionId
@@ -172,31 +173,43 @@ if ($notPresent) {
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
 
-#
-#  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources 
-#
-$k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
-
 $isKubernetesCluster = $false 
 
-foreach($k8MasterVM in $k8sMasterVMs) {
+#
+#  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources (VMs or VMSSes)
+#
+$k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
+
+if($null -eq $k8sMasterVMsOrVMSSes) {
+
+  $k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachineScaleSets' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
+}
+
+
+
+foreach($k8MasterVM in $k8sMasterVMsOrVMSSes) {
   
   $tags = $k8MasterVM.Tags
 
   $acsEngineVersion = $tags['acsengineVersion']  
+
+  if($null -eq $acsEngineVersion) {
+     $acsEngineVersion = $tags['aksEngineVersion']  
+  }
+
   $orchestrator = $tags['orchestrator']
 
-  Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green
+  Write-Host("Aks-Engine or ACS-Engine version : " + $acsEngineVersion) -ForegroundColor Green
 
   Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
 
   if([string]$orchestrator.StartsWith('Kubernetes')) {
    $isKubernetesCluster = $true
 
-    Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
+    Write-Host("Resource group name: '" + $ResourceGroupName + "' found the aks-engine Kubernetes resources") -ForegroundColor Green
   }
   else {
-        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the Kubernetes aks-engine resources") -ForegroundColor Red
         exit 
   }
 
@@ -211,7 +224,7 @@ if($isKubernetesCluster -eq $false) {
 
 $workspaceResource = Get-AzureRmResource -ResourceId $LogAnalyticsWorkspaceResourceId
 
-if($workspaceResource -eq $null) {
+if($null -eq $workspaceResource) {
     Write-Host("Specified Log Analytics workspace ResourceId: '" + $LogAnalyticsWorkspaceResourceId + "' doesnt exist or don't have access to it") -ForegroundColor Red
     exit 
 }
@@ -220,17 +233,17 @@ if($workspaceResource -eq $null) {
 #  Add logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
 
-foreach($k8MasterVM in $k8sMasterVMs) { 
+foreach($k8MasterVM in $k8sMasterVMsOrVMSSes) { 
 
         $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
         
-        if ($r -eq $null) {
+        if ($null -eq $r) {
            
            Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :"  + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
            exit 
         }
 
-        if ($r.Tags -eq $null) {
+        if ($null -eq $r.Tags) {
            
            Write-Host("K8s master VM should have the tags" ) -ForegroundColor Red
            exit 
