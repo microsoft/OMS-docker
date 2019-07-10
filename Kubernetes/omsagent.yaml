@@ -397,7 +397,7 @@ spec:
   spec:
    serviceAccountName: omsagent
    containers:
-     - name: omsagent 
+     - name: omsagent
        image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
        imagePullPolicy: IfNotPresent
        resources:
