@@ -35,7 +35,7 @@ az account set -s $subscriptionId
 # check whether specified rg exists or not
 rg=$(az group show --name $clusterResourceGroup --subscription $subscriptionId)
 
-if [ -z $rg]; then
+if [ -z $rg ]; then
     echo "resource group does not exist in specified subscription":$clusterResourceGroup
     exit 1
 fi	
