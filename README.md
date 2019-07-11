@@ -32,24 +32,21 @@ For more details on how to use the product, go to [Azure Monitor for containers 
 ## Troubleshooting
 Follow the instructions in [Azure Monitor for Containers Troubleshoot](https://github.com/Microsoft/OMS-docker/tree/aks-engine/Troubleshoot) to troubleshoot the issues related to onboarding of Azure Monitor for containers for AKS-engine Kubernetes cluster(s).
 
-Azure Monitor for containers uses the following tags on the master nodes of AKS-engine Kubernetes cluster to detect whether the cluster is AKS-engine or not, onboarded to monitoring or not, determine log analytics workspace id to query the data etc. These tags critical to enable the Azure Monitor for containers experience. 
+Azure Monitor for containers uses the following tags on the master nodes or VMSS(es) of AKS-engine Kubernetes cluster to detect whether the cluster is AKS-engine or not, onboarded to monitoring or not, determine log analytics workspace id to query the data etc. These tags critical to enable the Azure Monitor for containers experience. 
 
 Following Azure tags are used by Azure Monitor for containers:
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tag Name                        | Tag Value                                                              | Creation Source of the Tag                |
 | ----------------------------    | -------------------------------------------------------                | ------------------------------------      | 
-| acsengineversion                | v0.24.0                                                                | ACS-engine or AKS-engine                  |
-| orchestrator                      | Kubernetes                                                             | ACS-engine or AKS-engine                  |
-| creationsource                  | acs-engine-k8s-master                                                  | ACS-engine or AKS-engine                  |
 | logAnalyticsWorkspaceResourceId | Azure Resource Id of Log Analytics workspace configured on the Agent   | Azure Monitor for containers onboarding   |
 | clusterName                     | Resource Id of the cluster Resource group or cluster Name              | Azure Monitor for containers onboarding   |
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Note: clusterName is the optional tag. If this tag not specified, clusterName should be Azure Resource Id of the AKS-engine resource group during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
-If the clusterName tag specified, please make sure the value of the tag is same used during the install of [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers) chart.
 
-Except logAnalyticsWorkspaceResourceId tag and all other tags are created by ACS-engine (new name is AKS-engine). logAnalyticsWorkspaceResourceId is a custom tag and this tag lost during the upgrade or scale as reported github issue https://github.com/Azure/acs-engine/issues/4155. Azure Monitor for containers should work as long as at least one of the K8s master node has required tags described above. If the Azure Monitor for containers not working, please verify   logAnalyticsWorkspaceResourceId tag after Upgrade or scale up if the Azure Monitor for containers not working.
+Note: logAnalyticsWorkspaceResourceId  and clusterName are customs tag and these tag lost during the upgrade or scale as reported github issue https://github.com/Azure/acs-engine/issues/4155. 
+Azure Monitor for containers should work as long as at least one of the K8s master node has required tags described above. 
+If the Azure Monitor for containers not working, please verify   logAnalyticsWorkspaceResourceId and ckusterName tags after Upgrade or scale up.
 
 ## Supportability
 Supporting of Azure Monitor for containers for AKS-engine (formerly known as ACS-engine) cluster is best effort basis.
