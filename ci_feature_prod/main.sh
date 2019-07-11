@@ -50,7 +50,7 @@ fi
 #check if file was written successfully.
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
-#resourceid override for loganalytics data.
+#resourceid override for loganalytics data
 if [ -z $AKS_RESOURCE_ID ]; then
       echo "not setting customResourceId" 
 else
