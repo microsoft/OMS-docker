@@ -42,7 +42,7 @@ fi
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case
+	#kubernetes treats node names as lower case.
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
