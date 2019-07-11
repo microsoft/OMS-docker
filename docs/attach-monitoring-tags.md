@@ -1,12 +1,11 @@
 # How to add Log Analytics Workspace ResourceId tags to Acs-engine Kubernetes cluster resources
 
-You can either use the Azure Powershell or Azure cli to attach the Azure Resource Id of the Log Analytics workspace and optionally clusterName tag to Acs-engine Kubernetes master nodes. If the clusterName tag attached and that will be used to identify that as cluster name in the UI else its name of the resource group where the acs-engine resources exist. ClusterName should be match with what's configured on the omsagent for omsagent.env.clusterName as part of the omsagent installation. Log Analytics workspace ResourceId tag on the K8s master node used to determine whether the specified cluster is onboarded to monitoring or not.  
-
+You can either use the Azure Powershell or Azure cli Bash script to attach the Azure Resource Id of the Log Analytics workspace and clusterName tag to AKS-Engine ( or ACS-Engine Kubernetes) master nodes or VMSSes.
+ClusterName should be match with what's configured on the omsagent for omsagent.env.clusterName as part of the omsagent installation. Log Analytics workspace ResourceId tag on the K8s master node(s) or VMSS(es) used to determine whether the specified cluster is onboarded to monitoring or not.  
 
 These  tags required for the Azure Monitor for Containers Ux experience (https://docs.microsoft.com/en-us/azure/monitoring/monitoring-container-insights-overview )
 
 If you are not familiar with the concepts of azure resource tags (https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags)
-
 
 ## Attach tags using Powershell
 
@@ -35,7 +34,7 @@ Get the below powershell script files to your local computer.
 
 ``` sh 
 
-.\AddMonitoringWorkspaceTags.ps1 -SubscriptionId <Acs-Engine SubscriptionId> -ResourceGroupName <Acs-Engine ResourceGroup> -LogAnalyticsWorkspaceResourceId <WorkspaceResourceId>
+.\AddMonitoringWorkspaceTags.ps1 -SubscriptionId <Cluster SubscriptionId> -ResourceGroupName <Cluster ResourceGroup> -LogAnalyticsWorkspaceResourceId <WorkspaceResourceId> -ClusterName <name of the cluster>
 
 ```
 
@@ -47,11 +46,11 @@ The configuration change can take a few minutes to complete. When it finishes, y
 
 ``` sh
 
-curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringTags.sh | bash -s <subscriptionId> <clusterResourceGroup> <logAnalyticsWorkspaceResourceId> <clusterName>
+curl -sL https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s <subscriptionId> <clusterResourceGroup> <logAnalyticsWorkspaceResourceId> <clusterName>
 
 For example
 
-curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster"
+curl -sL https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster"
 
 
 ```

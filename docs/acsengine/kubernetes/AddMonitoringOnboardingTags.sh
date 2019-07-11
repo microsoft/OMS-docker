@@ -13,7 +13,7 @@
 #  [Required]  ${4} clusterName                       Name of the cluster configured on the omsAgent (for omsagent.env.clusterName) of specified acs-engine Kubernetes cluster
 #
 #  For example
-#  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "Resource Group Name of AKS-Engine cluster"  "/subscriptions/<SubscriptionId>/resourceGroups/<resourceGroup>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>" "clusterName of AKS-Engine cluster"
+# https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "Resource Group Name of AKS-Engine cluster"  "/subscriptions/<SubscriptionId>/resourceGroups/<resourceGroup>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>" "clusterName of AKS-Engine cluster"
 #
 
 subscriptionId=${1}
@@ -24,7 +24,7 @@ clusterName=${4}
 echo "subscriptionId"=$subscriptionId
 echo "clusterResourceGroup" = $clusterResourceGroup
 echo "logAnalyticsWorkspaceResourceId" = $workspaceResourceId
-echo "clusterName" = ${4}
+echo "clusterName" = $clusterName
 
 # login
 az login
@@ -35,7 +35,7 @@ az account set -s $subscriptionId
 # check whether specified rg exists or not
 rg=$(az group show --name $clusterResourceGroup --subscription $subscriptionId)
 
-if [ -z $rg]; then
+if [ -z "$rg" ]; then
     echo "resource group does not exist in specified subscription":$clusterResourceGroup
     exit 1
 fi	
