@@ -1,12 +1,14 @@
 ﻿<# 
     .DESCRIPTION 
-		Attach Log Analytics Workspace Resource Id tags to the master nodes in resource group of the acs-engine Kubernetes cluster
-        
+		Attach Log Analytics Workspace Resource Id tags to the master nodes or VMSS(es) in resource group of the AKS-Engine (or ACS-Engine Kubernetes) cluster
+		        
         ---------------------------------------------------------------------------------------------------------
        | tagName                             | tagValue                                                         |
         ---------------------------------------------------------------------------------------------------------
-       |logAnalyticsWorkspaceResourceId      | <azure ResourceId of the workspace configured on the omsAgent >  |
-       ----------------------------------------------------------------------------------------------------------
+       | logAnalyticsWorkspaceResourceId      | <azure ResourceId of the workspace configured on the omsAgent >  |
+	   ----------------------------------------------------------------------------------------------------------
+	   | clusterName                           | <name of the cluster configured during agent installation>       |
+	   ----------------------------------------------------------------------------------------------------------
      
      https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags  
 	 
@@ -19,10 +21,10 @@
     .PARAMETER ResourceGroupName
         Resource Group name where the acs-engine Kubernetes cluster is in
 
-    .PARAMETER logAnalyticsWorkspaceResourceId
+    .PARAMETER LogAnalyticsWorkspaceResourceId
         ResourceId of the Log Analytics. This should be the same as the one configured on the omsAgent of specified acs-engine Kubernetes cluster
 
-	 .PARAMETER clusterName
+	 .PARAMETER ClusterName
         Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified acs-engine Kubernetes cluster	
 #>
 
@@ -34,7 +36,7 @@ param(
 	[Parameter(mandatory=$true)]
 	[string]$LogAnalyticsWorkspaceResourceId,
 	[Parameter(mandatory=$true)]
-	[string] $clusterName
+	[string] $ClusterName
 )
 
 
@@ -265,11 +267,11 @@ foreach($k8MasterVM in $k8sMasterVMsOrVMSSes) {
         }
 
         # if clusterName parameter passed-in
-        if ($clusterName) {
+        if ($ClusterName) {
             if($r.Tags.ContainsKey("clusterName")) {
 				$existingclusterName = $r.Tags["clusterName"]
 
-				if ($existingclusterName -eq $clusterName) {
+				if ($existingclusterName -eq $ClusterName) {
 					 Write-Host("Ignoring the request since K8s master VM :" + $k8MasterVM.Name + " already has existing tag with specified clusterName" ) -ForegroundColor Green
                      exit
 				}
@@ -278,13 +280,13 @@ foreach($k8MasterVM in $k8sMasterVMsOrVMSSes) {
               $r.Tags.Remove("clusterName")        
 			}
 
-           $r.Tags.Add("clusterName", $clusterName) 
+           $r.Tags.Add("clusterName", $ClusterName) 
 		}
 
         $r.Tags.Add("logAnalyticsWorkspaceResourceId", $LogAnalyticsWorkspaceResourceId) 
         Set-AzureRmResource -Tag $r.Tags -ResourceId $r.ResourceId -Force
   } 
-if ($clusterName) {
+if ($ClusterName) {
    Write-Host("Successfully added clusterName and logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green 
 }
 else {
