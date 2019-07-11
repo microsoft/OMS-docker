@@ -43,7 +43,7 @@ The configuration change can take a few minutes to complete. When it finishes, y
 
 ## Attach tags using Azure CLI 
 
-- Run the below bash script to attach the log analytics workspace resourceId tags and clusterName tags to K8s master nodes or vmsses
+- Run the below bash script to attach required monitoring onboarding tags such as log analytics workspace resource id and clusterName tags to K8s master nodes or vmsses
 
 ``` sh
 
@@ -51,7 +51,7 @@ curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/
 
 For example
 
-https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster"
+curl -sL https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/acsengine/kubernetes/AddMonitoringTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster"
 
 
 ```
