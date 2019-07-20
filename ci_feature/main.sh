@@ -219,7 +219,7 @@ aikey=$(echo $APPLICATIONINSIGHTS_AUTH | base64 --decode)
 export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
 echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
 
-source ~/.bashrc
+# source ~/.bashrc
 
 #Parse the prometheus configmap to create a file with new custom settings.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
@@ -265,6 +265,7 @@ if [ -e "telemetry_prom_config_env_var" ]; then
       done
       source telemetry_prom_config_env_var
 fi
+source ~/.bashrc
 
 #start telegraf
 /opt/telegraf --config $telegrafConfFile &
