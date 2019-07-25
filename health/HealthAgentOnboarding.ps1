@@ -403,13 +403,13 @@ catch {
     #Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
 }  
 
-$desktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-if (-not (test-path $desktopPath\deployments) ) {
-    Write-Host "$($desktopPath)\deployments doesn't exist, creating it"
-    mkdir $desktopPath\deployments | out-null
+$desktopPath = "~"
+if (-not (test-path $desktopPath/deployments) ) {
+    Write-Host "$($desktopPath)/deployments doesn't exist, creating it"
+    mkdir $desktopPath/deployments | out-null
 }
 else {
-    Write-Host "$($desktopPath)\deployments exists, no need to create it"
+    Write-Host "$($desktopPath)/deployments exists, no need to create it"
 }
 try {
 
@@ -421,10 +421,10 @@ try {
     $clusterName = $aksResourceDetails[8].Trim()
     $clusterResourceGroupName = $aksResourceDetails[4].Trim()
     Import-AzAksCredential -Id $aksResourceId -Force
-    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath\omsagent-template.yaml   
+    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath/omsagent-template.yaml   
     
-    (Get-Content -Path $desktopPath\omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksResourceLocation -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath\deployments\omsagent-$clusterName.yaml
-    kubectl apply -f $desktopPath\deployments\omsagent-$clusterName.yaml
+    (Get-Content -Path $desktopPath/omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksResourceLocation -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath/deployments/omsagent-$clusterName.yaml
+    kubectl apply -f $desktopPath/deployments/omsagent-$clusterName.yaml
     Write-Host "Successfully onboarded to health model omsagent" -ForegroundColor Green
 }
 catch {
