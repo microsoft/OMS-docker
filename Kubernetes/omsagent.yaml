@@ -14,6 +14,9 @@ rules:
   verbs: ["list", "get", "watch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets"]
+  verbs: ["get", "update"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -286,13 +289,13 @@ spec:
      - name: omsagent 
        image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
        imagePullPolicy: IfNotPresent
-       resources:
-        limits:
-         cpu: 150m
-         memory: 600Mi
-        requests:
-         cpu: 75m
-         memory: 225Mi
+      #  resources:
+        # limits:
+        #  cpu: 150m
+        #  memory: 600Mi
+        # requests:
+        #  cpu: 75m
+        #  memory: 225Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
@@ -400,13 +403,13 @@ spec:
      - name: omsagent
        image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
        imagePullPolicy: IfNotPresent
-       resources:
-        limits:
-         cpu: 150m
-         memory: 500Mi
-        requests:
-         cpu: 50m
-         memory: 175Mi
+      #  resources:
+        # limits:
+        #  cpu: 150m
+        #  memory: 500Mi
+        # requests:
+        #  cpu: 50m
+        #  memory: 175Mi
        env:
        #- name: AKS_RESOURCE_ID
        #  value: "VALUE_AKS_RESOURCE_ID_VALUE"

@@ -73,6 +73,20 @@ data:
 
         #fielddrop = ["metric_to_drop"]
 
+  custom-resource-settings: |-
+       [resource_settings.omsagent]
+         # Custom settings for cpu and memory requests and limits for the daemonset
+          omsAgentCpuLimit = "150m"
+          omsAgentMemLimit = "600Mi"
+          omsAgentCpuRequest = "75m"
+          omsAgentMemRequest = "225Mi"
+
+       [resource_settings.omsagent-rs]
+         # Custom settings for cpu and memory requests and limits for the replicaset
+          omsAgentRsCpuLimit = "150m"
+          omsAgentRsMemLimit = "500Mi"
+          omsAgentRsCpuRequest = "50m"
+          omsAgentRsMemRequest = "175Mi"
 
 metadata:
   name: container-azm-ms-agentconfig
