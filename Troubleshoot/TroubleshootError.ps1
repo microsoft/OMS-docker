@@ -26,10 +26,8 @@ param(
 
 $ErrorActionPreference = "Stop";
 Start-Transcript -path .\TroubleshootDump.txt -Force
-$DocumentationLink = "https://github.com/Microsoft/OMS-docker/blob/troubleshooting_doc/Troubleshoot/README.md"
 $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
-$PowershellDownloadLink = "https://docs.microsoft.com/en-us/powershell/scripting/install/installing-windows-powershell"
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 $MdmCustomMetricAvailabilityLocations = (
@@ -42,117 +40,16 @@ $MdmCustomMetricAvailabilityLocations = (
     'westeurope'
 );
 
-# checks the required Powershell modules exist and if not exists, request the user permission to install
-$azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile 
-$azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources 
-$azureRmOperationalInsights = Get-Module -ListAvailable -Name AzureRM.OperationalInsights
-$azureRmAks = Get-Module -ListAvailable -Name AzureRM.AKS;
-
-if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule) -or ($null -eq $azureRmOperationalInsights) -or ($null -eq $azureRmAks)) {
-
-    $message = "This script will try to install the latest versions of the following Modules : `
-			    AzureRM.Resources, AzureRM.OperationalInsights and AzureRM.profile, AzureRM.AKS using the command`
-			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
-			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
-    $question = "Do you want to Install the modules and run the script or just run the script?"
-
-    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
-
-    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
-
-    switch ($decision) {
-        0 { 
-            try {
-                if ($null -eq $azureRmProfileModule) {
-                    Write-Host("Installing AzureRM.profile...")
-                    Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-                }
-            }
-            catch {
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
-                exit
-            }
-            try {
-                if ($null -eq $azureRmResourcesModule) {
-                    Write-Host("Installing AzureRM.Resources...")
-                    Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-                }
-            }
-            catch {
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red 
-                exit
-            }
-            try {
-                if ($null -eq $azureRmOperationalInsights) {
-                    Write-Host("Installing AzureRM.OperationalInsights...")
-                    Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-                }
-            }
-            catch {
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.OperationalInsights in a new powershell window: eg. 'Install-Module AzureRM.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red 
-                exit
-            }
-            try {
-                if ($null -eq $azureRmAks) {
-                    Write-Host("Installing AzureRM.AKS...");
-                    Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
-                }
-            }
-            catch {
-                Write-Host("Please make sure you're running the latest version of powershell. Download it from here: " + $PowershellDownloadLink);
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.AKS in a new powershell window: eg: 'Install-Module -AllowPreRelease AzureRM.AKS -Repository PSGallery -Force -AllowClobber -ErrorAction Stop'") -ForegroundColor Red;
-                exit
-            }
-        }
-        1 {
-            try {
-                Import-Module AzureRM.profile -ErrorAction Stop
-            }
-            catch {
-                Write-Host("Could not import AzureRM.profile...") -ForegroundColor Red
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
-                Stop-Transcript
-                exit
-            }
-            try {
-                Import-Module AzureRM.Resources
-            }
-            catch {
-                Write-Host("Could not import AzureRM.Resources... Please reinstall this Module") -ForegroundColor Red
-                Stop-Transcript
-                exit
-            }
-            try {
-                Import-Module AzureRM.OperationalInsights
-            }
-            catch {
-                Write-Host("Could not import AzureRM.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
-                Stop-Transcript
-                exit
-            }
-            Write-Host("Running troubleshooting script... Please reinstall this Module")
-            Write-Host("")
-        }
-        2 { 
-            Write-Host("")
-            Stop-Transcript
-            exit
-        }
-    }
-}
 try {
     Write-Host("")
-    Write-Host("Trying to get the current AzureRM login context...")
+    Write-Host("Trying to get the current Az login context...")
     $account = Get-AzContext -ErrorAction Stop
-    Write-Host("Successfully fetched current AzureRM context...") -ForegroundColor Green
+    Write-Host("Successfully fetched current Az context...") -ForegroundColor Green
     Write-Host("")
 }
 catch {
     Write-Host("")
-    Write-Host("Could not fetch AzureRMContext..." ) -ForegroundColor Red
+    Write-Host("Could not fetch AzContext..." ) -ForegroundColor Red
     Write-Host("")
 }
 
