@@ -22,24 +22,20 @@ The table below summarizes known issues you may face while using Azure Monitor f
 # Troubleshooting script
 
 Prequisites: 
-- Powershell version 5.1 or above. To install powershell use the following [link](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6). If you've it installed already, check the powershell version using the command `$psversiontable` and look at the PSVersion row.
-- Run powershell as an administrator
-- Use 'Get-ExecutionPolicy' to get the current execution policy and store it in a file
-- Type the following command 'Set-ExecutionPolicy Unrestricted' before running the script
-- latest version of PowerShellGet Module 
-
+- Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
 
 # Azure Kubernetes Service (AKS)
 
 You can use the troubleshooting script provided [here](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Steps:
-- Download [TroubleshootError.ps1](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
-- Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
-- Use the following command to run the script : `.\TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`.
+- Open powershell using the [cloudshell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview) in the azure portal.
+- Make sure that you're using powershell (selected by default)
+- Run the following command to change the directory - `cd ~`
+- Run the following command to download the script - `curl https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1 -o TroubleshootError.ps1`
+- Run the following command to execute the script - `~/TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`using the subscription ID, resource group name and cluster name you collected in the pre-requisite step.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
 Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
-- Please remember to 'Set-ExecutionPolicy' to what it was previously(from the value stored in the file) after you've run the script
 
 # Aks-Engine Kubernetes
 
