@@ -3,13 +3,13 @@
 #
 <# 
     .DESCRIPTION 
-		Classifies the error type that a user is facing with their Acs-Engine Kubernetes cluster
+		Classifies the error type that a user is facing with their ACS-Engine Kubernetes or AKS-Engine cluster
  
     .PARAMETER SubscriptionId
-        Subscription Id that the Acs-Engine Kubernetes cluster is in
+        Subscription Id that the ACS-Engine Kubernetes or AKS-Engine cluster is in
 
     .PARAMETER ResourceGroupName
-        Resource Group name where the Acs-Engine Kubernetes cluster is in
+        Resource Group name where the ACS-Engine Kubernetes or AKS-Engine cluster is in
     
 #>
 
@@ -187,48 +187,64 @@ if ($notPresent) {
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
 #
-#  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources 
+#  Validate the specified Resource Group has the AKS-Engine or ACS-Engine Kuberentes cluster resources 
 #
-Write-Host("Checking specified Resource Group has the acs-engine Kuberentes cluster resources...")
+Write-Host("Checking specified Resource Group has the AKS-Engine or ACS-Engine kubernetes cluster resources...")
 
-$k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName  | Where-Object {$_.Name -match "k8s-master"}
+$k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+
+if ($null -eq $k8sMasterVMsOrVMSSes) {
+    $k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachineScaleSets' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+}
 
 $isKubernetesCluster = $false 
 
-foreach ($k8MasterVM in $k8sMasterVMs) {
+foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) {
 
     $tags = $k8MasterVM.Tags
 
-    $acsEngineVersion = $tags['acsengineVersion']  
-    $orchestrator = $tags['orchestrator']
+    $aksEngineVersion = $tags['aksEngineVersion']  
+    $orchestrator = $tags['orchestrator']   
+    
+    if ($null -eq $aksEngineVersion) {
+        $acsEngineVersion = $tags['acsengineVersion']  
+        Write-Host("Aks Engine version : " + $acsEngineVersion) -ForegroundColor Green  
+    }
+    else {
+        Write-Host("Aks Engine version : " + $aksEngineVersion) -ForegroundColor Green  
+    }
 
-    Write-Host("Acs Engine version : " + $acsEngineVersion) -ForegroundColor Green  
     Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
 
     if ([string]$orchestrator.StartsWith('Kubernetes')) {
         $isKubernetesCluster = $true	
-        Write-Host("Resource group name: '" + $ResourceGroupName + "' found the acs-engine Kubernetes resources") -ForegroundColor Green
+        if ($aksEngineVersion) {
+            Write-Host("Resource group name: '" + $ResourceGroupName + "' found the AKS-Engine resources") -ForegroundColor Green
+        }
+        else {
+            Write-Host("Resource group name: '" + $ResourceGroupName + "' found the ACS-Engine kubernetes resources") -ForegroundColor Green
+        }
 
         break
     }
     else {
-        Write-Host("This Resource group : '" + $ResourceGroupName + "'does not have the Kubernetes acs-engine resources") -ForegroundColor Red
+        Write-Host("This Resource group : '" + $ResourceGroupName + "'does not have the AKS-engine or ACS-Engine Kubernetes resources") -ForegroundColor Red
         exit 
     }
 }
 
 if ($isKubernetesCluster -eq $false) {
-    Write-Host("Monitoring only supported  for Acs-engine with Kubernetes") -ForegroundColor Red
+    Write-Host("Monitoring only supported  for AKS-Engine or ACS-Engine with Kubernetes") -ForegroundColor Red
     exit 
 }
 
-Write-Host("Successfully checked the Acs-engine Kuberentes cluster resources in specified resource group") -ForegroundColor Green
+Write-Host("Successfully checked the AKS-Engine or ACS-Engine Kuberentes cluster resources in specified resource group") -ForegroundColor Green
 
 #
 #  Extract logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
 
-foreach ($k8MasterVM in $k8sMasterVMs) { 
+foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) { 
 
     $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
 	
@@ -245,21 +261,36 @@ foreach ($k8MasterVM in $k8sMasterVMs) {
         Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red		
         exit 
     }
-
+    
     if ($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {	   
+        Write-host $r.Tags["logAnalyticsWorkspaceResourceId"]
         $LogAnalyticsWorkspaceResourceID = $r.Tags["logAnalyticsWorkspaceResourceId"]
-        $LogAnalyticsWorkspaceResourceID = $LogAnalyticsWorkspaceResourceID.Trim()
-        break;
+        $LogAnalyticsWorkspaceResourceID = $LogAnalyticsWorkspaceResourceID.Trim()       
+    }
+    
+
+    if ($r.Tags.ContainsKey("clusterName")) {	  
+        $AksEngineClusterName = $r.Tags["clusterName"]
+        $AksEngineClusterName = $AksEngineClusterName.Trim()     
     }
 }
 
 
 if ($null -eq $LogAnalyticsWorkspaceResourceID) {
-    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
+    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on AKS-Engine k8 master nodes or VMSSes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
     Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
     Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
     exit
-} else {
+}
+else {
+
+    if ($null -eq $AksEngineClusterName) {
+        Write-Host("There is no existing clusterName tag on AKS-Engine k8 master nodes to correlate the clusterName used on the omsagent" ) -ForegroundColor Red	
+        Write-Host("Please add the clusterName tag with the value of clusterName used during the omsagent agent onboarding. Refer below link for details:") -ForegroundColor Red    
+        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+
+        exit
+    }
 
     Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ") 
     $workspaceSubscriptionId = $LogAnalyticsWorkspaceResourceID.split("/")[2]
@@ -409,7 +440,7 @@ if ($null -eq $LogAnalyticsWorkspaceResourceID) {
             $CurrentDir = (Get-Item -Path ".\" -Verbose).FullName
             $TemplateFile = $CurrentDir + "\ContainerInsightsSolution.json"
             $DeploymentName = "ContainerHealthOnboarding-Solution-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-            $Parameters = @{}
+            $Parameters = @{ }
             $Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
             $Parameters.Add("workspaceRegion", $WorkspaceLocation)
 

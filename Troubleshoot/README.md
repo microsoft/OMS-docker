@@ -16,35 +16,33 @@ The table below summarizes known issues you may face while using Azure Monitor f
 | Issues and Error Messages  | Action |
 | ---- | --- |
 | Error Message `No data for selected filters`  | It may take some time to establish monitoring data flow for newly created clusters. Please allow at least 10-15 minutes for data to appear for your cluster. | 
-| Error Message `Error retrieving data` | While Aks-Engine cluster is setting up for health and performance monitoring, a connection is established between the cluster and Azure Log Analytics workspace. Log Analytics workspace is used to store all monitoring data for your cluster. This error may occurr when your Log Analytics workspace has been deleted or lost. Please check whether your Log Analytics workspace is available. To find your Log Analytics workspace go [here.](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-manage-access) and your workspace is available. If the workspace is missing, you will need to re-onboard Container Health to your cluster. To re-onboard, you will need to [onboard] (https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-enable-existing-clusters) again to Container Health. |
+| Error Message `Error retrieving data` | While Aks-Engine cluster is setting up for health and performance monitoring, a connection is established between the cluster and Azure Log Analytics workspace. Log Analytics workspace is used to store all monitoring data for your cluster. This error may occurr when your Log Analytics workspace has been deleted or lost. Please check whether your Log Analytics workspace is available. To find your Log Analytics workspace go [here.](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-manage-access) and your workspace is available. If the workspace is missing, you will need to re-onboard Container Health to your cluster. To re-onboard, you will need to [onboard](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-enable-existing-clusters) again to Container Health. |
+| Failed to `Enable fast alerting experience on basic metrics for this Azure Kubernetes Services cluster`  | The action is trying to grant the Monitoring Metrics Publisher role assignment on the cluster resource. The user initiating the process must have access to the **Microsoft.Authorization/roleAssignments/write** permission on the AKS cluster resource scope. Only members of the **Owner** and **User Access Administrator** built-in roles are granted access to this permission. If your security policies require assigning granular level permissions, we recommend you view [custom roles](https://docs.microsoft.com/en-us/azure/role-based-access-control/custom-roles) and assign it to the users who require it. | 
 
 # Troubleshooting script
 
 Prequisites: 
-- Powershell version 5.1 or above. To install powershell use the following [link](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6). If you've it installed already, check the powershell version using the command `$psversiontable` and look at the PSVersion row.
-- Run powershell as an administrator
-- Use 'Get-ExecutionPolicy' to get the current execution policy and store it in a file
-- Type the following command 'Set-ExecutionPolicy Unrestricted' before running the script
-
+- Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
 
 # Azure Kubernetes Service (AKS)
 
-You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
+You can use the troubleshooting script provided [here](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1) to diagnose the problem.
 
 Steps:
-- Download [TroubleshootError.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
-- Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
-- Use the following command to run the script : `.\TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`.
+- Open powershell using the [cloudshell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview) in the azure portal.
+- Make sure that you're using powershell (selected by default)
+- Run the following command to change the directory - `cd ~`
+- Run the following command to download the script - `curl https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1 -o TroubleshootError.ps1`
+- Run the following command to execute the script - `~/TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`using the subscription ID, resource group name and cluster name you collected in the pre-requisite step.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
 Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
-- Please remember to 'Set-ExecutionPolicy' to what it was previously(from the value stored in the file) after you've run the script
 
 # Aks-Engine Kubernetes
 
-You can use the troubleshooting script provided [here](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1) to diagnose the problem.
+You can use the troubleshooting script provided [here](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1) to diagnose the problem.
 
 Steps:
-- Download [TroubleshootError_AcsEngine.ps1](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1), [ContainerInsightsSolution.json](https://github.com/Microsoft/OMS-docker/blob/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
+- Download [TroubleshootError_AcsEngine.ps1](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError_AcsEngine.ps1), [ContainerInsightsSolution.json](https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json)
 - Collect Subscription ID, Resource group name of the Aks-Engine Kubernetes cluster
 - Use the following command to run the script : `.\TroubleshootError_AcsEngine.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName>`.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.

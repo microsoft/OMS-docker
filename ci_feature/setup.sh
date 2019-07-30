@@ -14,8 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-https://github.com/Microsoft/Docker-Provider/releases/download/healthpreview04262019/docker-cimprov-4.0.0-1.universal.x86_64.sh
-
+wget https://github.com/microsoft/Docker-Provider/releases/download/healthpreview06182019/docker-cimprov-5.0.0-1.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
@@ -53,13 +52,13 @@ wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0.0/tele
 
 chmod 777 /opt/telegraf
 
-/$TMPDIR/docker-cimprov-5.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-6.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
 sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
 sudo apt-get update
-sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.1 libsqlite3-dev=3.11.0-1ubuntu1.1 -y
+sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.2 libsqlite3-dev=3.11.0-1ubuntu1.2 -y
 
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
