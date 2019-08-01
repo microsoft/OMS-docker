@@ -372,18 +372,18 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "5.0.0-1"
+    dockerProviderVersion: "6.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview08012019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
-         memory: 300Mi
+         memory: 600Mi
         requests:
          cpu: 75m
          memory: 225Mi
@@ -394,7 +394,7 @@ spec:
          value: "VALUE_AKS_REGION"
       #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
       #  - name: ACS_RESOURCE_NAME
-      #    value: "aks-engine-health"
+       #   value: "my_acs_cluster_name"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -488,13 +488,13 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "5.0.0-1"
+    dockerProviderVersion: "6.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview08012019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -511,8 +511,6 @@ spec:
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
       #  - name: ACS_RESOURCE_NAME
       #    value: "aks-engine-health"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP
@@ -553,7 +551,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - ps -ef | grep omsagent | grep -v "grep"
+         - /opt/livenessprobe.sh
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
