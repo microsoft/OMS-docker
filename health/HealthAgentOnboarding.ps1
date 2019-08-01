@@ -421,7 +421,7 @@ try {
     $clusterName = $aksResourceDetails[8].Trim()
     $clusterResourceGroupName = $aksResourceDetails[4].Trim()
     Import-AzAksCredential -Id $aksResourceId -Force
-    Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath/omsagent-template.yaml   
+    Invoke-WebRequest https://raw.githubusercontent.com/microsoft/OMS-docker/dilipr/mergeHealthToCiFeature/health/omsagent-template.yaml -OutFile $desktopPath/omsagent-template.yaml   
     
     (Get-Content -Path $desktopPath/omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksResourceLocation -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath/deployments/omsagent-$clusterName.yaml
     kubectl apply -f $desktopPath/deployments/omsagent-$clusterName.yaml
