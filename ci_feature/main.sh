@@ -116,6 +116,52 @@ cat config_env_var | while read line; do
 done
 source config_env_var
 
+
+#Parse the prometheus configmap to create a file with new custom settings.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
+
+#If config parsing was successful, a copy of the conf file with replaced custom settings file is created
+if [ ! -e "/etc/config/kube.conf" ]; then
+            if [ -e "/opt/telegraf-test.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+            fi
+else
+      if [ -e "/opt/telegraf-test-rs.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test-rs.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+      fi
+fi
+
+#Setting default environment variables to be used in any case of failure in the above steps
+if [ ! -e "/etc/config/kube.conf" ]; then
+      cat defaultpromenvvariables | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables
+else
+      cat defaultpromenvvariables-rs | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables-rs
+fi
+
+#Sourcing telemetry environment variable file if it exists
+if [ -e "telemetry_prom_config_env_var" ]; then
+      cat telemetry_prom_config_env_var | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source telemetry_prom_config_env_var
+fi
+
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
@@ -220,51 +266,6 @@ export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
 echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
 
 source ~/.bashrc
-
-#Parse the prometheus configmap to create a file with new custom settings.
-/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
-
-#If config parsing was successful, a copy of the conf file with replaced custom settings file is created
-if [ ! -e "/etc/config/kube.conf" ]; then
-            if [ -e "/opt/telegraf-test.conf" ]; then
-                  echo "****************Start Telegraf in Test Mode**************************"
-                  /opt/telegraf --config /opt/telegraf-test.conf -test
-                  if [ $? -eq 0 ]; then
-                        mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
-                  fi
-                  echo "****************End Telegraf Run in Test Mode**************************"
-            fi
-else
-      if [ -e "/opt/telegraf-test-rs.conf" ]; then
-                  echo "****************Start Telegraf in Test Mode**************************"
-                  /opt/telegraf --config /opt/telegraf-test-rs.conf -test
-                  if [ $? -eq 0 ]; then
-                        mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
-                  fi
-                  echo "****************End Telegraf Run in Test Mode**************************"
-      fi
-fi
-
-#Setting default environment variables to be used in any case of failure in the above steps
-if [ ! -e "/etc/config/kube.conf" ]; then
-      cat defaultpromenvvariables | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source defaultpromenvvariables
-else
-      cat defaultpromenvvariables-rs | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source defaultpromenvvariables-rs
-fi
-
-#Sourcing telemetry environment variable file if it exists
-if [ -e "telemetry_prom_config_env_var" ]; then
-      cat telemetry_prom_config_env_var | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source telemetry_prom_config_env_var
-fi
 
 #start telegraf
 /opt/telegraf --config $telegrafConfFile &
