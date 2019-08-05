@@ -116,6 +116,10 @@ cat config_env_var | while read line; do
 done
 source config_env_var
 
+#Replace the placeholders in td-agent-bit.conf file for fluentbit with custom/default values in daemonset
+if [ ! -e "/etc/config/kube.conf" ]; then
+      /opt/microsoft/omsagent/ruby/bin/ruby td-agent-bit-conf-customizer.rb
+fi
 
 #Parse the prometheus configmap to create a file with new custom settings.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
