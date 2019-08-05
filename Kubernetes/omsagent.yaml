@@ -31,6 +31,14 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
+  AKS_RESOURCE_ID: "VALUE_AKS_RESOURCE_ID_VALUE"
+metadata:
+  name: omsagent-aks-resource-id
+  namespace: kube-system
+---
+kind: ConfigMap
+apiVersion: v1
+data:
   kube.conf: |- 
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
 
