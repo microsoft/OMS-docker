@@ -253,8 +253,8 @@ try {
         -ResourceGroupName $workspaceResourceGroupName `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/templates/azuremonitor-containerSolution.json `
         -TemplateParameterObject $Parameters -ErrorAction Stop`
-    Write-Host("")
 
+    Write-Host("")
     Write-Host("Successfully added Container Insights Solution") -ForegroundColor Green
 
     Write-Host("")
