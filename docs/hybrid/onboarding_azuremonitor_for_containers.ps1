@@ -7,7 +7,7 @@
       2. Adds the ContainerInsights solution to the Azure log analytics workspace
       3. Outputs the Workspace Guid and Key which can be used to onboard the Agent
 
-    .PARAMETER workspaceSubscriptionId
+    .PARAMETER azureSubscriptionId
         Id of the Azure subscription where the Azure Log Analytics Workspace exists or can be created
     .PARAMETER workspaceResourceGroupName
         Name of the workspace RespourceGroup
@@ -19,7 +19,7 @@
 #>
 param(
     [Parameter(mandatory = $true)]
-    [string]$workspaceSubscriptionId,
+    [string]$azureSubscriptionId,
     [Parameter(mandatory = $true)]
     [string]$workspaceResourceGroupName,
     [Parameter(mandatory = $true)]
@@ -36,7 +36,7 @@ $azOperationalInsights = Get-Module -ListAvailable -Name Az.OperationalInsights
 if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azOperationalInsights)) {
 
     $isWindowsMachine = $true
-    if ($PSVersionTable -and $PSVersionTable.PSEdition -contains "core") {
+    if ($PSVersionTable -and $PSVersionTable.PSEdition -ccontains "core") {
         if ($PSVersionTable.Platform -notcontains "win") {
             $isWindowsMachine = $false
         }
@@ -45,6 +45,7 @@ if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -
 
     if ($isWindowsMachine) {
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+
         if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             Write-Host("Running script as an admin...")
             Write-Host("")
@@ -167,7 +168,7 @@ if ([string]::IsNullOrEmpty($workspaceLocation)) {
     exit
 }
 
-Write-Host("LogAnalytics Workspace SubscriptionId : '" + $workspaceSubscriptionId + "' ") -ForegroundColor Green
+Write-Host("LogAnalytics Workspace SubscriptionId : '" + $azureSubscriptionId + "' ") -ForegroundColor Green
 
 try {
     Write-Host("")
@@ -186,18 +187,18 @@ catch {
 if ($null -eq $account.Account) {
     try {
         Write-Host("Please login...")
-        Connect-AzAccount -subscriptionid $workspaceSubscriptionId
+        Connect-AzAccount -subscriptionid $azureSubscriptionId
     }
     catch {
         Write-Host("")
-        Write-Host("Could not select subscription with ID : " + $workspaceSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+        Write-Host("Could not select subscription with ID : " + $azureSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
         Write-Host("")
         Stop-Transcript
         exit
     }
 }
 else {
-    if ($account.Subscription.Id -eq $workspaceSubscriptionId) {
+    if ($account.Subscription.Id -eq $azureSubscriptionId) {
         Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
         $account
     }
@@ -205,12 +206,12 @@ else {
         try {
             Write-Host("Current Subscription:")
             $account
-            Write-Host("Changing to subscription: $workspaceSubscriptionId")
-            Set-AzContext -SubscriptionId $workspaceSubscriptionId
+            Write-Host("Changing to subscription: $azureSubscriptionId")
+            Set-AzContext -SubscriptionId $azureSubscriptionId
         }
         catch {
             Write-Host("")
-            Write-Host("Could not select subscription with ID : " + $workspaceSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
+            Write-Host("Could not select subscription with ID : " + $azureSubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
             Write-Host("")
             Stop-Transcript
             exit
@@ -221,24 +222,23 @@ else {
 # validate specified logAnalytics workspace exists and got access permissions
 Write-Host("Checking specified Log Analytics Resource Group exists and got access...")
 
-try {
-    Get-AzResourceGroup -ResourceGroupName $workspaceResourceGroupName
-    Write-Host("Resource Group : '" + $workspaceResourceGroupName + "' exists")
-}
-catch {
+$rg = Get-AzResourceGroup -ResourceGroupName $workspaceResourceGroupName -ErrorAction SilentlyContinue
+if ($null -eq $rg) {
     Write-Host("Creating Resource Group: '" + $workspaceResourceGroupName + "' since this does not exist")
     New-AzResourceGroup -Name $workspaceResourceGroupName -Location $workspaceLocation
 }
+else {
+    Write-Host("Resource Group : '" + $workspaceResourceGroupName + "' exists")
+}
 
 Write-Host("Checking specified Log Analytics Workspace exists and got access...")
-
-try {
-    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
-    Write-Host("Workspace : '" + $workspaceName + "' exists in WorkspaceResourceGroup : '" + $workspaceResourceGroupName + "'  ")
-}
-catch {
+$WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
+if ($null -eq $WorkspaceInformation) {
     Write-Host("Creating Log Analytics Workspace: '" + $workspaceName + "'  in Resource Group: '" + $workspaceResourceGroupName + "' since this workspace does not exist")
     $WorkspaceInformation = New-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -Location $workspaceLocation -ErrorAction Stop
+}
+else {
+    Write-Host("Azure Log Workspace: '" + $workspaceName + "' exists in WorkspaceResourceGroup : '" + $workspaceResourceGroupName + "'  ")
 }
 
 Write-Host("Deploying template to onboard Container Insights solution : Please wait...")
@@ -268,19 +268,20 @@ Write-Host("Retrieving WorkspaceGuid and Workspace Key of the Log Anaylytics wor
 
 try {
 
-    $WorkspaceSharedKeys = Get-AzOperationalInsightsWorkspaceSharedKey -ResourceGroupName $WorkspaceInformation.ResourceGroupName -Name $WorkspaceInformation.Name
+    $WorkspaceSharedKeys = Get-AzOperationalInsightsWorkspaceSharedKey -ResourceGroupName $WorkspaceInformation.ResourceGroupName -Name $WorkspaceInformation.Name -ErrorAction Stop -WarningAction SilentlyContinue
     Write-Host("Successfully retrieved WorkspaceGuid and Workspace Key of the Log Anaylytics workspace : '" + $WorkspaceInformation.Name + "'") -ForegroundColor Green
-    Write-Host("Please use the following WorkspaceGuid and Key to onboard the Monitoring agent using Azure Monitor for containers HELM chart at https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers")
-    Write-Host("------------------------------------------------------------")
-    Write-Host("Workspace Id: '" + $WorkspaceInformation.CustomerId + "' ")
-    Write-Host("Workspace Key: '" + $WorkspaceSharedKeys.PrimarySharedKey + "' ")
-    Write-Host("------------------------------------------------------------")
+    Write-Host("Please use the following WorkspaceGuid and Key to onboard the Monitoring agent using Azure Monitor for containers HELM chart")
+    Write-Host "Workspace Id:"$WorkspaceInformation.CustomerId
+    Write-Host "Workspace Key:"$WorkspaceSharedKeys.PrimarySharedKey
 }
 catch {
     Write-Host ("Please validate whether you have Log Analytics Contributor role on the workspace error: '" + $Error[0] + "' ") -ForegroundColor Red
 }
 
-Write-Host("After successful onboarding of the HELM chart. Navigate to https://aka.ms/azmon-containers to view and monitor your onboarded Kubernetes cluster")
+
+
+
+
 
 
 
