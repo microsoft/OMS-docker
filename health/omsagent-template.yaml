@@ -379,7 +379,7 @@ spec:
    containers:
      - name: omsagent 
        image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
-       imagePullPolicy: IfNotPresent
+       imagePullPolicy: Always
        resources:
         limits:
          cpu: 150m
@@ -495,7 +495,7 @@ spec:
    containers:
      - name: omsagent 
        image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
-       imagePullPolicy: IfNotPresent
+       imagePullPolicy: Always
        resources:
         limits:
          cpu: 150m
