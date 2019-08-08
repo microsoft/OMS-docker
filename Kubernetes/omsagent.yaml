@@ -42,7 +42,7 @@ data:
      #fluent forward plugin
      <source>
       type forward
-      port 25235
+      port 25227
       bind 0.0.0.0
      </source>
 
@@ -331,15 +331,13 @@ spec:
          cpu: 75m
          memory: 225Mi
        env:
-       - name: AKS_RESOURCE_ID
-         value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       - name: AKS_REGION
-         value: "VALUE_AKS_REGION_VALUE"
+       #- name: AKS_RESOURCE_ID
+       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
+       #- name: AKS_REGION
+       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-       #   value: "my_acs_cluster_name"
-       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
-         value: "true"
+       - name: ACS_RESOURCE_NAME
+         value: "my_acs_cluster_name"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: NODE_IP
@@ -467,7 +465,7 @@ spec:
          protocol: TCP 
        - containerPort: 25224
          protocol: UDP
-       - containerPort: 25235
+       - containerPort: 25227
          protocol: TCP
          name: in-rs-tcp         
        volumeMounts:
@@ -487,8 +485,6 @@ spec:
         - mountPath: /etc/config/settings
           name: settings-vol-config
           readOnly: true
-        - mountPath: "/mnt/azure"
-          name: azurefile-pv
        livenessProbe:
         exec:
          command:
