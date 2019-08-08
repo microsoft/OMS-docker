@@ -7,7 +7,7 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: omsagent-reader
+  name: omsagent-user
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
@@ -15,6 +15,9 @@ rules:
 - apiGroups: ["extensions"]
   resources: ["deployments"]
   verbs: ["list"]
+- apiGroups: ["azmon.container.insights"]
+  resources: ["healthstates"]
+  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -28,7 +31,7 @@ subjects:
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: omsagent-reader
+  name: omsagent-user
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ConfigMap
@@ -523,67 +526,29 @@ spec:
       configMap:
         name: container-azm-ms-agentconfig
         optional: true
-    - name: azurefile-pv
-      persistentVolumeClaim:
-        claimName: azurefile
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: replicaset-service
+  name: healthmodel-replicaset-service
   namespace: kube-system
 spec:
   selector:
     rsName: "omsagent-rs"
   ports:
   - protocol: TCP
-    port: 25235
+    port: 25227
     targetPort: in-rs-tcp
 ---
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
 metadata:
-  name: azurefile
-provisioner: kubernetes.io/azure-file
-mountOptions:
-  - dir_mode=0777
-  - file_mode=0777
-  - uid=1000
-  - gid=1000
-parameters:
-  skuName: Standard_LRS
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-cloud-provider
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: azurefile
+  name: healthstates.azmon.container.insights
   namespace: kube-system
 spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: azurefile
-  resources:
-    requests:
-      storage: 10Mi
+  group: azmon.container.insights
+  version: v1
+  scope: Namespaced
+  names:
+    plural: healthstates
+    kind: HealthState
