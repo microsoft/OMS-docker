@@ -119,7 +119,6 @@ data:
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
      </filter>
-
      #health model aggregation filter
      <filter oms.api.KubeHealth**>
       type filter_health_model_builder
@@ -298,6 +297,67 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+  - protocol: TCP
+    port: 25235
+    targetPort: in-rs-tcp
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=1000
+parameters:
+  skuName: Standard_LRS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-cloud-provider
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile
+  namespace: kube-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 10Mi
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -312,7 +372,7 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "5.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
@@ -323,18 +383,18 @@ spec:
        resources:
         limits:
          cpu: 150m
-         memory: 600Mi
+         memory: 300Mi
         requests:
          cpu: 75m
          memory: 225Mi
        env:
-       - name: AKS_RESOURCE_ID
-         value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       - name: AKS_REGION
-         value: "VALUE_AKS_REGION_VALUE"
-       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       #- name: ACS_RESOURCE_NAME
-       #   value: "my_acs_cluster_name"
+      #  - name: AKS_RESOURCE_ID
+      #    value: "VALUE_AKS_RESOURCE_ID"
+      #  - name: AKS_REGION
+      #    value: "VALUE_AKS_REGION"
+      #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+       - name: ACS_RESOURCE_NAME
+         value: "VALUE_ACS_RESOURCE_NAME"
        - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
          value: "true"
        - name: CONTROLLER_TYPE
@@ -428,7 +488,7 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "5.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
@@ -441,16 +501,18 @@ spec:
          cpu: 150m
          memory: 500Mi
         requests:
-         cpu: 110m
-         memory: 250Mi
+         cpu: 50m
+         memory: 175Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #- name: AKS_REGION
-       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+      #  - name: AKS_RESOURCE_ID
+      #    value: "VALUE_AKS_RESOURCE_ID"
+      #  - name: AKS_REGION
+      #    value: "VALUE_AKS_REGION"
+      #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
        - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+         value: "aks-engine-health"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP
@@ -491,7 +553,7 @@ spec:
          command:
          - /bin/bash
          - -c
-         - /opt/livenessprobe.sh
+         - ps -ef | grep omsagent | grep -v "grep"
         initialDelaySeconds: 60
         periodSeconds: 60
    nodeSelector:
@@ -518,7 +580,7 @@ spec:
        secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
-        name: omsagent-rs-config
+        name: omsagent-rs-config    
     - name: settings-vol-config
       configMap:
         name: container-azm-ms-agentconfig
@@ -526,64 +588,3 @@ spec:
     - name: azurefile-pv
       persistentVolumeClaim:
         claimName: azurefile
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: replicaset-service
-  namespace: kube-system
-spec:
-  selector:
-    rsName: "omsagent-rs"
-  ports:
-  - protocol: TCP
-    port: 25235
-    targetPort: in-rs-tcp
----
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: azurefile
-provisioner: kubernetes.io/azure-file
-mountOptions:
-  - dir_mode=0777
-  - file_mode=0777
-  - uid=1000
-  - gid=1000
-parameters:
-  skuName: Standard_LRS
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-cloud-provider
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: azurefile
-  namespace: kube-system
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: azurefile
-  resources:
-    requests:
-      storage: 10Mi

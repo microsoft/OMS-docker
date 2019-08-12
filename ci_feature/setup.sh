@@ -14,8 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/microsoft/Docker-Provider/releases/download/6.0.0.0/docker-cimprov-6.0.0-0.universal.x86_64.sh
-
+wget https://github.com/microsoft/Docker-Provider/releases/download/healthpreview06182019/docker-cimprov-6.0.0-1.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
