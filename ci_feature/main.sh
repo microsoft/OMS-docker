@@ -91,11 +91,11 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-workspaceId=$(cat /etc/omsagent-secret/WSID)
-RET=`curl -s -o /dev/null -w "%{http_code}" https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest`
+RET=`curl -s -o /dev/null -w "%{http_code}" https://abc.blob.core.windows.net`
 if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
+            workspaceId=$(cat /etc/omsagent-secret/WSID)
             curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
             if [ $? -ne 0 ]; then
                   echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
