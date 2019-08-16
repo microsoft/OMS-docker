@@ -385,6 +385,9 @@ try {
         }
     }
 
+    Write-Host("Getting Tags for restoring later")
+    $tags = (Get-AzAks -Id $aksResourceId).Tags
+    
     Write-Host("Enabling Custom Monitoring using template deployment")
     New-AzResourceGroupDeployment -Name  $DeploymentName `
         -ResourceGroupName $clusterResourceGroupName `
@@ -395,6 +398,9 @@ try {
         
     Write-Host("Successfully custom onboarded cluster to Monitoring") -ForegroundColor Green
 
+    Set-AzResource -ResourceId $aksResourceId -Tag $tags -Force
+    Write-Host("Successfully restored tags")
+    
     Write-Host("")
 }
 catch {
@@ -424,7 +430,6 @@ try {
     Invoke-WebRequest https://raw.githubusercontent.com/Microsoft/OMS-docker/dilipr/kubeHealth/health/omsagent-template.yaml -OutFile $desktopPath/omsagent-template.yaml   
     
     (Get-Content -Path $desktopPath/omsagent-template.yaml -Raw) -replace 'VALUE_AKS_RESOURCE_ID', $aksResourceId -replace 'VALUE_AKS_REGION', $aksResourceLocation -replace 'VALUE_WSID', $base64EncodedWsId -replace 'VALUE_KEY', $base64EncodedKey -replace 'VALUE_ACS_RESOURCE_NAME', $acsResourceName | Set-Content $desktopPath/deployments/omsagent-$clusterName.yaml
-    Start-Sleep 30
     kubectl apply -f $desktopPath/deployments/omsagent-$clusterName.yaml
     Write-Host "Successfully onboarded to health model omsagent" -ForegroundColor Green
 }
