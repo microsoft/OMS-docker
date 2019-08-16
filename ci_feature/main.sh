@@ -91,8 +91,8 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
-if [ $RET -eq 200 ]; then 
+RET=`curl -s -o /dev/null -w "%{http_code}" https://abc.blob.core.windows.net`
+if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
             workspaceId=$(cat /etc/omsagent-secret/WSID)
