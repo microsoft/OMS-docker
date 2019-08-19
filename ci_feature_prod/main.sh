@@ -42,7 +42,7 @@ fi
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case
+	#kubernetes treats node names as lower case.
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
@@ -88,6 +88,23 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "export AZMON_AGENT_CFG_FILE_VERSION=$config_file_version" >> ~/.bashrc
       source ~/.bashrc
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
+fi
+
+# Check for internet connectivity
+RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
+if [ $RET -eq 200 ]; then 
+      # Check for workspace existence
+      if [ -e "/etc/omsagent-secret/WSID" ]; then
+            workspaceId=$(cat /etc/omsagent-secret/WSID)
+            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
+            if [ $? -ne 0 ]; then
+                  echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+            fi
+      else
+            echo "LA Onboarding:Workspace Id not mounted"
+      fi
+else 
+      echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
 fi
 
 # Check for internet connectivity

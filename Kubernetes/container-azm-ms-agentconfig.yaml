@@ -8,7 +8,7 @@ data:
     #string.used by customer to keep track of this config file's version in their source control/repository (max allowed 10 chars, other chars will be truncated)
     ver1
   log-data-collection-settings: |-
-    # Log data collection settings container-azm-ms-agent settings
+    # Log data collection settings
     [log_collection_settings]
        [log_collection_settings.stdout]
           # In the absense of this configmap, default value for enabled is true
