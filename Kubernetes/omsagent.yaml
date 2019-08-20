@@ -315,7 +315,7 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "7.0.0-0"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
@@ -429,7 +429,7 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "7.0.0-0"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
