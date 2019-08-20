@@ -191,11 +191,15 @@ Write-Host("Successfully checked resource groups details...") -ForegroundColor G
 #
 Write-Host("Checking specified Resource Group has the AKS-Engine or ACS-Engine kubernetes cluster resources...")
 
-$k8sMasterVMs = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+$k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+
+if ($null -eq $k8sMasterVMsOrVMSSes) {
+    $k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachineScaleSets' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+}
 
 $isKubernetesCluster = $false 
 
-foreach ($k8MasterVM in $k8sMasterVMs) {
+foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) {
 
     $tags = $k8MasterVM.Tags
 
@@ -240,7 +244,7 @@ Write-Host("Successfully checked the AKS-Engine or ACS-Engine Kuberentes cluster
 #  Extract logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
 
-foreach ($k8MasterVM in $k8sMasterVMs) { 
+foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) { 
 
     $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
 	
@@ -273,7 +277,7 @@ foreach ($k8MasterVM in $k8sMasterVMs) {
 
 
 if ($null -eq $LogAnalyticsWorkspaceResourceID) {
-    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on AKS-Engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
+    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
     Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
     Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
     exit

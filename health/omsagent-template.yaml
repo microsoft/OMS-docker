@@ -7,7 +7,7 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: omsagent-user
+  name: omsagent-reader
 rules:
 - apiGroups: [""]
   resources: ["pods", "events", "nodes", "namespaces", "services"]
@@ -15,9 +15,6 @@ rules:
 - apiGroups: ["extensions"]
   resources: ["deployments"]
   verbs: ["list"]
-- apiGroups: ["azmon.container.insights"]
-  resources: ["healthstates"]
-  verbs: ["get", "create", "patch"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
 ---
@@ -31,7 +28,7 @@ subjects:
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: omsagent-user
+  name: omsagent-reader
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ConfigMap
@@ -42,7 +39,7 @@ data:
      #fluent forward plugin
      <source>
       type forward
-      port 25227
+      port 25235
       bind 0.0.0.0
      </source>
 
@@ -122,7 +119,6 @@ data:
       metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
       log_level info
      </filter>
-
      #health model aggregation filter
      <filter oms.api.KubeHealth**>
       type filter_health_model_builder
@@ -301,6 +297,67 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: replicaset-service
+  namespace: kube-system
+spec:
+  selector:
+    rsName: "omsagent-rs"
+  ports:
+  - protocol: TCP
+    port: 25235
+    targetPort: in-rs-tcp
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=1000
+  - gid=1000
+parameters:
+  skuName: Standard_LRS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-cloud-provider
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azurefile
+  namespace: kube-system
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 10Mi
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -315,13 +372,13 @@ spec:
     dsName: "omsagent-ds"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "6.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview08012019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -331,13 +388,15 @@ spec:
          cpu: 75m
          memory: 225Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #- name: AKS_REGION
-       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-       #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+       - name: AKS_RESOURCE_ID
+         value: "VALUE_AKS_RESOURCE_ID"
+       - name: AKS_REGION
+         value: "VALUE_AKS_REGION"
+      #  Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+      #  - name: ACS_RESOURCE_NAME
+       #   value: "my_acs_cluster_name"
+       - name: DISABLE_KUBE_SYSTEM_LOG_COLLECTION
+         value: "true"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: NODE_IP
@@ -429,29 +488,29 @@ spec:
     rsName: "omsagent-rs"
    annotations:
     agentVersion: "1.10.0.1"
-    dockerProviderVersion: "6.0.0-0"
+    dockerProviderVersion: "6.0.0-1"
     schema-versions: "v1"
   spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview08012019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
          cpu: 150m
          memory: 500Mi
         requests:
-         cpu: 110m
-         memory: 250Mi
+         cpu: 50m
+         memory: 175Mi
        env:
-       #- name: AKS_RESOURCE_ID
-       #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-       #- name: AKS_REGION
-       #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+       - name: AKS_RESOURCE_ID
+         value: "VALUE_AKS_RESOURCE_ID"
+       - name: AKS_REGION
+         value: "VALUE_AKS_REGION"
        #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-       - name: ACS_RESOURCE_NAME
-         value: "my_acs_cluster_name"
+      #  - name: ACS_RESOURCE_NAME
+      #    value: "aks-engine-health"
        - name: CONTROLLER_TYPE
          value: "ReplicaSet"
        - name: NODE_IP
@@ -465,7 +524,7 @@ spec:
          protocol: TCP 
        - containerPort: 25224
          protocol: UDP
-       - containerPort: 25227
+       - containerPort: 25235
          protocol: TCP
          name: in-rs-tcp         
        volumeMounts:
@@ -485,6 +544,8 @@ spec:
         - mountPath: /etc/config/settings
           name: settings-vol-config
           readOnly: true
+        - mountPath: "/mnt/azure"
+          name: azurefile-pv
        livenessProbe:
         exec:
          command:
@@ -517,34 +578,11 @@ spec:
        secretName: omsagent-secret
     - name: omsagent-rs-config
       configMap:
-        name: omsagent-rs-config
+        name: omsagent-rs-config    
     - name: settings-vol-config
       configMap:
         name: container-azm-ms-agentconfig
         optional: true
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: healthmodel-replicaset-service
-  namespace: kube-system
-spec:
-  selector:
-    rsName: "omsagent-rs"
-  ports:
-  - protocol: TCP
-    port: 25227
-    targetPort: in-rs-tcp
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: healthstates.azmon.container.insights
-  namespace: kube-system
-spec:
-  group: azmon.container.insights
-  version: v1
-  scope: Namespaced
-  names:
-    plural: healthstates
-    kind: HealthState
+    - name: azurefile-pv
+      persistentVolumeClaim:
+        claimName: azurefile

@@ -37,6 +37,14 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
+  AKS_RESOURCE_ID: "VALUE_AKS_RESOURCE_ID_VALUE"
+metadata:
+  name: container-azm-ms-aks-resource-id
+  namespace: kube-system
+---
+kind: ConfigMap
+apiVersion: v1
+data:
   kube.conf: |- 
      # Fluentd config file for OMS Docker - cluster components (kubeAPI)
      #fluent forward plugin
@@ -321,7 +329,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:
@@ -435,7 +443,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:healthpreview07182019"
        imagePullPolicy: IfNotPresent
        resources:
         limits:

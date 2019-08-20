@@ -36,7 +36,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi 
+fi
 
 #Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
@@ -48,11 +48,11 @@ else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully.
-cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
+cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
-#resourceid override for loganalytics data
+#resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
-      echo "not setting customResourceId" 
+      echo "not setting customResourceId"
 else
       export customResourceId=$AKS_RESOURCE_ID
       echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
@@ -63,7 +63,7 @@ fi
 #set agent config schema version
 if [  -e "/etc/config/settings/schema-version" ] && [  -s "/etc/config/settings/schema-version" ]; then
       #trim
-      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)" 
+      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)"
       #remove all spaces
       config_schema_version="${config_schema_version//[[:space:]]/}"
       #take first 10 characters
@@ -107,6 +107,22 @@ else
       echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
 fi
 
+# Check for internet connectivity
+RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
+if [ $RET -eq 200 ]; then
+      # Check for workspace existence
+      if [ -e "/etc/omsagent-secret/WSID" ]; then
+            workspaceId=$(cat /etc/omsagent-secret/WSID)
+            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
+            if [ $? -ne 0 ]; then
+                  echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+            fi
+      else
+            echo "LA Onboarding:Workspace Id not mounted"
+      fi
+else
+      echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
+fi
 
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
@@ -116,6 +132,56 @@ cat config_env_var | while read line; do
     echo $line >> ~/.bashrc
 done
 source config_env_var
+
+#Replace the placeholders in td-agent-bit.conf file for fluentbit with custom/default values in daemonset
+if [ ! -e "/etc/config/kube.conf" ]; then
+      /opt/microsoft/omsagent/ruby/bin/ruby td-agent-bit-conf-customizer.rb
+fi
+
+#Parse the prometheus configmap to create a file with new custom settings.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
+
+#If config parsing was successful, a copy of the conf file with replaced custom settings file is created
+if [ ! -e "/etc/config/kube.conf" ]; then
+            if [ -e "/opt/telegraf-test.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+            fi
+else
+      if [ -e "/opt/telegraf-test-rs.conf" ]; then
+                  echo "****************Start Telegraf in Test Mode**************************"
+                  /opt/telegraf --config /opt/telegraf-test-rs.conf -test
+                  if [ $? -eq 0 ]; then
+                        mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
+                  fi
+                  echo "****************End Telegraf Run in Test Mode**************************"
+      fi
+fi
+
+#Setting default environment variables to be used in any case of failure in the above steps
+if [ ! -e "/etc/config/kube.conf" ]; then
+      cat defaultpromenvvariables | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables
+else
+      cat defaultpromenvvariables-rs | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source defaultpromenvvariables-rs
+fi
+
+#Sourcing telemetry environment variable file if it exists
+if [ -e "telemetry_prom_config_env_var" ]; then
+      cat telemetry_prom_config_env_var | while read line; do
+            echo $line >> ~/.bashrc
+      done
+      source telemetry_prom_config_env_var
+fi
 
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
@@ -131,7 +197,7 @@ rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.c
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
-  elif [ -a /etc/omsagent-secret/WSID ]; then  
+  elif [ -a /etc/omsagent-secret/WSID ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
   elif [ -a /run/secrets/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
@@ -159,7 +225,7 @@ service cron start
 
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
-dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
+dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
@@ -222,57 +288,12 @@ echo "export TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey" >> ~/.bashrc
 
 source ~/.bashrc
 
-#Parse the prometheus configmap to create a file with new custom settings.
-/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-prom-customconfig.rb
-
-#If config parsing was successful, a copy of the conf file with replaced custom settings file is created
-if [ ! -e "/etc/config/kube.conf" ]; then
-            if [ -e "/opt/telegraf-test.conf" ]; then
-                  echo "****************Start Telegraf in Test Mode**************************"
-                  /opt/telegraf --config /opt/telegraf-test.conf -test
-                  if [ $? -eq 0 ]; then
-                        mv "/opt/telegraf-test.conf" "/etc/opt/microsoft/docker-cimprov/telegraf.conf"
-                  fi
-                  echo "****************End Telegraf Run in Test Mode**************************"
-            fi
-else
-      if [ -e "/opt/telegraf-test-rs.conf" ]; then
-                  echo "****************Start Telegraf in Test Mode**************************"
-                  /opt/telegraf --config /opt/telegraf-test-rs.conf -test
-                  if [ $? -eq 0 ]; then
-                        mv "/opt/telegraf-test-rs.conf" "/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
-                  fi
-                  echo "****************End Telegraf Run in Test Mode**************************"
-      fi
-fi
-
-#Setting default environment variables to be used in any case of failure in the above steps
-if [ ! -e "/etc/config/kube.conf" ]; then
-      cat defaultpromenvvariables | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source defaultpromenvvariables
-else
-      cat defaultpromenvvariables-rs | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source defaultpromenvvariables-rs
-fi
-
-#Sourcing telemetry environment variable file if it exists
-if [ -e "telemetry_prom_config_env_var" ]; then
-      cat telemetry_prom_config_env_var | while read line; do
-            echo $line >> ~/.bashrc
-      done
-      source telemetry_prom_config_env_var
-fi
-
 #start telegraf
 /opt/telegraf --config $telegrafConfFile &
 /opt/telegraf --version
 dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
-#dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+#dpkg -l | grep telegraf | awk '{print $2 " " $3}'
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
