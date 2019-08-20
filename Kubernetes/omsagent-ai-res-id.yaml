@@ -37,9 +37,9 @@ roleRef:
 kind: ConfigMap
 apiVersion: v1
 data:
-  AKS_RESOURCE_ID: "VALUE_AKS_RESOURCE_ID_VALUE"
+  CLUSTER_RESOURCE_ID: "VALUE_AKS_RESOURCE_ID_VALUE"
 metadata:
-  name: container-azm-ms-aks-resource-id
+  name: container-azm-ms-aks-k8scluster
   namespace: kube-system
 ---
 kind: ConfigMap
