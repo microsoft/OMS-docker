@@ -177,28 +177,28 @@ fi
 #/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
-if [ -z $INT ]; then
-  if [ -a /etc/omsagent-secret/DOMAIN ]; then
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
-  elif [ -a /etc/omsagent-secret/WSID ]; then  
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
-  elif [ -a /run/secrets/DOMAIN ]; then
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
-  elif [ -a /run/secrets/WSID ]; then
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY`
-  elif [ -z $DOMAIN ]; then
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY
-  else
-        /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
-  fi
-else
+# if [ -z $INT ]; then
+#   if [ -a /etc/omsagent-secret/DOMAIN ]; then
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
+#   elif [ -a /etc/omsagent-secret/WSID ]; then  
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
+#   elif [ -a /run/secrets/DOMAIN ]; then
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
+#   elif [ -a /run/secrets/WSID ]; then
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY`
+#   elif [ -z $DOMAIN ]; then
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY
+#   else
+#         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
+#   fi
+# else
 #To onboard to INT workspace - workspace-id (WSID-not base64 encoded), workspace-key (KEY-not base64 encoded), Domain(DOMAIN-int2.microsoftatlanta-int.com)
 #need to be added to omsagent.yaml.
 	echo WORKSPACE_ID=$WSID > /etc/omsagent-onboard.conf
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
       echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
-fi
+# fi
 
 #start cron daemon for logrotate
 service cron start
