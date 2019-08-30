@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 data:
-  schema-version: 
+  schema-version:
     #string.used by agent to parse config. supported versions are {v1}. Configs with other schema versions will be rejected by the agent.
     v1
   config-version:
@@ -21,7 +21,7 @@ data:
 
        [log_collection_settings.stderr]
           # Default value for enabled is true
-          enabled = true
+          enabled = false
           # exclude_namespaces setting holds good only if enabled is set to true
           # kube-system log collection is disabled by default in the absence of 'log_collection_settings.stderr' setting. If you want to enable kube-system, remove it from the following setting.
           # If you want to continue to disable kube-system log collection keep this namespace in the following setting and add any other namespace you want to disable log collection to the array.
@@ -72,11 +72,6 @@ data:
         #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
 
         #fielddrop = ["metric_to_drop"]
-  agent-settings: |-
-    # agent health model feature settings
-    [agent_settings.health_model]
-      # In the absence of this configmap, default value for enabled is false
-      enabled = false
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
