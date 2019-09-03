@@ -1,25 +1,23 @@
 ## Overview
-The following documentation outlines the steps required to upgrade an existing cluster onboarded to a Log Analytics workspace running the omsagent, to an agent running the workflow that generates health monitor signals into the same workspace.
+The following documentation outlines the steps required to turn on health modeling for a cluster already onboarded to Container Insights Monitoring
 
-### Onboarding using a script (AKS)
-We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kubeHealth/health/HealthAgentOnboarding.ps1) which can onboard your AKS clusters to a version of the agent that can generate the health model. Read on to find out more
+### Scenario 1 : No custom configurations for prometheus or log settings
+* Save the config map yaml file locally by running: wget https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Kubernetes/container-azm-ms-agentconfig.yaml
+* change the agent_settings.health_model enabled setting to true in the yaml
+* apply the updated yaml file using kubectl apply -f {updated_yaml_file path} {Prior to this, ensure that you are in the right Kubernetes context}
 
-#### Script Prerequisites
-* script should run in an elevated command prompt
-* kubectl should have been installed and be present in the path
+### Scenario 2 : Custom configurations present for prometheus or log collection settings
+ * Add the following snippet to your current configurations yaml file under the data section {ensure it is correctly formatted}
+```yaml
+  agent-settings: |-
+    [agent_settings.health_model]
+      enabled = true
+```
+ * apply the updated yaml file using kubectl apply -f {updated_yaml_file path} {Prior to this, ensure that you are in the right Kubernetes context}
 
-#### What does the script do:
-* Installs necessary powershell modules
-* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
-* Updates the cluster metadata to link the LA workspace ID to the cluster
-* Installs the new agent that generates health monitor signals (using kubectl)
-
-#### Script Execution
-* Download the script from [here](https://github.com/Microsoft/OMS-docker/blob/dilipr/kubeHealth/health/HealthAgentOnboarding.ps1)
-* Run the script:  
- .\HealthAgentOnboarding.ps1 -aksResourceId <AKS_RESOURCE_ID> -aksResourceLocation <AKS_RESOURCE_LOCATION>
- -logAnalyticsWorkspaceResourceId <LOG_ANALYTICS_WS_RESOURCE_ID> (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
- * Please make sure the right location of the AKS cluster is passed in to the script (without spaces e.g. eastus, southcentralus)
+### Scenario 3 : Not onboarded to container insights
+ * Follow the steps to onboard using the steps outlined [here]https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard
+ * Follow steps outlined in Scenario 1
 
 #### Viewing the health model
 * Navigate to <https://aka.ms/ci-privatepreview>
