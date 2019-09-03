@@ -1,25 +1,9 @@
 ## Overview
-The following documentation outlines the steps required to upgrade an existing cluster onboarded to a Log Analytics workspace running the omsagent, to an agent running the workflow that generates health monitor signals into the same workspace.
+The following documentation outlines the steps required to turn on health modeling for a cluster already onboarded to Container Insights Monitoring
 
-### Onboarding using a script (AKS)
-We have a handy [script](https://github.com/Microsoft/OMS-docker/blob/dilipr/kubeHealth/health/HealthAgentOnboarding.ps1) which can onboard your AKS clusters to a version of the agent that can generate the health model. Read on to find out more
-
-#### Script Prerequisites
-* script should run in an elevated command prompt
-* kubectl should have been installed and be present in the path
-
-#### What does the script do:
-* Installs necessary powershell modules
-* Onboards Container Insights solution to the supplied LA workspace if not already onboarded
-* Updates the cluster metadata to link the LA workspace ID to the cluster
-* Installs the new agent that generates health monitor signals (using kubectl)
-
-#### Script Execution
-* Download the script from [here](https://github.com/Microsoft/OMS-docker/blob/dilipr/kubeHealth/health/HealthAgentOnboarding.ps1)
-* Run the script:  
- .\HealthAgentOnboarding.ps1 -aksResourceId <AKS_RESOURCE_ID> -aksResourceLocation <AKS_RESOURCE_LOCATION>
- -logAnalyticsWorkspaceResourceId <LOG_ANALYTICS_WS_RESOURCE_ID> (e.g./subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourceGroups/dilipr-health-preview/providers/Microsoft.OperationalInsights/workspaces/dilipr-health-preview)
- * Please make sure the right location of the AKS cluster is passed in to the script (without spaces e.g. eastus, southcentralus)
+* wget https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/Kubernetes/container-azm-ms-agentconfig.yaml
+* change the agent-settings.health_model enabled setting to true 
+* apply the yaml file using kubectl apply -f <updated yaml file path>
 
 #### Viewing the health model
 * Navigate to <https://aka.ms/ci-privatepreview>
