@@ -76,7 +76,7 @@ data:
     # agent health model feature settings
     [agent_settings.health_model]
       # In the absence of this configmap, default value for enabled is false
-      enabled = true
+      enabled = false
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
