@@ -321,7 +321,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08222019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -344,7 +344,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-            - name: REPLICASET_SERVICE_ENDPOINT
+            - name: HEALTHMODEL_REPLICASET_SERVICE_ENDPOINT
               value: "healthmodel-replicaset-service.kube-system"
           securityContext:
             privileged: true
@@ -437,7 +437,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08222019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:

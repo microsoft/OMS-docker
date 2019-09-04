@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 data:
-  schema-version: 
+  schema-version:
     #string.used by agent to parse config. supported versions are {v1}. Configs with other schema versions will be rejected by the agent.
     v1
   config-version:
@@ -62,7 +62,7 @@ data:
         # Node level scrape endpoint(s). These metrics will be scraped from agent's DaemonSet running in every node in the cluster
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
-        interval = "1m"
+        interval : "1
 
         ## Uncomment the following settings with valid string arrays for prometheus scraping
 
@@ -76,7 +76,7 @@ data:
     # agent health model feature settings
     [agent_settings.health_model]
       # In the absence of this configmap, default value for enabled is false
-      enabled = false
+      enabled = true
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system

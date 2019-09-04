@@ -7,7 +7,7 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: omsagent-user
+  name: omsagent-reader
 rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "namespaces", "services"]
@@ -31,7 +31,7 @@ subjects:
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: omsagent-user
+  name: omsagent-reader
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ConfigMap
@@ -329,7 +329,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08222019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -348,7 +348,7 @@ spec:
               value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
-            - name: REPLICASET_SERVICE_ENDPOINT
+            - name: HEALTHMODEL_REPLICASET_SERVICE_ENDPOINT
               value: "healthmodel-replicaset-service.kube-system"
             - name: NODE_IP
               valueFrom:
@@ -445,7 +445,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08192019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod08222019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
