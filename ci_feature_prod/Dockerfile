@@ -5,7 +5,7 @@ LABEL vendor=Microsoft\ Corp \
     com.microsoft.version="7.0.0-0"
 ENV tmpdir /opt
 ENV APPLICATIONINSIGHTS_AUTH NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi
-ENV AGENT_VERSION ciprod08212019
+ENV AGENT_VERSION healthhotfix09082019
 ENV HOST_MOUNT_PREFIX /hostfs
 ENV HOST_PROC /hostfs/proc
 ENV HOST_SYS /hostfs/sys
