@@ -122,14 +122,14 @@ if [ ! -e "/etc/config/kube.conf" ]; then
 
       # remove the container-health.conf if health is not enabled.
       # swap container.conf with container-health.conf of health is enabled
-      if [ -z $AZMON_CLUSTER_ENABLE_HEALTH_MODEL ]  || [ $AZMON_CLUSTER_ENABLE_HEALTH_MODEL == "false" ]; then 
-            #delete container-health.conf
-            echo "Removing container-health.conf" 
-            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf
-      elif [ $AZMON_CLUSTER_ENABLE_HEALTH_MODEL == "true" ]; then
+      if [ ! -z $AZMON_CLUSTER_ENABLE_HEALTH_MODEL ] && [ $AZMON_CLUSTER_ENABLE_HEALTH_MODEL == "true" ]; then
             echo "Deleting container.conf and moving container-health.conf to container.conf"
             rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
             mv /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
+      else
+            #delete container-health.conf
+            echo "Removing container-health.conf" 
+            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf
       fi
 fi
 
