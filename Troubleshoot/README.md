@@ -33,6 +33,7 @@ Steps:
 - Make sure that you're using powershell (selected by default)
 - Run the following command to change the directory - `cd ~`
 - Run the following command to download the script - `curl https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1 -o TroubleshootError.ps1`
+- Run the following command to download the Solution enabler - `curl https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/ContainerInsightsSolution.json -o ContainerInsightsSolution.json`
 - Run the following command to execute the script - `~/TroubleshootError.ps1 -SubscriptionId <subId> -ResourceGroupName <rgName> -AKSClusterName <aksClusterName>`using the subscription ID, resource group name and cluster name you collected in the pre-requisite step.
 This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
 Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
