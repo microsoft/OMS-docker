@@ -3,22 +3,22 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "workspaceResourceId": {
-        "type": "string",
-        "metadata": {
-            "description": "Azure Monitor Log Analytics Workspace Resource ID"
-        }
+            "type": "string",
+            "metadata": {
+                "description": "Azure Monitor Log Analytics Workspace Resource ID"
+            }
         },
         "workspaceRegion": {
-        "type": "string",
-        "metadata": {
-        "description": "Azure Monitor Log Analytics Workspace region"
-         }
-         }
-        },
+            "type": "string",
+            "metadata": {
+                "description": "Azure Monitor Log Analytics Workspace region"
+            }
+        }
+    },
     "resources": [
         {
             "type": "Microsoft.Resources/deployments",
-            "name": "[Concat('ContainerInsights', '(', split(parameters('workspaceResourceId'),'/')[8], ')')]",
+            "name": "[Concat('ContainerInsights', '-',  uniqueString(parameters('workspaceResourceId')))]",
             "apiVersion": "2017-05-10",
             "subscriptionId": "[split(parameters('workspaceResourceId'),'/')[2]]",
             "resourceGroup": "[split(parameters('workspaceResourceId'),'/')[4]]",
