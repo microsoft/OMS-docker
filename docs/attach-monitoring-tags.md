@@ -1,6 +1,7 @@
 # How to add Monitoring onboarding tags to AKS-engine (or ACS-Engine) Cluster
 You can either use the Azure Powershell or Azure cli Bash script to attach the Azure Resource Id of the Log Analytics workspace and clusterName tag to AKS-Engine ( or ACS-Engine Kubernetes) master nodes or VMSSes.
-ClusterName should be match with what's configured on the omsagent for omsagent.env.clusterName as part of the omsagent installation. Log Analytics workspace ResourceId tag on the K8s master node(s) or VMSS(es) used to determine whether the specified cluster is onboarded to monitoring or not.
+ClusterName should be match with what's configured on the omsagent for omsagent.env.clusterName as part of the omsagent installation.
+Log Analytics workspace ResourceId tag on the K8s master node(s) or VMSS(es) used to determine whether the specified cluster is onboarded to monitoring or not.
 
 These  tags required for the Azure Monitor for Containers Ux experience (https://docs.microsoft.com/en-us/azure/monitoring/monitoring-container-insights-overview )
 
@@ -14,10 +15,13 @@ Get the below powershell script files to your local computer.
    - Log analytics workspace resource Id can retrieved either Azure CLI or Powershell or Azure Portal
       Azure CLI
 
+      ``` sh
+      az cloud set --name <AzureCloud | AzureChinaCloud | AzureUSGovernment>
+      az login
       az resource list --resource-type Microsoft.OperationalInsights/workspaces
                   OR
       az resource show -g `<resource group of the workspace>` -n `<name of the workspace>` --resource-type Microsoft.OperationalInsights/workspaces
-
+      ```
       Powershell
 
       https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
@@ -32,8 +36,9 @@ Get the below powershell script files to your local computer.
 - Use the following PowerShell command from the folder containing the Powershell script file:
 
 ``` sh
-
-.\AddMonitoringWorkspaceTags.ps1 -NameoftheCloud <AzureCloud | AzureChinaCloud> -SubscriptionId <Cluster SubscriptionId> -ResourceGroupName <Cluster ResourceGroup> -LogAnalyticsWorkspaceResourceId <WorkspaceResourceId> -ClusterName <name of the cluster>
+ # Specify Cloud Environment of the AKS-Engine (or ACS-Engine Kubernetes) cluster.
+.\AddMonitoringWorkspaceTags.ps1 -NameoftheCloud <AzureCloud | AzureChinaCloud> -SubscriptionId <Cluster SubscriptionId> -ResourceGroupName <Cluster ResourceGroup>
+ -LogAnalyticsWorkspaceResourceId <WorkspaceResourceId> -ClusterName <name of the cluster>
 
 ```
 

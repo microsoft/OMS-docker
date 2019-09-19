@@ -20,7 +20,7 @@ If you are not familiar with the concepts of deploying resources using a templat
 - Use the following PowerShell commands from the folder containing the template files:
 
 ``` sh
-# configure and login to cloud of log analytics workspace
+# configure and login to the cloud of log analytics workspace.Specify the corresponding cloud environment of your workspace to below command.
 Connect-AzureRmAccount -Environment <AzureCloud | AzureChinaCloud | AzureUSGovernment>
 # set the context of the subscription of log analytics workspace
 Set-AzureRmContext -SubscriptionId <subscription id of log analytics>
@@ -38,7 +38,7 @@ provisioningState       : Succeeded
 - Run the following command from the folder containing the template files:
 
 ``` sh
-# configure the cloud of log analytics workspace.
+# configure the cloud of log analytics workspace.Specify the corresponding cloud environment of your workspace to below command.
 az cloud set --name <AzureCloud | AzureChinaCloud | AzureUSGovernment>
 az login
 az account set --subscription "<Subscription Name of your Log Analytics Workspace>"
