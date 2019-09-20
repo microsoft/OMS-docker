@@ -52,7 +52,7 @@ $azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources
 if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
 
     $isWindowsMachine = $true
-    if ($PSVersionTable -and $PSVersionTable.PSEdition -ccontains "core") {
+    if ($PSVersionTable -and $PSVersionTable.PSEdition -contains "core") {
         if ($PSVersionTable.Platform -notcontains "win") {
             $isWindowsMachine = $false
         }
@@ -89,8 +89,8 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
     switch ($decision) {
         0 {
             try {
-                Write-Host("Installing AzureRM.profile...")
-                Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                Write-Host("Installing AzureRM.Profile...")
+                Install-Module AzureRM.Profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
             }
             catch {
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
@@ -108,10 +108,10 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
         }
         1 {
             try {
-                Import-Module AzureRM.profile -ErrorAction Stop
+                Import-Module AzureRM.Profile -ErrorAction Stop
             }
             catch {
-                Write-Host("Could not import AzureRM.profile...") -ForegroundColor Red
+                Write-Host("Could not import AzureRM.Profile...") -ForegroundColor Red
                 Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
                 Stop-Transcript
                 exit
@@ -134,9 +134,9 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
     }
 }
 
-if ($NameoftheCloud -like "AzureCloud" -or $NameoftheCloud -like "AzureChinaCloud") {
+if ($NameoftheCloud -like "AzureCloud" -or $NameoftheCloud -like "AzureChinaCloud" -or $NameoftheCloud -like "AzureUSGovernment" ) {
     Write-Host("")
-    Write-Host("Trying to configure the provided cloud...")
+    Write-Host("Connecting provided cloud environment:", $NameoftheCloud)
     Connect-AzureRmAccount -Environment $NameoftheCloud
 }
 else {
