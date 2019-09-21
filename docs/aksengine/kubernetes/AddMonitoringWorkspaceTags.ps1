@@ -1,34 +1,33 @@
-﻿<#
-    .DESCRIPTION
-		Attach Monitoring onboarding tags to the master nodes or VMSS(es) in resource group of the AKS-Engine (or ACS-Engine Kubernetes) cluster
+﻿﻿<#
+.DESCRIPTION
+Attach Monitoring onboarding tags to the master nodes or VMSS(es) in resource group of the AKS-Engine (or ACS-Engine Kubernetes) cluster
+-------------------------------------------------------------------------------------------------------- -
+| tagName | tagValue |
+-------------------------------------------------------------------------------------------------------- -
+| logAnalyticsWorkspaceResourceId | <azure ResourceId of the workspace configured on the omsAgent > |
+----------------------------------------------------------------------------------------------------------
+| clusterName | <name of the cluster configured during agent installation> |
+----------------------------------------------------------------------------------------------------------
 
-        ---------------------------------------------------------------------------------------------------------
-       | tagName                             | tagValue                                                         |
-        ---------------------------------------------------------------------------------------------------------
-       | logAnalyticsWorkspaceResourceId      | <azure ResourceId of the workspace configured on the omsAgent >  |
-	   ----------------------------------------------------------------------------------------------------------
-	   | clusterName                           | <name of the cluster configured during agent installation>       |
-	   ----------------------------------------------------------------------------------------------------------
+https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags
 
-     https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-using-tags
+See below reference to get the Log Analytics workspace resource Id
+https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
 
-	See below reference to get the Log Analytics workspace resource Id
-	https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
+.PARAMETER NameoftheCloud
+Name of the cloud that the AKS-engine(or ACS-engine) Kubernetes cluster is in. Supported clouds are AzureCloud, AzureChinaCloud and AzureUSGovernment.
 
-	.PARAMETER NameoftheCloud
-		Name of the cloud that the AKS-engine(or ACS-engine) Kubernetes cluster is in. Supported clouds are AzureCloud, AzureChinaCloud and AzureUSGovernment.
+.PARAMETER SubscriptionId
+Subscription Id that the aks-engine Kubernetes cluster is in
 
-    .PARAMETER SubscriptionId
-        Subscription Id that the aks-engine Kubernetes cluster is in
+.PARAMETER ResourceGroupName
+Resource Group name where the aks-engine Kubernetes cluster is in
 
-    .PARAMETER ResourceGroupName
-        Resource Group name where the aks-engine Kubernetes cluster is in
+.PARAMETER LogAnalyticsWorkspaceResourceId
+Fully qualified ResourceId of the Log Analytics workspace. This should be the same as the one configured on the omsAgent of specified AKS-engine or (ACS-engine Kubernetes) cluster
 
-    .PARAMETER LogAnalyticsWorkspaceResourceId
-        Fully qualified ResourceId of the Log Analytics workspace. This should be the same as the one configured on the omsAgent of specified AKS-engine or (ACS-engine Kubernetes) cluster
-
-	 .PARAMETER ClusterName
-        Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified ACS-engine Kubernetes cluster
+.PARAMETER ClusterName
+Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified ACS-engine Kubernetes cluster
 #>
 
 param(
