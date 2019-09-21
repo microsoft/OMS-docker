@@ -7,14 +7,14 @@
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 #
-#  [Required]  ${1} nameoftheCloud                    name of the cloud where AKS-Engine or ACS-Engine cluster in
+#  [Required]  ${1} nameoftheCloud                    name of the cloud where AKS-Engine or ACS-Engine cluster in (AzureCloud or AzureChinaCloud or AzureUSGovernment)
 #  [Required]  ${2} subscriptionId                    subscriptionId  of the AKS-Engine or ACS-Engine cluster
 #  [Required]  ${3} resourceGroupName                 azure resource group AKS-Engine or ACS-Engine cluster is in
 #  [Required]  ${4} logAnalyticsWorkspaceResourceId   azure resource of the Log Analytics. This should be the same as the one configured on the omsAgent of specified acs-engine Kubernetes cluster during agent installation
 #  [Required]  ${5} clusterName                       Name of the cluster configured on the omsAgent (for omsagent.env.clusterName) of specified acs-engine Kubernetes cluster
 #
 #  For example
-# https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/aksengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "00000000-0000-0000-0000-000000000000"  "Resource Group Name of AKS-Engine cluster"  "/subscriptions/<SubscriptionId>/resourceGroups/<resourceGroup>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>" "clusterName of AKS-Engine cluster"
+# https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/aksengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "name of the cloud" "00000000-0000-0000-0000-000000000000"  "Resource Group Name of AKS-Engine cluster"  "/subscriptions/<SubscriptionId>/resourceGroups/<resourceGroup>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>" "clusterName of AKS-Engine cluster"
 #
 
 nameoftheCloud=${1}
@@ -42,8 +42,8 @@ az account set -s $subscriptionId
 rg=$(az group show --name $clusterResourceGroup --subscription $subscriptionId)
 
 if [ -z "$rg" ]; then
-    echo "resource group does not exist in specified subscription":$clusterResourceGroup
-    exit 1
+  echo "resource group does not exist in specified subscription":$clusterResourceGroup
+  exit 1
 fi
 
 # check whether log analytics workspace resource exists or not
@@ -58,14 +58,14 @@ if [ -z $resources ]; then
 fi
 
 if [ -z $resources ]; then
-	echo "No k8s-master VMs or VMSSes found in the specified resource group":$clusterResourceGroup
-	exit 1
+  echo "No k8s-master VMs or VMSSes found in the specified resource group":$clusterResourceGroup
+  exit 1
 else
-   # attach logAnalyticsWorkspaceResourceId and clusterName tags to all K8s master VMs or VMSSes
+  # attach logAnalyticsWorkspaceResourceId and clusterName tags to all K8s master VMs or VMSSes
   for resid in $resources; do
-      jsonrtag=$(az resource show --id $resid --query tags)
-      rt=$(echo $jsonrtag | tr -d '"{},' | sed 's/: /=/g')
-     az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId clusterName=$clusterName --id $resid
+    jsonrtag=$(az resource show --id $resid --query tags)
+    rt=$(echo $jsonrtag | tr -d '"{},' | sed 's/: /=/g')
+    az resource tag --tags $rt logAnalyticsWorkspaceResourceId=$workspaceResourceId clusterName=$clusterName --id $resid
   done
 fi
 
