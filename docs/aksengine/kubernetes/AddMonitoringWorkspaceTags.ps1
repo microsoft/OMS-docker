@@ -1,6 +1,6 @@
 ﻿<#
     .DESCRIPTION
-		Attach Log Analytics Workspace Resource Id tags to the master nodes or VMSS(es) in resource group of the AKS-Engine (or ACS-Engine Kubernetes) cluster
+		Attach Monitoring onboarding tags to the master nodes or VMSS(es) in resource group of the AKS-Engine (or ACS-Engine Kubernetes) cluster
 
         ---------------------------------------------------------------------------------------------------------
        | tagName                             | tagValue                                                         |
@@ -16,19 +16,19 @@
 	https://docs.microsoft.com/en-us/powershell/module/azurerm.operationalinsights/get-azurermoperationalinsightsworkspace?view=azurermps-6.11.0
 
 	.PARAMETER NameoftheCloud
-		Name of the cloud that the acs-engine Kubernetes cluster is in. Supported clouds are AzureCloud, AzureChinaCloud.
+		Name of the cloud that the AKS-engine(or ACS-engine) Kubernetes cluster is in. Supported clouds are AzureCloud, AzureChinaCloud and AzureUSGovernment.
 
     .PARAMETER SubscriptionId
-        Subscription Id that the acs-engine Kubernetes cluster is in
+        Subscription Id that the aks-engine Kubernetes cluster is in
 
     .PARAMETER ResourceGroupName
-        Resource Group name where the acs-engine Kubernetes cluster is in
+        Resource Group name where the aks-engine Kubernetes cluster is in
 
     .PARAMETER LogAnalyticsWorkspaceResourceId
-        ResourceId of the Log Analytics. This should be the same as the one configured on the omsAgent of specified acs-engine Kubernetes cluster
+        Fully qualified ResourceId of the Log Analytics workspace. This should be the same as the one configured on the omsAgent of specified AKS-engine or (ACS-engine Kubernetes) cluster
 
 	 .PARAMETER ClusterName
-        Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified acs-engine Kubernetes cluster
+        Name of the cluster configured. This should be the same as the one configured on the omsAgent (for omsagent.env.clusterName) of specified ACS-engine Kubernetes cluster
 #>
 
 param(
@@ -46,21 +46,17 @@ param(
 
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
-$azureRmProfileModule = Get-Module -ListAvailable -Name AzureRM.Profile
-$azureRmResourcesModule = Get-Module -ListAvailable -Name AzureRM.Resources
-
-if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
-
+$azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
+$azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
+if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule)) {
     $isWindowsMachine = $true
-    if ($PSVersionTable -and $PSVersionTable.PSEdition -ccontains "core") {
+    if ($PSVersionTable -and $PSVersionTable.PSEdition -contains "core") {
         if ($PSVersionTable.Platform -notcontains "win") {
             $isWindowsMachine = $false
         }
     }
-
     if ($isWindowsMachine) {
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-
         if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             Write-Host("Running script as an admin...")
             Write-Host("")
@@ -72,9 +68,8 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
         }
     }
 
-
     $message = "This script will try to install the latest versions of the following Modules : `
-			    AzureRM.Resources and AzureRM.profile using the command`
+			    Az.Resources and Az.Accounts using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
     $question = "Do you want to Install the modules and run the script or just run the script?"
@@ -89,38 +84,38 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
     switch ($decision) {
         0 {
             try {
-                Write-Host("Installing AzureRM.profile...")
-                Install-Module AzureRM.profile -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                Write-Host("Installing Az.Resources...")
+                Install-Module Az.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
             }
             catch {
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
+                Write-Host("Close other powershell logins and try installing the latest modules for Az.Resources in a new powershell window: eg. 'Install-Module Az.Resources -Repository PSGallery -Force'") -ForegroundColor Red
                 exit
             }
             try {
-                Write-Host("Installing AzureRM.Resources...")
-                Install-Module AzureRM.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                Write-Host("Installing Az.Accounts...")
+                Install-Module Az.Accounts -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
             }
             catch {
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.Resoureces in a new powershell window: eg. 'Install-Module AzureRM.Resoureces -Repository PSGallery -Force'") -ForegroundColor Red
+                Write-Host("Close other powershell logins and try installing the latest modules for Az.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
                 exit
             }
 
         }
         1 {
             try {
-                Import-Module AzureRM.profile -ErrorAction Stop
+                Import-Module Az.Resources -ErrorAction Stop
             }
             catch {
-                Write-Host("Could not import AzureRM.profile...") -ForegroundColor Red
-                Write-Host("Close other powershell logins and try installing the latest modules for AzureRM.profile in a new powershell window: eg. 'Install-Module AzureRM.profile -Repository PSGallery -Force'") -ForegroundColor Red
+                Write-Host("Could not import Az.Resources ...") -ForegroundColor Red
+                Write-Host("Close other powershell logins and try installing the latest modules for Az.Resources  in a new powershell window: eg. 'Install-Module Az.Resources  -Repository PSGallery -Force'") -ForegroundColor Red
                 Stop-Transcript
                 exit
             }
             try {
-                Import-Module AzureRM.Resources
+                Import-Module Az.Accounts
             }
             catch {
-                Write-Host("Could not import AzureRM.Resources... Please reinstall this Module") -ForegroundColor Red
+                Write-Host("Could not import Az.Accounts... Please reinstall this Module") -ForegroundColor Red
                 Stop-Transcript
                 exit
             }
@@ -134,131 +129,67 @@ if (($null -eq $azureRmProfileModule) -or ($null -eq $azureRmResourcesModule)) {
     }
 }
 
-if ($NameoftheCloud -like "AzureCloud" -or $NameoftheCloud -like "AzureChinaCloud") {
+if ($NameoftheCloud -like "AzureCloud" -or
+    $NameoftheCloud -like "AzureChinaCloud" -or
+    $NameoftheCloud -like "AzureUSGovernment") {
     Write-Host("")
-    Write-Host("Trying to configure the provided cloud...")
-    Connect-AzureRmAccount -Environment $NameoftheCloud
+    Write-Host("Please login to $NameoftheCloud cloud environment with corresponding creds ...")
+    Connect-AzAccount -Environment $NameoftheCloud -SubscriptionId $SubscriptionId
 }
 else {
     Write-Host("Error: Monitoring not supported in this cloud: $NameoftheCloud") -ForegroundColor Red
     exit
 }
 
-try {
-    Write-Host("")
-    Write-Host("Trying to get the current AzureRM login context...")
-    $account = Get-AzureRmContext -ErrorAction Stop
-    Write-Host("Successfully fetched current AzureRM context...") -ForegroundColor Green
-    Write-Host("")
-}
-catch {
-    Write-Host("")
-    Write-Host("Could not fetch AzureRMContext..." ) -ForegroundColor Red
-    Write-Host("")
-}
-
-
-if ($null -eq $account.Account) {
-    try {
-        Write-Host("Please login...")
-        Login-AzureRmAccount -subscriptionid $SubscriptionId
-    }
-    catch {
-        Write-Host("")
-        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-        Write-Host("")
-        Stop-Transcript
-        exit
-    }
-}
-else {
-    if ($account.Subscription.Id -eq $SubscriptionId) {
-        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
-        $account
-    }
-    else {
-        try {
-            Write-Host("Current Subscription:")
-            $account
-            Write-Host("Changing to subscription: $SubscriptionId")
-            Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-        }
-        catch {
-            Write-Host("")
-            Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the ID you entered is correct and you have access to the cluster" ) -ForegroundColor Red
-            Write-Host("")
-            Stop-Transcript
-            exit
-        }
-    }
-}
-
 #
 #   Resource group existance and access check
 #
 Write-Host("Checking resource group details...")
-Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
+Get-AzResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 if ($notPresent) {
     Write-Host("")
-    Write-Host("Could not find RG. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the acs-engine cluster") -ForegroundColor Red
+    Write-Host("Could not find RG. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the aks-engine cluster") -ForegroundColor Red
     Write-Host("")
     Stop-Transcript
     exit
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
-
 $isKubernetesCluster = $false
-
 #
 #  Validate the specified Resource Group has the acs-engine Kuberentes cluster resources (VMs or VMSSes)
 #
-$k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
-
+$k8sMasterVMsOrVMSSes = Get-AzResource -ResourceType 'Microsoft.Compute/virtualMachines' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
 if ($null -eq $k8sMasterVMsOrVMSSes) {
-
-    $k8sMasterVMsOrVMSSes = Get-AzureRmResource -ResourceType 'Microsoft.Compute/virtualMachineScaleSets' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
+    $k8sMasterVMsOrVMSSes = Get-AzResource -ResourceType 'Microsoft.Compute/virtualMachineScaleSets' -ResourceGroupName $ResourceGroupName | Where-Object { $_.Name -match "k8s-master" }
 }
 
-
-
 foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) {
-
     $tags = $k8MasterVM.Tags
-
     $acsEngineVersion = $tags['acsengineVersion']
-
     if ($null -eq $acsEngineVersion) {
         $acsEngineVersion = $tags['aksEngineVersion']
     }
-
     $orchestrator = $tags['orchestrator']
-
     Write-Host("Aks-Engine or ACS-Engine version : " + $acsEngineVersion) -ForegroundColor Green
-
     Write-Host("orchestrator : " + $orchestrator) -ForegroundColor Green
-
     if ([string]$orchestrator.StartsWith('Kubernetes')) {
         $isKubernetesCluster = $true
-
-        Write-Host("Resource group name: '" + $ResourceGroupName + "' found the aks-engine Kubernetes resources") -ForegroundColor Green
+        Write-Host("Resource group name: '" + $ResourceGroupName + "' has the aks-engine resources") -ForegroundColor Green
     }
     else {
-        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the Kubernetes aks-engine resources") -ForegroundColor Red
+        Write-Host("Resource group name: '" + $ResourceGroupName + "'is doesnt have the aks-engine resources") -ForegroundColor Red
         exit
     }
-
 }
 
 if ($isKubernetesCluster -eq $false) {
-    Write-Host("Resource group name: '" + $ResourceGroupName + "' doesnt have the Kubernetes acs-engine resources") -ForegroundColor Red
+    Write-Host("Resource group name: '" + $ResourceGroupName + "' doesnt have the aks-engine or acs-engine resources") -ForegroundColor Red
     exit
 }
 
 # validate specified logAnalytics workspace exists or not
-
-$workspaceResource = Get-AzureRmResource -ResourceId $LogAnalyticsWorkspaceResourceId
-
+$workspaceResource = Get-AzResource -ResourceId $LogAnalyticsWorkspaceResourceId
 if ($null -eq $workspaceResource) {
     Write-Host("Specified Log Analytics workspace ResourceId: '" + $LogAnalyticsWorkspaceResourceId + "' doesnt exist or don't have access to it") -ForegroundColor Red
     exit
@@ -267,57 +198,43 @@ if ($null -eq $workspaceResource) {
 #
 #  Add logAnalyticsWorkspaceResourceId and clusterName (if exists) tag(s) to the K8s master VMs
 #
-
 foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) {
-
-    $r = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
-
+    $r = Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceName  $k8MasterVM.Name
     if ($null -eq $r) {
-
-        Write-Host("Get-AzureRmResource for Resource Group: " + $ResourceGroupName + "Resource Name :" + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
+        Write-Host("Get-AzResource for Resource Group: " + $ResourceGroupName + "Resource Name :" + $k8MasterVM.Name + " failed" ) -ForegroundColor Red
         exit
     }
-
     if ($null -eq $r.Tags) {
-
         Write-Host("K8s master VM should have the tags" ) -ForegroundColor Red
         exit
     }
-
     if ($r.Tags.ContainsKey("logAnalyticsWorkspaceResourceId")) {
-
         $existingLogAnalyticsWorkspaceResourceId = $r.Tags["logAnalyticsWorkspaceResourceId"]
-
         if ($existingLogAnalyticsWorkspaceResourceId -eq $LogAnalyticsWorkspaceResourceId) {
-
-            Write-Host("Ignoring the request since K8s master VM :" + $k8MasterVM.Name + " already has existing tag with specified logAnalyticsWorkspaceResourceId" ) -ForegroundColor Green
-            exit
+            Write-Host("Ignoring attaching logAnalyticsWorkspaceResourceId tag to K8s master VM :" + $k8MasterVM.Name + " since it has already with same tag value" ) -ForegroundColor Yellow
         }
-
-        Write-Host("K8s master VM :" + $k8MasterVM.Name + " has the existing tag for logAnalyticsWorkspaceResourceId with different workspace resource Id hence updating the resourceId with specified one" ) -ForegroundColor Green
-        $r.Tags.Remove("logAnalyticsWorkspaceResourceId")
-
+        else {
+            Write-Host("K8s master VM :" + $k8MasterVM.Name + " has the existing tag for logAnalyticsWorkspaceResourceId with different workspace resource Id hence updating the resourceId with specified one" ) -ForegroundColor Green
+            $r.Tags.Remove("logAnalyticsWorkspaceResourceId")
+        }
     }
 
     # if clusterName parameter passed-in
     if ($ClusterName) {
         if ($r.Tags.ContainsKey("clusterName")) {
             $existingclusterName = $r.Tags["clusterName"]
-
             if ($existingclusterName -eq $ClusterName) {
-                Write-Host("Ignoring the request since K8s master VM :" + $k8MasterVM.Name + " already has existing tag with specified clusterName" ) -ForegroundColor Green
+                Write-Host("Ignoring attaching clusterName tag to K8s master VM :" + $k8MasterVM.Name + " since it has already with same tag value" ) -ForegroundColor Yellow
                 exit
             }
-
             Write-Host("K8s master VM :" + $k8MasterVM.Name + " has the existing tag for clusterName with different from specified one" ) -ForegroundColor Green
             $r.Tags.Remove("clusterName")
         }
-
         $r.Tags.Add("clusterName", $ClusterName)
     }
 
     $r.Tags.Add("logAnalyticsWorkspaceResourceId", $LogAnalyticsWorkspaceResourceId)
-    Set-AzureRmResource -Tag $r.Tags -ResourceId $r.ResourceId -Force
+    Set-AzResource -Tag $r.Tags -ResourceId $r.ResourceId -Force
 }
 if ($ClusterName) {
     Write-Host("Successfully added clusterName and logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green
@@ -326,4 +243,13 @@ else {
     Write-Host("Successfully added logAnalyticsWorkspaceResourceId tag to K8s master VMs") -ForegroundColor Green
 }
 
+if ($NameoftheCloud -like "AzureCloud") {
+    Write-Host("If you have already onboarded the azure monitor for containers HELM chart, proceed to https://aka.ms/azmon-containers to view the health and metrics of your cluster $clusterName") -ForegroundColor Green
+}
+elseif ($NameoftheCloud -like "AzureChinaCloud") {
+    Write-Host("If you have already onboarded the azure monitor for containers HELM chart, proceed to https://aka.ms/azmon-containers to view the health and metrics of your cluster $clusterName") -ForegroundColor Green
+}
+else {
+    Write-Host("If you have already onboarded the azure monitor for containers HELM chart, proceed to https://portal.azure.us to view the health and metrics of your cluster $clusterName") -ForegroundColor Green
+}
 
