@@ -23,9 +23,9 @@ If you are not familiar with the concepts of deploying resources using a templat
 # configure and login to the cloud of log analytics workspace.Specify the corresponding cloud environment of your workspace to below command.
 Connect-AzureRmAccount -Environment <AzureCloud | AzureChinaCloud | AzureUSGovernment>
 # set the context of the subscription of log analytics workspace
-Set-AzureRmContext -SubscriptionId <subscription id of log analytics>
+Set-AzureRmContext -SubscriptionId <subscription id of log analytics workspace>
 # execute deployment command to add container insights solution to the specified log analytics workspace
-New-AzureRmResourceGroupDeployment -Name OnboardCluster -ResourceGroupName ClusterResourceGroupName -TemplateFile .\azuremonitor-containerSolution.json -TemplateParameterFile .\azuremonitor-containerSolutionParams.json
+New-AzureRmResourceGroupDeployment -Name OnboardCluster -ResourceGroupName <resource group of log analytics workspace> -TemplateFile .\azuremonitor-containerSolution.json -TemplateParameterFile .\azuremonitor-containerSolutionParams.json
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:
@@ -41,9 +41,9 @@ provisioningState       : Succeeded
 # configure the cloud of log analytics workspace.Specify the corresponding cloud environment of your workspace to below command.
 az cloud set --name <AzureCloud | AzureChinaCloud | AzureUSGovernment>
 az login
-az account set --subscription "<Subscription Name of your Log Analytics Workspace>"
+az account set --subscription "<Subscription Id or name of your Log Analytics Workspace>"
 # execute deployment command to add container insights solution to the specified log analytics workspace
-az group deployment create --resource-group <ResourceGroupName> --template-file ./azuremonitor-containerSolution.json --parameters @./azuremonitor-containerSolutionParams.json
+az group deployment create --resource-group <resource group of log analytics workspace> --template-file ./azuremonitor-containerSolution.json --parameters @./azuremonitor-containerSolutionParams.json
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:
