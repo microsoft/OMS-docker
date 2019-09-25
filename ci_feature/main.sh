@@ -4,6 +4,7 @@ if [ -e "/etc/config/kube.conf" ]; then
     cat /etc/config/kube.conf > /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
 else
     sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
+    sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/docker-cimprov/container-health.conf
 fi
 sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/opt/microsoft/omsagent/sysconf/omsagent.d/syslog.conf
 sed -i -e 's/^exit 101$/exit 0/g' /usr/sbin/policy-rc.d
@@ -123,13 +124,8 @@ if [ ! -e "/etc/config/kube.conf" ]; then
       # remove the container-health.conf if health is not enabled.
       # swap container.conf with container-health.conf of health is enabled
       if [ ! -z $AZMON_CLUSTER_ENABLE_HEALTH_MODEL ] && [ $AZMON_CLUSTER_ENABLE_HEALTH_MODEL == "true" ]; then
-            echo "Deleting container.conf and moving container-health.conf to container.conf"
-            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-            mv /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-      else
-            #delete container-health.conf
-            echo "Removing container-health.conf" 
-            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf
+             echo "Replacing non-health config with health-config."
+             cat /etc/opt/microsoft/docker-cimprov/container-health.conf > /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
       fi
 fi
 
