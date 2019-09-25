@@ -36,12 +36,11 @@ $azOperationalInsights = Get-Module -ListAvailable -Name Az.OperationalInsights
 if (($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azOperationalInsights)) {
 
     $isWindowsMachine = $true
-    if ($PSVersionTable -and $PSVersionTable.PSEdition -ccontains "core") {
+    if ($PSVersionTable -and $PSVersionTable.PSEdition -contains "core") {
         if ($PSVersionTable.Platform -notcontains "win") {
             $isWindowsMachine = $false
         }
     }
-
 
     if ($isWindowsMachine) {
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
