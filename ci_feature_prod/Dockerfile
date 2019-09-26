@@ -2,10 +2,10 @@ FROM ubuntu:16.04
 MAINTAINER OMSContainers@microsoft.com
 LABEL vendor=Microsoft\ Corp \
     com.microsoft.product="OMS Container Docker Provider" \
-    com.microsoft.version="7.0.0-1"
+    com.microsoft.version="7.0.0-3"
 ENV tmpdir /opt
 ENV APPLICATIONINSIGHTS_AUTH NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi
-ENV AGENT_VERSION ciprod09092019
+ENV AGENT_VERSION ciprod09262019
 ENV HOST_MOUNT_PREFIX /hostfs
 ENV HOST_PROC /hostfs/proc
 ENV HOST_SYS /hostfs/sys
