@@ -93,7 +93,7 @@ data:
      #Kubernetes health
      <source>
       type kubehealth
-      tag oms.api.KubeHealth.ReplicaSet
+      tag kubehealth.ReplicaSet
       run_interval 60s
       log_level debug
      </source>
@@ -120,7 +120,7 @@ data:
       log_level info
      </filter>
      #health model aggregation filter
-     <filter oms.api.KubeHealth**>
+     <filter kubehealth**>
       type filter_health_model_builder
      </filter>
 

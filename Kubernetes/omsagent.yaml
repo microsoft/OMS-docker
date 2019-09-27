@@ -96,7 +96,7 @@ data:
     #Kubernetes health
     <source>
      type kubehealth
-     tag oms.api.KubeHealth.ReplicaSet
+     tag kubehealth.ReplicaSet
      run_interval 60s
      log_level debug
     </source>
@@ -124,7 +124,7 @@ data:
     </filter>
 
     #health model aggregation filter
-    <filter oms.api.KubeHealth**>
+    <filter kubehealth**>
      type filter_health_model_builder
     </filter>
 
@@ -315,13 +315,13 @@ spec:
         dsName: "omsagent-ds"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-1"
+        dockerProviderVersion: "7.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod09092019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod09262019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -429,13 +429,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-1"
+        dockerProviderVersion: "7.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod09092019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod09262019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
