@@ -107,23 +107,6 @@ else
       echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
 fi
 
-# Check for internet connectivity
-RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
-if [ $RET -eq 200 ]; then
-      # Check for workspace existence
-      if [ -e "/etc/omsagent-secret/WSID" ]; then
-            workspaceId=$(cat /etc/omsagent-secret/WSID)
-            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
-            if [ $? -ne 0 ]; then
-                  echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
-            fi
-      else
-            echo "LA Onboarding:Workspace Id not mounted"
-      fi
-else
-      echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
-fi
-
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
