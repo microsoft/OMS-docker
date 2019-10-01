@@ -36,7 +36,7 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi
+fi 
 
 #Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
@@ -48,11 +48,11 @@ else
 	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully.
-cat /var/opt/microsoft/docker-cimprov/state/containerhostname
+cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
 
 #resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
-      echo "not setting customResourceId"
+      echo "not setting customResourceId" 
 else
       export customResourceId=$AKS_RESOURCE_ID
       echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
@@ -63,7 +63,7 @@ fi
 #set agent config schema version
 if [  -e "/etc/config/settings/schema-version" ] && [  -s "/etc/config/settings/schema-version" ]; then
       #trim
-      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)"
+      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)" 
       #remove all spaces
       config_schema_version="${config_schema_version//[[:space:]]/}"
       #take first 10 characters
@@ -91,8 +91,8 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-RET=`curl -s -o /dev/null -w "%{http_code}" http://www.microsoft.com/`
-if [ $RET -eq 200 ]; then
+RET=`curl -s -o /dev/null -w "%{http_code}" https://abc.blob.core.windows.net`
+if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
             workspaceId=$(cat /etc/omsagent-secret/WSID)
@@ -103,7 +103,7 @@ if [ $RET -eq 200 ]; then
       else
             echo "LA Onboarding:Workspace Id not mounted"
       fi
-else
+else 
       echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
 fi
 
@@ -180,7 +180,7 @@ rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.c
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
-  elif [ -a /etc/omsagent-secret/WSID ]; then
+  elif [ -a /etc/omsagent-secret/WSID ]; then  
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
   elif [ -a /run/secrets/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
@@ -208,7 +208,7 @@ service cron start
 
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
-dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
+dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
@@ -276,7 +276,7 @@ source ~/.bashrc
 /opt/telegraf --version
 dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
-#dpkg -l | grep telegraf | awk '{print $2 " " $3}'
+#dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
