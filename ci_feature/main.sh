@@ -97,7 +97,7 @@ if [ $RET -ne 000 ]; then
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
             workspaceId=$(cat /etc/omsagent-secret/WSID)
-            if [-e "/etc/omsagent-secret/DOMAIN"]; then
+            if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
                   domain=$(cat /etc/omsagent-secret/DOMAIN)
             else
                   domain="opinsights.azure.com"
