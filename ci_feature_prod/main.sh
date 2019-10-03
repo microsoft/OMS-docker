@@ -92,7 +92,7 @@ fi
 
 # Check for internet connectivity
 echo "Making curl request to blob end-point"
-RET=`curl -s -o /dev/null -w "%{http_code}" https://abc.blob.core.windows.net`
+RET=`curl -s -o /dev/null -w "%{http_code}" https://azmonagentpingtest.blob.core.windows.net`
 if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
