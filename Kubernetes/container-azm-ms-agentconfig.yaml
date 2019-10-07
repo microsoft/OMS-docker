@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 data:
-  schema-version: 
+  schema-version:
     #string.used by agent to parse config. supported versions are {v1}. Configs with other schema versions will be rejected by the agent.
     v1
   config-version:
@@ -76,11 +76,6 @@ data:
         #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
 
         #fielddrop = ["metric_to_drop"]
-  agent-settings: |-
-    # agent health model feature settings
-    [agent_settings.health_model]
-      # In the absence of this configmap, default value for enabled is false
-      enabled = false
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
