@@ -277,7 +277,7 @@ foreach ($k8MasterVM in $k8sMasterVMsOrVMSSes) {
 
 
 if ($null -eq $LogAnalyticsWorkspaceResourceID) {
-    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on ACS-engine k8 master nodes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
+    Write-Host("There is no existing logAnalyticsWorkspaceResourceId tag on AKS-Engine k8 master nodes or VMSSes so this indicates this cluster not enabled monitoring or tags have been removed" ) -ForegroundColor Red	
     Write-Host("Please try to opt-in for monitoring using the following links:") -ForegroundColor Red    
     Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
     exit

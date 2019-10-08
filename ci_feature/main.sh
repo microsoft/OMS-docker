@@ -91,12 +91,19 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-RET=`curl -s -o /dev/null -w "%{http_code}" https://abc.blob.core.windows.net`
+echo "Making curl request to blob end-point"
+RET=`curl -s -o /dev/null -w "%{http_code}" https://azmonagentpingtest.blob.core.windows.net`
 if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
             workspaceId=$(cat /etc/omsagent-secret/WSID)
-            curl https://$workspaceId.oms.opinsights.azure.com/AgentService.svc/LinuxAgentTopologyRequest
+            if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
+                  domain=$(cat /etc/omsagent-secret/DOMAIN)
+            else
+                  domain="opinsights.azure.com"
+            fi
+            echo "Making curl request to oms endpint with domain: $domain"
+            curl https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
             if [ $? -ne 0 ]; then
                   echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
             fi
@@ -119,18 +126,6 @@ source config_env_var
 #Replace the placeholders in td-agent-bit.conf file for fluentbit with custom/default values in daemonset
 if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/microsoft/omsagent/ruby/bin/ruby td-agent-bit-conf-customizer.rb
-
-      # remove the container-health.conf if health is not enabled.
-      # swap container.conf with container-health.conf of health is enabled
-      if [ ! -z $AZMON_CLUSTER_ENABLE_HEALTH_MODEL ] && [ $AZMON_CLUSTER_ENABLE_HEALTH_MODEL == "true" ]; then
-            echo "Deleting container.conf and moving container-health.conf to container.conf"
-            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-            mv /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container.conf
-      else
-            #delete container-health.conf
-            echo "Removing container-health.conf" 
-            rm -rf /etc/opt/microsoft/omsagent/sysconf/omsagent.d/container-health.conf
-      fi
 fi
 
 #Parse the prometheus configmap to create a file with new custom settings.
