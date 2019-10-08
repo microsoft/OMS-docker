@@ -58,7 +58,8 @@ data:
         # - prometheus.io/port: If port is not 9102 use this annotation
         monitor_kubernetes_pods = false
 
-        ## Restricts Kubernetes monitoring to namespaces for pods. This will take effect when monitor_kubernetes_pods is set to true
+        ## Restricts Kubernetes monitoring to namespaces for pods that have annotations set and are scraped using the monitor_kubernetes_pods setting.
+        ## This will take effect when monitor_kubernetes_pods is set to true
         ##   ex: monitor_kubernetes_pods_namespaces = ["default1", "default2", "default3"]
         # monitor_kubernetes_pods_namespaces = ["default1"]
 
