@@ -344,6 +344,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DISABLE_TELEMETRY
+              value: "true"
           securityContext:
             privileged: true
           ports:
@@ -439,11 +441,11 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 150m
-              memory: 500Mi
+              cpu: 500m
+              memory: 2000Mi
             requests:
-              cpu: 110m
-              memory: 250Mi
+              cpu: 500m
+              memory: 2000Mi
           env:
             #- name: AKS_RESOURCE_ID
             #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
@@ -458,6 +460,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: DISABLE_TELEMETRY
+              value: "true"
           securityContext:
             privileged: true
           ports:
