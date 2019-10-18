@@ -21,15 +21,15 @@ chmod 775 $TMPDIR/*.sh
 $TMPDIR/omsagent-*.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Install omi
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/omi*.deb
 
 #Install scx
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/scx*.deb
 #$TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
 
 #Install omsagent
 
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/omsagent*.deb
 #/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
 
 #Assign permissions to omsagent user to access docker.sock
@@ -58,7 +58,7 @@ chmod 777 /opt/telegraf
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
 sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
 sudo apt-get update
-sudo apt-get install td-agent-bit=0.14.4 sqlite3=3.11.0-1ubuntu1.2 libsqlite3-dev=3.11.0-1ubuntu1.2 -y
+sudo apt-get install td-agent-bit=0.14.4 -y
 
 rm -rf $TMPDIR/omsbundle
 rm -f $TMPDIR/omsagent*.sh
