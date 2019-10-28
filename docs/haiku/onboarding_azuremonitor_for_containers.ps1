@@ -6,7 +6,8 @@
       1. Creates the Default Azure log analytics workspace if doesn't exist one in specified subscription
       2. Adds the ContainerInsights solution to the Azure log analytics workspace
       3. Adds the logAnalyticsWorkspaceResourceId tag on the provided Azure Arc Cluster
-      4. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
+      4. Add the required node labels on the worker nodes if doesnt exists already
+      5. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
 
     .PARAMETER azureArcClusterResourceId
         Id of the Azure Arc Cluster
@@ -399,10 +400,10 @@ Write-Host("Add node labels on worker nodes for the Azure Monitor for containers
 $workernodesInfo = kubectl get nodes -o json --selector='node-role.kubernetes.io/controlplane!=true,node-role.kubernetes.io/etcd!=true,node-role.kubernetes.io/master!=true,node-role.kubernetes.io/master!=""'
 $workernodes = $workernodesInfo | ConvertFrom-Json
 
-for ($index = 0; $index -le $workernodes.Items.length; $index ++) {
+for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
     $nodeName = $workernodes.Items[$index].metadata.name
     $nodeLabels = $workernodes.Items[$index].metadata.labels
-    if ($nodeLabels -notcontains "node-role.kubernetes.io/worker") {
+    if ($nodeLabels.PSObject.Properties.Name.Contains("node-role.kubernetes.io/worker")) {
         Write-Host("Attaching node label:node-role.kubernetes.io/worker=true for node:" + $nodeName)
         kubectl label node $nodeName node-role.kubernetes.io/worker=true
     }
@@ -417,7 +418,7 @@ try {
     # uncomment below line when all the required changes merged to HELM charts repo
     # helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
     $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    helm install --name $releaseName --set omsagent.secret.wsid=$workspaceGUID, omsagent.secret.key=$workspacePrimarySharedKey, omsagent.env.clusterId=$azureArcClusterResourceId incubator/azuremonitor-containers
+    helm install --name $releaseName --set 'omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId' incubator/azuremonitor-containers
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
