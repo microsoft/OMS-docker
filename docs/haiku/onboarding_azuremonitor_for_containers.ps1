@@ -404,7 +404,7 @@ for ($index = 0; $index -le $workernodes.Items.length; $index ++) {
     $nodeLabels = $workernodes.Items[$index].metadata.labels
     if ($nodeLabels -notcontains "node-role.kubernetes.io/worker") {
         Write-Host("Attaching node label:node-role.kubernetes.io/worker=true for node:" + $nodeName)
-        kubectl label $nodeName node-role.kubernetes.io/worker=true
+        kubectl label node $nodeName node-role.kubernetes.io/worker=true
     }
 }
 
