@@ -172,7 +172,7 @@ if ((Test-Path $kubeConfig -PathType Leaf) -ne $true) {
 }
 
 
-if ($azureArcClusterResourceId.Contains("Microsoft.Kubernetes/connectedClusters" -ne $true) -or ($azureArcClusterResourceId.Split("/").Length -ne 9)) {
+if (($azureArcClusterResourceId.Contains("Microsoft.Kubernetes/connectedClusters") -ne $true) -or ($azureArcClusterResourceId.Split("/").Length -ne 9)) {
     Write-Host("Provided cluster resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.Kubernetes/connectedClusters/<clusterName>") -ForegroundColor Red
     exit
 }
