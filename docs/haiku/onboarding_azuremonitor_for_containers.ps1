@@ -403,9 +403,10 @@ $workernodes = $workernodesInfo | ConvertFrom-Json
 for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
     $nodeName = $workernodes.Items[$index].metadata.name
     $nodeLabels = $workernodes.Items[$index].metadata.labels
-    if ($nodeLabels.PSObject.Properties.Name.Contains("node-role.kubernetes.io/worker")) {
+    if (($nodeLabels.PSObject.Properties.Name.Contains("node-role.kubernetes.io/worker") -eq $false) -and ($nodeLabels.PSObject.Properties.Name.Contains("kubernetes.io/role") -eq $false)) {
         Write-Host("Attaching node label:node-role.kubernetes.io/worker=true for node:" + $nodeName)
         kubectl label node $nodeName node-role.kubernetes.io/worker=true
+        kubectl label node $nodeName kubernetes.io/role=agent
     }
 }
 
@@ -418,7 +419,8 @@ try {
     # uncomment below line when all the required changes merged to HELM charts repo
     # helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
     $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-    helm install --name $releaseName --set 'omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId' incubator/azuremonitor-containers
+    $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
+    helm install --name $releaseName --set $helmParameters incubator/azuremonitor-containers
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
