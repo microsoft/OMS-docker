@@ -1,4 +1,4 @@
-﻿<#
+<#
     .DESCRIPTION
 
      Onboards Azure Monitor for containers to Kubernetes cluster hosted outside and connected to Azure via Azure Arc cluster
@@ -395,25 +395,18 @@ catch {
     exit
 }
 
-
-enum ClusterCreationSource {
-    KubeAdm
-    Rancher
-    Other
-}
-
-$clustercreationSource = ClusterCreationSource.KubeAdm;
-Write-Host("Check all the worker nodes has required node labels for the Azure Monitor for containers replicaset pod ...")
-$masternodesInfo = kubectl get nodes -o json --selector=node-role.kubernetes.io/controlplane==true, node-role.kubernetes.io/master==true, node-role.kubernetes.io/master==""
-
-if ($masternodesInfo.Contains("rke") -or $masternodesInfo.Contains("rke-")) {
-    $clustercreationSource = ClusterCreationSource.Rancher
-}
-
-$workernodesInfo = kubectl get nodes -o json --selector=node-role.kubernetes.io/controlplane!=true, node-role.kubernetes.io/etcd!=true, node-role.kubernetes.io/master!=true, node-role.kubernetes.io/master!=""
+Write-Host("Add node labels on worker nodes for the Azure Monitor for containers replicaset pod scheduling if not extists already ...")
+$workernodesInfo = kubectl get nodes -o json --selector='node-role.kubernetes.io/controlplane!=true,node-role.kubernetes.io/etcd!=true,node-role.kubernetes.io/master!=true,node-role.kubernetes.io/master!=""'
 $workernodes = $workernodesInfo | ConvertFrom-Json
 
-
+for ($index = 0; $index -le $workernodes.Items.length; $index ++) {
+    $nodeName = $workernodes.Items[$index].metadata.name
+    $nodeLabels = $workernodes.Items[$index].metadata.labels
+    if ($nodeLabels -notcontains "node-role.kubernetes.io/worker") {
+        Write-Host("Attaching node label:node-role.kubernetes.io/worker=true for node:" + $nodeName)
+        kubectl label $nodeName node-role.kubernetes.io/worker=true
+    }
+}
 
 Write-Host("Sleep for 10 secs to get tiller running state on the cluster ...")
 Start-Sleep -Seconds 10
