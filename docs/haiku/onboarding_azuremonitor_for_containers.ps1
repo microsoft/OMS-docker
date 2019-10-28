@@ -395,6 +395,26 @@ catch {
     exit
 }
 
+
+enum ClusterCreationSource {
+    KubeAdm
+    Rancher
+    Other
+}
+
+$clustercreationSource = ClusterCreationSource.KubeAdm;
+Write-Host("Check all the worker nodes has required node labels for the Azure Monitor for containers replicaset pod ...")
+$masternodesInfo = kubectl get nodes -o json --selector=node-role.kubernetes.io/controlplane==true, node-role.kubernetes.io/master==true, node-role.kubernetes.io/master==""
+
+if ($masternodesInfo.Contains("rke") -or $masternodesInfo.Contains("rke-")) {
+    $clustercreationSource = ClusterCreationSource.Rancher
+}
+
+$workernodesInfo = kubectl get nodes -o json --selector=node-role.kubernetes.io/controlplane!=true, node-role.kubernetes.io/etcd!=true, node-role.kubernetes.io/master!=true, node-role.kubernetes.io/master!=""
+$workernodes = $workernodesInfo | ConvertFrom-Json
+
+
+
 Write-Host("Sleep for 10 secs to get tiller running state on the cluster ...")
 Start-Sleep -Seconds 10
 
