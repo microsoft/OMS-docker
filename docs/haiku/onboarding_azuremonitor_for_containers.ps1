@@ -361,6 +361,7 @@ catch {
 
 Write-Host("Attaching logAnalyticsWorkspaceResourceId tag on the cluster ResourceId")
 $clusterResource.Tags.Add("logAnalyticsWorkspaceResourceId", $WorkspaceInformation.ResourceId)
+Set-AzResource -Tag $clusterResource.Tags -ResourceId $clusterResource.ResourceId -Force
 
 $workspaceGUID = "";
 $workspacePrimarySharedKey = "";
@@ -418,9 +419,9 @@ try {
 
     # uncomment below line when all the required changes merged to HELM charts repo
     # helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
-    $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    # $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
     $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
-    helm install --name $releaseName --set $helmParameters incubator/azuremonitor-containers
+    helm install --generate-name --set $helmParameters incubator/azuremonitor-containers
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
