@@ -43,9 +43,9 @@ inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyout
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case.
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully.
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname
@@ -252,11 +252,11 @@ echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bas
 export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
 echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 
-if [ ! -e "/etc/config/kube.conf" ]; then
-   nodename=$(cat /hostfs/etc/hostname)
-else
-   nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
-fi
+#if [ ! -e "/etc/config/kube.conf" ]; then
+#   nodename=$(cat /hostfs/etc/hostname)
+#else
+nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+#fi
 echo "nodename: $nodename"
 echo "replacing nodename in telegraf config"
 sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
