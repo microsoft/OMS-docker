@@ -12,14 +12,14 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions"]
-    resources: ["deployments"]
-    verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
     verbs: ["get", "create", "patch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["list", "get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -304,7 +304,7 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: omsagent
@@ -312,6 +312,9 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      dsName: "omsagent-ds"
   template:
     metadata:
       labels:
@@ -383,9 +386,7 @@ spec:
         beta.kubernetes.io/os: linux
       # Tolerate a NoSchedule taint on master that ACS Engine sets.
       tolerations:
-        - key: "node-role.kubernetes.io/master"
-          operator: "Equal"
-          value: "true"
+        - operator: "Exists" 
           effect: "NoSchedule"
       volumes:
         - name: host-root
@@ -414,7 +415,7 @@ spec:
             name: container-azm-ms-agentconfig
             optional: true
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: omsagent-rs
