@@ -31,6 +31,10 @@ data:
        [log_collection_settings.env_var]
           # In the absense of this configmap, default value for enabled is true
           enabled = true
+       [log_collection_settings.enrich_container_logs]
+          # In the absense of this configmap, default value for enrich_logs is true
+          # When this is enabled (enabled = true), every container log entry (both stdout & stderr) will be enriched with container Name, container Image & TimeOfCommand (agent processing time)
+          enabled = true
   prometheus-data-collection-settings: |-
     # Custom Prometheus metrics data collection settings
     [prometheus_data_collection_settings.cluster]

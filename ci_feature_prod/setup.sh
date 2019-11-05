@@ -9,12 +9,12 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.10.0-1/omsagent-1.10.0-1.universal.x64.sh
+wget https://github.com/microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.12.7-0/omsagent-1.12.7-0.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/microsoft/Docker-Provider/releases/download/7.0.0.5/docker-cimprov-7.0.0-5.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/most/docker-cimprov-9.0.0-1.universal.x86_64.sh
 chmod 775 $TMPDIR/*.sh
 
 #Extract omsbundle
@@ -52,7 +52,7 @@ wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0.0/tele
 
 chmod 777 /opt/telegraf
 
-/$TMPDIR/docker-cimprov-7.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-9.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
