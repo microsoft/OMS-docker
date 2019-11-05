@@ -9,7 +9,7 @@ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
 
-wget https://github.com/microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.12.7-0/omsagent-1.12.7-0.universal.x64.sh
+wget https://github.com/microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.11.0-9/omsagent-1.11.0-9.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
