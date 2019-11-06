@@ -37,7 +37,16 @@ $MdmCustomMetricAvailabilityLocations = (
     'westus2',
     'southeastasia',
     'northeurope',
-    'westeurope'
+    'westeurope',
+    'southafricanorth',
+    'centralus',
+    'northcentralus',
+    'eastus2',
+    'koreacentral',
+    'eastasia',
+    'centralindia',
+    'uksouth',
+    'canadacentral'
 );
 
 try {
@@ -410,7 +419,7 @@ else {
             $CurrentDir = (Get-Item -Path ".\" -Verbose).FullName
             $TemplateFile = $CurrentDir + "\ContainerInsightsSolution.json"
             $DeploymentName = "ContainerHealthOnboarding-Solution-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
-            $Parameters = @{}
+            $Parameters = @{ }
             $Parameters.Add("workspaceResourceId", $LogAnalyticsWorkspaceResourceID)
             $Parameters.Add("workspaceRegion", $WorkspaceLocation)
 
