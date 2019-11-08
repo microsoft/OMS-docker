@@ -11,6 +11,7 @@
          4. OmsAgent daemonset pod are running
          5. OmsAgent Health service running correctly
          6. Azure Log AnalyticsWorkspaceGuid and key configured on the agent matching with configured log analytics workspace
+         8. validate all the linux worker nodes has kubernetes.io/role=agent label to schedule rs pod. If doesnt exist, add it.
 
     .PARAMETER azureLogAnalyticsWorkspaceResourceId
         Id of the Azure Log Analytics Workspace
@@ -458,6 +459,19 @@ try {
 catch {
     Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
     exit
+}
+
+Write-Host("Add node label kubernetes.io/role=agent on linux worker nodes for the Azure Monitor for containers replicaset pod scheduling if not extists already ...")
+$workernodesInfo = kubectl get nodes -o json --selector='node-role.kubernetes.io/controlplane!=true,node-role.kubernetes.io/etcd!=true,node-role.kubernetes.io/master!=true,node-role.kubernetes.io/master!="",kubernetes.io/os=linux'
+$workernodes = $workernodesInfo | ConvertFrom-Json
+
+for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
+    $nodeName = $workernodes.Items[$index].metadata.name
+    $nodeLabels = $workernodes.Items[$index].metadata.labels
+    if ($nodeLabels.PSObject.Properties.Name.Contains("kubernetes.io/role") -eq $false) {
+        Write-Host("Attaching node label:kubernetes.io/role=agent for node:" + $nodeName)
+        kubectl label node $nodeName kubernetes.io/role=agent
+    }
 }
 
 Write-Host("")
