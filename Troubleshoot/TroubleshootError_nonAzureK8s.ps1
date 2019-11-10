@@ -3,15 +3,16 @@
 #
 <#
     .DESCRIPTION
-         This troubleshooting script detects and fixes the issues related to onboarding of Azure Monitor for containers to k8s outside of the Azure
-         Following basic scenarios are validated  and this needs to be extended with more scenarios to cover deeper investigations
-         1. Configured Azure Log Analytics workspace valid and exists
-         2. Azure Log Analytics configured with the Container Insights solution. If not, configures
-         3. OmsAgent replicaset pod are running
-         4. OmsAgent daemonset pod are running
-         5. OmsAgent Health service running correctly
-         6. Azure Log AnalyticsWorkspaceGuid and key configured on the agent matching with configured log analytics workspace
-         8. validate all the linux worker nodes has kubernetes.io/role=agent label to schedule rs pod. If doesnt exist, add it.
+    This troubleshooting script detects and fixes the issues related to onboarding of Azure Monitor for containers to k8s outside of the Azure
+    Below are the list of scenarios this script validates and fix the issues related
+      1. Configured Azure Log Analytics workspace valid and exists
+      2. Azure Log Analytics configured with the Container Insights solution. If not, configures
+      3. OmsAgent replicaset pod are running
+      4. OmsAgent daemonset pod are running
+      5. OmsAgent Health service running correctly
+      6. Azure Log AnalyticsWorkspaceGuid and key configured on the agent matching with configured log analytics workspace
+      7. validate all the linux worker nodes has kubernetes.io/role=agent label to schedule rs pod. If doesnt exist, add it.
+      8. provide the warn message to validate  cAdvisor configured to readOnlyPort:10255
 
     .PARAMETER azureLogAnalyticsWorkspaceResourceId
         Id of the Azure Log Analytics Workspace
@@ -21,7 +22,6 @@
      Pre-requisites:
       -  Contributor role permission on the Subscription of the Azure Arc Cluster
       -  kubectl https://kubernetes.io/docs/tasks/tools/install-kubectl/
-      -  HELM https://github.com/helm/helm/releases
       -  Kubeconfig of the K8s cluster
 
 #>
@@ -35,7 +35,7 @@ param(
 
 $ErrorActionPreference = "Stop";
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-hybrid-setup"
-Start-Transcript -path .\TroubleshootDump.txt -Force
+Start-Transcript -path .\TroubleshootDumpForNonAzureK8s.txt -Force
 $contactUSMessage = "Please contact us by emailing askcoin@microsoft.com for help"
 
 Write-Host("LogAnalyticsWorkspaceResourceId: : '" + $azureLogAnalyticsWorkspaceResourceId + "' ")
@@ -238,9 +238,10 @@ else {
 
 # validate configured log analytics workspace exists and got access permissions
 Write-Host("Checking specified Azure Log Analytics Workspace exists and got access...")
-$workspaceResource = Get-AzResource -ResourceId $azureLogAnalyticsWorkspaceResourceId
+$workspaceResource = Get-AzResource -ResourceId $azureLogAnalyticsWorkspaceResourceId -ErrorAction SilentlyContinue
 if ($null -eq $workspaceResource) {
     Write-Host("specified Azure Log Analytics resource id: " + $azureLogAnalyticsWorkspaceResourceId + ". either you dont have access or doesnt exist") -ForegroundColor Red
+    Stop-Transcript
     exit
 }
 
@@ -349,6 +350,8 @@ else {
     }
     else {
         Write-Host("The container health solution isn't onboarded to your cluster. This required for the monitoring to work.") -ForegroundColor Red
+        Stop-Transcript
+        exit
     }
 }
 
@@ -380,7 +383,8 @@ try {
     Write-Host( "omsagent replicaset pod running OK.") -ForegroundColor Green
 }
 catch {
-    Write-Host ("Failed to configure Tiller  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Write-Host ("Failed to get omsagent replicatset pod info using kubectl get rs  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
     exit
 }
 
@@ -411,6 +415,7 @@ try {
 }
 catch {
     Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
     exit
 }
 
@@ -426,7 +431,8 @@ try {
     Write-Host( "omsagent healthservice pod running OK.") -ForegroundColor Green
 }
 catch {
-    Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Write-Host ("Failed to execute kubectl get services command : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
     exit
 }
 
@@ -449,7 +455,7 @@ try {
     $workspaceGuidConfiguredOnAgent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($omsagentSecret.data.WSID))
     $workspaceKeyConfiguredOnAgent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($omsagentSecret.data.KEY))
     if ((($workspaceGuidConfiguredOnAgent -eq $workspaceGUID) -and ($workspaceKeyConfiguredOnAgent -eq $workspacePrimarySharedKey)) -eq $false) {
-        Write-Host ("Error - Log Analytics Workspace Guid and key configured on the agent not matching with details of the Workspace. Please fix this") -ForegroundColor Red
+        Write-Host ("Error - Log Analytics Workspace Guid and key configured on the agent not matching with details of the Workspace. Please verify and fix with the correct workspace Guid and Key") -ForegroundColor Red
         Stop-Transcript
         exit
     }
@@ -458,10 +464,11 @@ try {
 }
 catch {
     Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
     exit
 }
 
-Write-Host("Add node label kubernetes.io/role=agent on linux worker nodes for the Azure Monitor for containers replicaset pod scheduling if not extists already ...")
+Write-Host("Adding node label kubernetes.io/role=agent on linux worker nodes for the Azure Monitor for containers replicaset pod scheduling if not extists already ...")
 $workernodesInfo = kubectl get nodes -o json --selector='node-role.kubernetes.io/controlplane!=true,node-role.kubernetes.io/etcd!=true,node-role.kubernetes.io/master!=true,node-role.kubernetes.io/master!="",kubernetes.io/os=linux'
 $workernodes = $workernodesInfo | ConvertFrom-Json
 
@@ -473,6 +480,12 @@ for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
         kubectl label node $nodeName kubernetes.io/role=agent
     }
 }
+
+Write-Host("Performance charts (CPU or Memory) blank indicates that cAdvisor on the Kubelet not configured for readOnlyPort:10255") -ForegroundColor Yellow
+Write-Host("Please refer the cluster creation tool how to configure cAdvisor on the Kubelet to readOnlyPort:10255") -ForegroundColor Yellow
+Write-Host("On all the nodes cAdvisor on the Kubelet MUST be configured to readOnlyPort:10255 to get the perfomance metrics") -ForegroundColor Yellow
+
+Write-Host("If you still have problem getting Azure Monitor for containers working for your K8s cluster. Please reach out us on askcoin@microsoft.com") -ForegroundColor Yellow
 
 Write-Host("")
 Stop-Transcript
