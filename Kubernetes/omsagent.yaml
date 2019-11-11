@@ -12,7 +12,7 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions"]
+  - apiGroups: ["apps"]
     resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
