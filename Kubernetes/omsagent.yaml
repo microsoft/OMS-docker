@@ -504,6 +504,13 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
         kubernetes.io/role: agent
+      tolerations:
+        - operator: "Exists" 
+          effect: "NoSchedule"
+        - operator: "Exists" 
+          effect: "NoExecute"
+        - operator: "Exists" 
+          effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock
           hostPath:
