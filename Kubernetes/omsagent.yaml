@@ -12,7 +12,7 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions"]
+  - apiGroups: ["apps"]
     resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
@@ -304,7 +304,7 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: omsagent
@@ -312,6 +312,9 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      dsName: "omsagent-ds"
   template:
     metadata:
       labels:
@@ -383,10 +386,12 @@ spec:
         beta.kubernetes.io/os: linux
       # Tolerate a NoSchedule taint on master that ACS Engine sets.
       tolerations:
-        - key: "node-role.kubernetes.io/master"
-          operator: "Equal"
-          value: "true"
+        - operator: "Exists" 
           effect: "NoSchedule"
+        - operator: "Exists" 
+          effect: "NoExecute"
+        - operator: "Exists" 
+          effect: "PreferNoSchedule"
       volumes:
         - name: host-root
           hostPath:
@@ -414,7 +419,7 @@ spec:
             name: container-azm-ms-agentconfig
             optional: true
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: omsagent-rs
@@ -499,6 +504,13 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
         kubernetes.io/role: agent
+      tolerations:
+        - operator: "Exists" 
+          effect: "NoSchedule"
+        - operator: "Exists" 
+          effect: "NoExecute"
+        - operator: "Exists" 
+          effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock
           hostPath:
