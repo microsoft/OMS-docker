@@ -13,6 +13,8 @@ ENV HOST_SYS /hostfs/sys
 ENV HOST_ETC /hostfs/etc
 ENV HOST_VAR /hostfs/var
 ENV AZMON_COLLECT_ENV False
+ENV KUBE_CLIENT_BACKOFF_BASE 1 
+ENV KUBE_CLIENT_BACKOFF_DURATION 0
 RUN /usr/bin/apt-get update && /usr/bin/apt-get install -y libc-bin wget openssl curl sudo python-ctypes init-system-helpers  net-tools rsyslog cron vim dmidecode apt-transport-https gnupg && rm -rf /var/lib/apt/lists/*
 COPY setup.sh main.sh defaultpromenvvariables defaultpromenvvariables-rs $tmpdir/
 WORKDIR ${tmpdir}
