@@ -12,8 +12,8 @@ rules:
   - apiGroups: [""]
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
-  - apiGroups: ["extensions"]
-    resources: ["deployments"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
@@ -289,7 +289,7 @@ data:
   WSID: "VALUE_WSID"
   KEY: "VALUE_KEY"
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: omsagent
@@ -297,19 +297,22 @@ metadata:
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      dsName: "omsagent-ds"
   template:
     metadata:
       labels:
         dsName: "omsagent-ds"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-5"
+        dockerProviderVersion: "7.0.0-6"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -368,10 +371,12 @@ spec:
         beta.kubernetes.io/os: linux
       # Tolerate a NoSchedule taint on master that ACS Engine sets.
       tolerations:
-        - key: "node-role.kubernetes.io/master"
-          operator: "Equal"
-          value: "true"
+        - operator: "Exists" 
           effect: "NoSchedule"
+        - operator: "Exists" 
+          effect: "NoExecute"
+        - operator: "Exists" 
+          effect: "PreferNoSchedule"
       volumes:
         - name: host-root
           hostPath:
@@ -399,7 +404,7 @@ spec:
             name: container-azm-ms-agentconfig
             optional: true
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: omsagent-rs
@@ -417,13 +422,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-5"
+        dockerProviderVersion: "7.0.0-6"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -483,7 +488,22 @@ spec:
             periodSeconds: 60
       nodeSelector:
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/role
+                operator: NotIn
+                values:
+                - master
+      tolerations:
+        - operator: "Exists" 
+          effect: "NoSchedule"
+        - operator: "Exists" 
+          effect: "NoExecute"
+        - operator: "Exists" 
+          effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock
           hostPath:

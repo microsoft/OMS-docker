@@ -13,7 +13,7 @@ rules:
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions"]
-    resources: ["deployments"]
+    resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
@@ -119,14 +119,14 @@ data:
 
     <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
      type filter_inventory2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral
      log_level info
     </filter>
 
     # custom_metrics_mdm filter plugin for perf data from windows nodes
     <filter mdm.cadvisorperf**>
      type filter_cadvisor2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral
      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
      log_level info
     </filter>
@@ -326,13 +326,13 @@ spec:
         dsName: "omsagent-ds"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-5"
+        dockerProviderVersion: "7.0.0-6"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -440,13 +440,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-5"
+        dockerProviderVersion: "7.0.0-6"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
