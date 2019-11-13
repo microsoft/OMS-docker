@@ -58,17 +58,9 @@ data:
     <source>
      type kubeevents
      tag oms.containerinsights.KubeEvents
-     run_interval 60s
+     run_interval 60
      log_level debug
      </source>
-
-    #Kubernetes services
-    <source>
-     type kubeservices
-     tag oms.containerinsights.KubeServices
-     run_interval 60s
-     log_level debug
-    </source>
 
     #Kubernetes Nodes
     <source>
@@ -82,7 +74,7 @@ data:
     #<source>
     # type kubehealth
     # tag kubehealth.ReplicaSet
-    # run_interval 60s
+    # run_interval 60
     # log_level debug
     #</source>
 
@@ -90,7 +82,7 @@ data:
     <source>
      type wincadvisorperf
      tag oms.api.wincadvisorperf
-     run_interval 60s
+     run_interval 60
      log_level debug
     </source>
 
@@ -116,100 +108,89 @@ data:
     <match oms.containerinsights.KubePodInventory**>
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 10
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 5s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
     <match oms.containerinsights.KubeEvents**>
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 5m
+     num_threads 3
+     #buffer_chunk_limit 5m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
-     buffer_queue_limit 10
+     #buffer_queue_limit 10
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
-    </match>
-
-    <match oms.api.KubeLogs**>
-     type out_oms_api
-     log_level debug
-     buffer_chunk_limit 10m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_api_kubernetes_logs*.buffer
-     buffer_queue_limit 10
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 30s
     </match>
 
     <match oms.containerinsights.KubeServices**>
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 2
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
     <match oms.containerinsights.KubeNodeInventory**>
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 3
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
     <match oms.containerinsights.ContainerNodeInventory**>
      type out_oms
      log_level debug
-     buffer_chunk_limit 20m
+     num_threads 3
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
-     buffer_queue_limit 20
-     flush_interval 20s
+     #buffer_queue_limit 20
+     flush_interval 10s
      retry_limit 10
-     retry_wait 15s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
     <match oms.api.KubePerf**>	
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 10
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
@@ -217,14 +198,14 @@ data:
      type out_mdm
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
      retry_mdm_post_wait_minutes 60
     </match>
@@ -233,29 +214,29 @@ data:
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 
     <match mdm.cadvisorperf**>
      type out_mdm
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 3
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
      retry_mdm_post_wait_minutes 60
     </match>
@@ -263,15 +244,15 @@ data:
     <match kubehealth.Signals**>
      type out_oms
      log_level debug
-     num_threads 5
-     buffer_chunk_limit 20m
+     num_threads 3
+     #buffer_chunk_limit 20m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
-     buffer_queue_limit 20
+     #buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
+     flush_interval 10s
      retry_limit 10
-     retry_wait 30s
+     retry_wait 10s
      max_retry_wait 9m
     </match>
 metadata:
