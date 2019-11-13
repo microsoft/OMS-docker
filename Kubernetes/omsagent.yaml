@@ -503,7 +503,15 @@ spec:
             periodSeconds: 60
       nodeSelector:
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/role
+                operator: NotIn
+                values:
+                - master
       tolerations:
         - operator: "Exists" 
           effect: "NoSchedule"
