@@ -1,27 +1,17 @@
 #
 # ClassifyError.ps1
 #
-<# 
-    .DESCRIPTION 
-		Classifies the error type that a user is facing with their AKS cluster
- 
-    .PARAMETER SubscriptionId
-        Subscription Id that the AKS cluster is in
+<#
+    .DESCRIPTION
+		Classifies the error type that a user is facing with their AKS or ARO cluster related to Azure Monitor for containers onboarding
 
-    .PARAMETER ResourceGroupName
-        Resource Group name where the AKS cluster is in
-
-    .PARAMETER AKSClusterName
-        AKS Cluster name
+    .PARAMETER ClusterResourceId
+        Resource Id of the AKS or ARO
 #>
 
 param(
     [Parameter(mandatory = $true)]
-    [string]$SubscriptionId,
-    [Parameter(mandatory = $true)]
-    [string]$ResourceGroupName,
-    [Parameter(mandatory = $true)]
-    [string]$AKSClusterName
+    [string]$ClusterResourceId
 )
 
 $ErrorActionPreference = "Stop";
@@ -29,6 +19,20 @@ Start-Transcript -path .\TroubleshootDump.txt -Force
 $OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
 $OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
+
+Write-Host("ClusterResourceId: '" + $ClusterResourceId + "' ")
+
+if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne 9) -or ($ClusterResourceId.Contains("Microsoft.ContainerService/managedClusters") -ne $true) -or ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -ne $true)
+) {
+    Write-Host("Provided Cluster resource id should be either in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName> or /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>") -ForegroundColor Red
+    Stop-Transcript
+    exit
+}
+
+$ClusterType = "AKS"
+if ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -eq $true) {
+    $ClusterType = "ARO";
+}
 
 $MdmCustomMetricAvailabilityLocations = (
     'eastus',
@@ -61,6 +65,10 @@ catch {
     Write-Host("Could not fetch AzContext..." ) -ForegroundColor Red
     Write-Host("")
 }
+
+$SubscriptionId = $ClusterResourceId.split("/")[2]
+$ResourceGroupName = $ClusterResourceId.split("/")[4]
+$ClusterName = $ClusterResourceId.split("/")[8]
 
 #
 #   Subscription existance and access check
@@ -115,13 +123,18 @@ if ($notPresent) {
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
-Write-Host("Checking AKS Cluster details...")
+Write-Host("Checking '" + $ClusterType + "' Cluster details...")
 try {
-    $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $AKSClusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+    if ($ClusterType.Contains("AKS") -eq $true) {
+        $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ClusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+    }
+    else {
+        $ResourceDetailsArray = Get-AzResource -ApiVersion "2019-09-30-preview" -ResourceGroupName $ResourceGroupName -Name $ClusterName -ResourceType "Microsoft.ContainerService/openShiftManagedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+    }
 }
 catch {
     Write-Host("")
-    Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
+    Write-Host("Could not fetch cluster details: Please make sure that the '" + $ClusterType + "' Cluster name: '" + $ClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
     Write-Host("")
     Stop-Transcript
     exit
@@ -129,13 +142,13 @@ catch {
 
 if ($null -eq $ResourceDetailsArray) {
     Write-Host("")
-    Write-Host("Could not fetch cluster details: Please make sure that the AKS Cluster name: '" + $AKSClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
+    Write-Host("Could not fetch cluster details: Please make sure that the '" + $ClusterType + "' Cluster name: '" + $ClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
     Write-Host("")
     Stop-Transcript
     exit
 }
 else {
-    Write-Host("Successfully checked AKS Cluster details...") -ForegroundColor Green
+    Write-Host("Successfully checked '" + $ClusterType + "' Cluster details...") -ForegroundColor Green
     Write-Host("")
     foreach ($ResourceDetail in $ResourceDetailsArray) {
         if ($ResourceDetail.ResourceType -eq "Microsoft.ContainerService/managedClusters") {
@@ -151,14 +164,14 @@ else {
             }
 
             $omsagentconfig = $props.addonprofiles.omsagent.config;
-            
+
             #gangams - figure out betterway to do this
             $omsagentconfig = $omsagentconfig.Trim("{", "}");
             $LogAnalyticsWorkspaceResourceID = $omsagentconfig.split("=")[1];
             $AKSClusterResourceId = $ResourceDetail.ResourceId
-			
-            Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");  
-			
+
+            Write-Host("AKS Cluster ResourceId: '" + $AKSClusterResourceId + "' ");
+
             break
         }
     }
@@ -193,7 +206,7 @@ try {
             $MonitoringMetricsPublisherCandidates = Get-AzRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $AKSClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
             if ($notPresent) {
-                Write-Host("Error in fetching monitoring metrics publisher candidates for " + $AKSClusterName) -ForegroundColor Red;
+                Write-Host("Error in fetching monitoring metrics publisher candidates for " + $ClusterName) -ForegroundColor Red;
                 Write-Host($notPresent);
                 Write-Host("");
             }
@@ -255,8 +268,8 @@ try {
     }
 }
 catch {
-    Write-Host("Error in fetching Cluster details for " + $AKSClusterName) -ForegroundColor Red;
-    Write-Host("Please check that you have access to the cluster: " + $AKSClusterName) -ForegroundColor Red;
+    Write-Host("Error in fetching Cluster details for " + $ClusterName) -ForegroundColor Red;
+    Write-Host("Please check that you have access to the cluster: " + $ClusterName) -ForegroundColor Red;
     Write-Host("");
 }
 
@@ -272,7 +285,7 @@ if ($null -eq $LogAnalyticsWorkspaceResourceID) {
 }
 else {
 
-    Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ") 
+    Write-Host("Configured LogAnalyticsWorkspaceResourceId: : '" + $LogAnalyticsWorkspaceResourceID + "' ")
     $workspaceSubscriptionId = $LogAnalyticsWorkspaceResourceID.split("/")[2]
     $workspaceResourceGroupName = $LogAnalyticsWorkspaceResourceID.split("/")[4]
     $workspaceName = $LogAnalyticsWorkspaceResourceID.split("/")[8]
@@ -296,7 +309,7 @@ else {
     #   Check WS subscription exists and access
     #
     try {
-        Write-Host("Checking workspace subscription details...") 
+        Write-Host("Checking workspace subscription details...")
         Get-AzSubscription -SubscriptionId $workspaceSubscriptionId -ErrorAction Stop
     }
     catch {
@@ -348,9 +361,9 @@ else {
         Stop-Transcript
         exit
     }
-	
+
     $WorkspaceLocation = $WorkspaceInformation.Location
-		
+
     if ($null -eq $WorkspaceLocation) {
         Write-Host("")
         Write-Host("Cannot fetch workspace location. Please try again...") -ForegroundColor Red
@@ -389,7 +402,7 @@ else {
     }
 
     $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
-	
+
     if ($isSolutionOnboarded) {
 
         if ($WorkspacePricingTier -eq "Free") {
