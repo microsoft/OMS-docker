@@ -1,5 +1,5 @@
 version: 1.0-preview-1
 steps:
-  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:ms11182019-1 .
+  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:ms11192019-1h .
     workingDirectory: ci_feature_prod
-  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:ms11182019-1"]
+  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/ciprod:ms11192019-1h"]
