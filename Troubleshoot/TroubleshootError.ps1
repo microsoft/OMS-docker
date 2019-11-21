@@ -364,7 +364,7 @@ if ("AKS" -eq $ClusterType ) {
                         $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0);
 
                         if ($decision -eq 0) {
-                            $AssignRoleAssignment = New-AzRoleAssignment -ObjectId $clusterSPNObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                            New-AzRoleAssignment -ObjectId $clusterSPNObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
                             if ($assignmentFailed) {
                                 Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
                                 Write-Host("You can find more information on this here: https://aka.ms/ci-enable-mdm") -ForegroundColor Red;
@@ -581,7 +581,7 @@ try {
             exit
         }
     }
-    Write-Host("Workspace doenst have daily cap: ") -ForegroundColor Green
+    Write-Host("Workspace doesnt have daily cap") -ForegroundColor Green
 }
 catch {
     Write-Host("Failed to get  usage details of the workspace") -ForegroundColor Red
@@ -601,7 +601,7 @@ if ("AKS" -eq $ClusterType ) {
         Write-Host("Successful got the Kubeconfig of the cluster.")
 
         Write-Host("Check whether the omsagent replicaset pod running correctly ...")
-        $rsPod = kubectl get rs -n kube-system -o json --selector='rsName=omsagent-rs' | ConvertFrom-Json
+        $rsPod = kubectl get deployments -n kube-system -o json --selector='rsName=omsagent-rs' | ConvertFrom-Json
         if ($rsPod.Items.Length -ne 1) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage)
             Stop-Transcript
@@ -610,7 +610,6 @@ if ("AKS" -eq $ClusterType ) {
 
         $rsPodStatus = $rsPod.Items[0].status
         if ((($rsPodStatus.availableReplicas -eq 1) -and
-                ($rsPodStatus.fullyLabeledReplicas -eq 1 ) -and
                 ($rsPodStatus.readyReplicas -eq 1 ) -and
                 ($rsPodStatus.replicas -eq 1 )) -eq $false
         ) {
