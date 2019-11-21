@@ -40,21 +40,20 @@ if ("ARO" -eq $ClusterType) {
 
     # Az.ResourceGraph module required for ARO
     $azARGModule = Get-Module -ListAvailable -Name Az.ResourceGraph
-
-    $message = "This script will try to install the latest versions of the following Modules : `
+    if ($null -eq $azARGModule) {
+        $message = "This script will try to install the latest versions of the following Modules : `
 			    Az.ResourceGraph`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
-    $question = "Do you want to Install the modules and run the script or just run the script?"
+        $question = "Do you want to Install the modules and run the script or just run the script?"
 
-    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
-    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
-    switch ($decision) {
-        0 {
-            if ($null -eq $azARGModule) {
+        $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
+        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
+        switch ($decision) {
+            0 {
                 try {
                     Write-Host("Installing Az.ResourceGraph...")
                     Install-Module Az.ResourceGraph -Force -ErrorAction Stop
@@ -64,11 +63,10 @@ if ("ARO" -eq $ClusterType) {
                     Stop-Transcript
                     exit
                 }
-            }
-        }
-        1 {
 
-            if ($null -eq $azARGModule) {
+            }
+            1 {
+
                 try {
                     Import-Module Az.ResourceGraph -ErrorAction Stop
                 }
@@ -79,48 +77,45 @@ if ("ARO" -eq $ClusterType) {
                     exit
                 }
             }
-
-        }
-        2 {
-            Write-Host("")
-            Stop-Transcript
-            exit
+            2 {
+                Write-Host("")
+                Stop-Transcript
+                exit
+            }
         }
     }
 }
 else {
 
-    # Az.ResourceGraph module required for ARO
+    # Az.Aks module required for AKS
     $azAksModule = Get-Module -ListAvailable -Name Az.Aks
-
-    $message = "This script will try to install the latest versions of the following Modules : `
+    if ($null -eq $azAksModule) {
+        $message = "This script will try to install the latest versions of the following Modules : `
 			    Az.Aks`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
-    $question = "Do you want to Install the modules and run the script or just run the script?"
+        $question = "Do you want to Install the modules and run the script or just run the script?"
 
-    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
-    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
-    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
-    switch ($decision) {
-        0 {
-            if ($null -eq $azAksModule) {
-                try {
-                    Write-Host("Installing Az.Aks...")
-                    Install-Module Az.Aks -Force -ErrorAction Stop
-                }
-                catch {
-                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
-                    Stop-Transcript
-                    exit
+        $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
+        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
+        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
+        switch ($decision) {
+            0 {
+                if ($null -eq $azAksModule) {
+                    try {
+                        Write-Host("Installing Az.Aks...")
+                        Install-Module Az.Aks -Force -ErrorAction Stop
+                    }
+                    catch {
+                        Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
+                        Stop-Transcript
+                        exit
+                    }
                 }
             }
-        }
-        1 {
-
-            if ($null -eq $azAksModule) {
+            1 {
                 try {
                     Import-Module Az.Aks -ErrorAction Stop
                 }
@@ -131,12 +126,11 @@ else {
                     exit
                 }
             }
-
-        }
-        2 {
-            Write-Host("")
-            Stop-Transcript
-            exit
+            2 {
+                Write-Host("")
+                Stop-Transcript
+                exit
+            }
         }
     }
 }
@@ -526,10 +520,7 @@ else {
     $isSolutionOnboarded = $WorkspaceIPDetails.Enabled[$ContainerInsightsIndex]
     if ($isSolutionOnboarded) {
         if ($WorkspacePricingTier -eq "Free") {
-            Write-Host("Pricing tier of the configured LogAnalytics workspace is Free so you may need to upgrade to pricing tier to non-Free") -ForegroundColor Red
-        }
-        else {
-            Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
+            Write-Host("Pricing tier of the configured LogAnalytics workspace is Free so you may need to upgrade to pricing tier to non-Free") -ForegroundColor Yellow
         }
     }
     else {
@@ -576,5 +567,149 @@ else {
     }
 }
 
+#
+#    Check Workspace Usage
+#
+try {
+    Write-Host("Checking workspace configured for capping on data ingestion limits...")
+    $WorkspaceUsage = Get-AzOperationalInsightsWorkspaceUsage -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
+    if ($WorkspaceUsage.Limit -gt -1) {
+        Write-Host("Workspace has daily cap of bytes: ", $WorkspaceUsage.Limit) -ForegroundColor Green
+        if ($WorkspaceUsage.CurrentValue -gt $WorkspaceUsage.Limit) {
+            Write-Host("Workspace usage has over the daily cap. Please increase the daily cap limits or wait for next reset interval") -ForegroundColor Red
+            Stop-Transcript
+            exit
+        }
+    }
+    Write-Host("Workspace doenst have daily cap: ") -ForegroundColor Green
+}
+catch {
+    Write-Host("Failed to get  usage details of the workspace") -ForegroundColor Red
+    Write-Host("")
+    Stop-Transcript
+    exit
+}
+
+
+if ("AKS" -eq $ClusterType ) {
+    #
+    #    Check Agent pods running as expected
+    #
+    try {
+        Write-Host("Getting Kubeconfig of the cluster...")
+        Import-AzAksCredential -Id $ClusterResourceId -Force -ErrorAction Stop
+        Write-Host("Successful got the Kubeconfig of the cluster.")
+
+        Write-Host("Check whether the omsagent replicaset pod running correctly ...")
+        $rsPod = kubectl get rs -n kube-system -o json --selector='rsName=omsagent-rs' | ConvertFrom-Json
+        if ($rsPod.Items.Length -ne 1) {
+            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage)
+            Stop-Transcript
+            exit
+        }
+
+        $rsPodStatus = $rsPod.Items[0].status
+        if ((($rsPodStatus.availableReplicas -eq 1) -and
+                ($rsPodStatus.fullyLabeledReplicas -eq 1 ) -and
+                ($rsPodStatus.readyReplicas -eq 1 ) -and
+                ($rsPodStatus.replicas -eq 1 )) -eq $false
+        ) {
+            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled.") -ForegroundColor Red
+            Write-Host($rsPodStatus)
+            Write-Host($contactUSMessage)
+            Stop-Transcript
+            exit
+        }
+
+        Write-Host( "omsagent replicaset pod running OK.") -ForegroundColor Green
+    }
+    catch {
+        Write-Host ("Failed to get omsagent replicatset pod info using kubectl get rs  : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    Write-Host("Checking whether the omsagent daemonset pod running correctly ...")
+    try {
+        $ds = kubectl get ds -n kube-system -o json --field-selector metadata.name=omsagent | ConvertFrom-Json
+        if ($ds.Items.Length -ne 1) {
+            Write-Host( "omsagent replicaset pod not scheduled or failed to schedule." + $contactUSMessage)
+            Stop-Transcript
+            exit
+        }
+
+        $dsStatus = $ds.Items[0].status
+
+        if (
+            (($dsStatus.currentNumberScheduled -eq $dsStatus.desiredNumberScheduled) -and
+                ($dsStatus.numberAvailable -eq $dsStatus.currentNumberScheduled) -and
+                ($dsStatus.numberAvailable -eq $dsStatus.numberReady)) -eq $false) {
+
+            Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.")
+            Write-Host($rsPodStatus)
+            Write-Host($contactUSMessage)
+            Stop-Transcript
+            exit
+        }
+
+        Write-Host( "omsagent daemonset pod running OK.") -ForegroundColor Green
+    }
+    catch {
+        Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    Write-Host("Checking whether the omsagent heatlhservice  running correctly ...")
+    try {
+        $healthservice = kubectl get services -n kube-system -o json --field-selector metadata.name=healthmodel-replicaset-service | ConvertFrom-Json
+        if ($healthservice.Items.Length -ne 1) {
+            Write-Host( "omsagent healthservice  not scheduled or failed to schedule." + $contactUSMessage)
+            Stop-Transcript
+            exit
+        }
+
+        Write-Host( "omsagent healthservice pod running OK.") -ForegroundColor Green
+    }
+    catch {
+        Write-Host ("Failed to execute kubectl get services command : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    Write-Host("Retrieving WorkspaceGUID and WorkspacePrimaryKey of the workspace : " + $WorkspaceInformation.Name)
+    try {
+
+        $WorkspaceSharedKeys = Get-AzOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $WorkspaceInformation.ResourceGroupName -Name $WorkspaceInformation.Name -ErrorAction Stop -WarningAction SilentlyContinue
+        $workspaceGUID = $WorkspaceInformation.CustomerId
+        $workspacePrimarySharedKey = $WorkspaceSharedKeys.PrimarySharedKey
+    }
+    catch {
+        Write-Host ("Failed to get workspace details. Please validate whether you have Log Analytics Contributor role on the workspace error: '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    Write-Host("Checking whether the WorkspaceGuid and key matching with configured log analytics workspace ...")
+    try {
+        $omsagentSecret = kubectl get secrets omsagent-secret -n kube-system -o json | ConvertFrom-Json
+        $workspaceGuidConfiguredOnAgent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($omsagentSecret.data.WSID))
+        $workspaceKeyConfiguredOnAgent = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($omsagentSecret.data.KEY))
+        if ((($workspaceGuidConfiguredOnAgent -eq $workspaceGUID) -and ($workspaceKeyConfiguredOnAgent -eq $workspacePrimarySharedKey)) -eq $false) {
+            Write-Host ("Error - Log Analytics Workspace Guid and key configured on the agent not matching with details of the Workspace. Please verify and fix with the correct workspace Guid and Key") -ForegroundColor Red
+            Stop-Transcript
+            exit
+        }
+
+        Write-Host("Workspace Guid and Key on the agent matching with the Workspace") -ForegroundColor Green
+    }
+    catch {
+        Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+}
+
+Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
 Write-Host("")
 Stop-Transcript
