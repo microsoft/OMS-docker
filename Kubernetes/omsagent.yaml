@@ -40,11 +40,11 @@ data:
   kube.conf: |-
     # Fluentd config file for OMS Docker - cluster components (kubeAPI)
     #fluent forward plugin
-    #<source>
-    # type forward
-    # port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
-    # bind 0.0.0.0
-    #</source>
+    <source>
+     type forward
+     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+     bind 0.0.0.0
+    </source>
 
     #Kubernetes pod inventory
     <source>
@@ -71,12 +71,12 @@ data:
     </source>
 
     #Kubernetes health
-    #<source>
-    # type kubehealth
-    # tag kubehealth.ReplicaSet
-    # run_interval 60
-    # log_level debug
-    #</source>
+    <source>
+     type kubehealth
+     tag kubehealth.ReplicaSet
+     run_interval 60
+     log_level debug
+    </source>
 
     #cadvisor perf- Windows nodes
     <source>
@@ -86,24 +86,24 @@ data:
      log_level debug
     </source>
 
-    #<filter mdm.kubepodinventory** mdm.kubenodeinventory**>
-    # type filter_inventory2mdm
-    # custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
-    # log_level info
-    #</filter>
+    <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
+     type filter_inventory2mdm
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+     log_level info
+    </filter>
 
     # custom_metrics_mdm filter plugin for perf data from windows nodes
-    #<filter mdm.cadvisorperf**>
-    # type filter_cadvisor2mdm
-    # custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
-    # metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
-    # log_level info
-    #</filter>
+    <filter mdm.cadvisorperf**>
+     type filter_cadvisor2mdm
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope
+     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
+     log_level info
+    </filter>
 
     #health model aggregation filter
-    #<filter kubehealth**>
-    # type filter_health_model_builder
-    #</filter>
+    <filter kubehealth**>
+     type filter_health_model_builder
+    </filter>
 
     <match oms.containerinsights.KubePodInventory**>
      type out_oms
@@ -413,10 +413,10 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 150m
+              cpu: 300m
               memory: 500Mi
             requests:
-              cpu: 110m
+              cpu: 150m
               memory: 250Mi
           env:
             #- name: AKS_RESOURCE_ID
