@@ -91,7 +91,7 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-echo "Making curl request to blob end-point"
+echo "Making curl request to ifconfig"
 RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
 if [ $RET -ne 000 ]; then 
       # Check for workspace existence
