@@ -423,7 +423,7 @@ spec:
             #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
             #- name: AKS_REGION
             #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-            #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+            # Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
             - name: ACS_RESOURCE_NAME
               value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
