@@ -677,8 +677,8 @@ try {
     $WorkspaceUsage = Get-AzOperationalInsightsWorkspaceUsage -ResourceGroupName $workspaceResourceGroupName -Name $workspaceName -ErrorAction Stop
     if ($WorkspaceUsage.Limit -gt -1) {
         Write-Host("Workspace has daily cap of bytes: ", $WorkspaceUsage.Limit) -ForegroundColor Green
-        if ($WorkspaceUsage.CurrentValue -gt $WorkspaceUsage.Limit) {
-            Write-Host("Workspace usage has over the daily cap. Please increase the daily cap limits or wait for next reset interval") -ForegroundColor Red
+        if ($WorkspaceUsage.CurrentValue -ge $WorkspaceUsage.Limit) {
+            Write-Host("Workspace usage has reached or over the configured daily cap. Please increase the daily cap limits or wait for next reset interval") -ForegroundColor Red
             Stop-Transcript
             exit
         }
