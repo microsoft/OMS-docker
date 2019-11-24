@@ -7,6 +7,9 @@
 
     .PARAMETER ClusterResourceId
         Resource Id of the AKS (Azure Kubernetes Service) or ARO (Azure Redhat Openshift)
+        Example :
+        AKS cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>
+        ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>
 #>
 
 param(
@@ -14,10 +17,13 @@ param(
     [string]$ClusterResourceId
 )
 
-$ErrorActionPreference = "Stop";
+$ErrorActionPreference = "Stop"
 Start-Transcript -path .\TroubleshootDump.txt -Force
-$OptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
-$OptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$AksOptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
+$AksOptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
+$AroOptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout-openshift"
+$AroOptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-azure-redhat-setup"
+
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 Write-Host("ClusterResourceId: '" + $ClusterResourceId + "' ")
@@ -36,24 +42,52 @@ if ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClus
     $ClusterType = "ARO";
 }
 
-if ("ARO" -eq $ClusterType) {
+# checks the all required Powershell modules exist and if not exists, request the user permission to install
+$azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
+$azResourcesModule = Get-Module -ListAvailable -Name Az.Resources
+$azOperationalInsights = Get-Module -ListAvailable -Name Az.OperationalInsights
+$azAksModule = Get-Module -ListAvailable -Name Az.Aks
+$azARGModule = Get-Module -ListAvailable -Name Az.ResourceGraph
 
-    # Az.ResourceGraph module required for ARO
-    $azARGModule = Get-Module -ListAvailable -Name Az.ResourceGraph
-    if ($null -eq $azARGModule) {
-        $message = "This script will try to install the latest versions of the following Modules : `
-			    Az.ResourceGraph`
+if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAccountModule) -or ($null -eq $azResourcesModule) -or ($null -eq $azOperationalInsights)) {
+
+    $isWindowsMachine = $true
+    if ($PSVersionTable -and $PSVersionTable.PSEdition -contains "core") {
+        if ($PSVersionTable.Platform -notcontains "win") {
+            $isWindowsMachine = $false
+        }
+    }
+
+    if ($isWindowsMachine) {
+        $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+
+        if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            Write-Host("Running script as an admin...")
+            Write-Host("")
+        }
+        else {
+            Write-Host("Please re-launch the script with elevated administrator") -ForegroundColor Red
+            Stop-Transcript
+            exit
+        }
+    }
+
+    $message = "This script will try to install the latest versions of the following Modules : `
+    Az.Ak,Az.ResourceGraph, Az.Resources, Az.Accounts  and Az.OperationalInsights using the command`
 			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
 			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
-        $question = "Do you want to Install the modules and run the script or just run the script?"
+    $question = "Do you want to Install the modules and run the script or just run the script?"
 
-        $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
-        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
-        switch ($decision) {
-            0 {
+    $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
+    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
+    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
+    $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
+
+    $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
+
+    switch ($decision) {
+        0 {
+            if ($null -eq $azARGModule) {
                 try {
                     Write-Host("Installing Az.ResourceGraph...")
                     Install-Module Az.ResourceGraph -Force -ErrorAction Stop
@@ -63,10 +97,59 @@ if ("ARO" -eq $ClusterType) {
                     Stop-Transcript
                     exit
                 }
-
             }
-            1 {
+            if ($null -eq $azAksModule) {
+                try {
+                    Write-Host("Installing Az.Aks...")
+                    Install-Module Az.Aks -Force -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
 
+            if ($null -eq $azResourcesModule) {
+                try {
+                    Write-Host("Installing Az.Resources...")
+                    Install-Module Az.Resources -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+
+            if ($null -eq $azAccountModule) {
+                try {
+                    Write-Host("Installing Az.Accounts...")
+                    Install-Module Az.Accounts -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules forAz.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+
+            if ($null -eq $azOperationalInsights) {
+                try {
+
+                    Write-Host("Installing Az.OperationalInsights...")
+                    Install-Module Az.OperationalInsights -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.OperationalInsights in a new powershell window: eg. 'Install-Module Az.OperationalInsights -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+
+        }
+        1 {
+            if ($null -eq $azARGModule) {
                 try {
                     Import-Module Az.ResourceGraph -ErrorAction Stop
                 }
@@ -77,45 +160,8 @@ if ("ARO" -eq $ClusterType) {
                     exit
                 }
             }
-            2 {
-                Write-Host("")
-                Stop-Transcript
-                exit
-            }
-        }
-    }
-}
-else {
 
-    # Az.Aks module required for AKS
-    $azAksModule = Get-Module -ListAvailable -Name Az.Aks
-    if ($null -eq $azAksModule) {
-        $message = "This script will try to install the latest versions of the following Modules : `
-			    Az.Aks`
-			    `'Install-Module {Insert Module Name} -Repository PSGallery -Force -AllowClobber -ErrorAction Stop -WarningAction Stop'
-			    `If you do not have the latest version of these Modules, this troubleshooting script may not run."
-        $question = "Do you want to Install the modules and run the script or just run the script?"
-
-        $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes, Install and run'))
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Continue without installing the Module'))
-        $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Quit'))
-        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
-        switch ($decision) {
-            0 {
-                if ($null -eq $azAksModule) {
-                    try {
-                        Write-Host("Installing Az.Aks...")
-                        Install-Module Az.Aks -Force -ErrorAction Stop
-                    }
-                    catch {
-                        Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
-                        Stop-Transcript
-                        exit
-                    }
-                }
-            }
-            1 {
+            if ($null -eq $azAksModule) {
                 try {
                     Import-Module Az.Aks -ErrorAction Stop
                 }
@@ -126,11 +172,46 @@ else {
                     exit
                 }
             }
-            2 {
-                Write-Host("")
-                Stop-Transcript
-                exit
+
+            if ($null -eq $azResourcesModule) {
+                try {
+                    Import-Module Az.Resources -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.Resources...") -ForegroundColor Red
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Resources in a new powershell window: eg. 'Install-Module Az.Resources -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
             }
+            if ($null -eq $azAccountModule) {
+                try {
+                    Import-Module Az.Accounts -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.Accounts...") -ForegroundColor Red
+                    Write-Host("Close other powershell logins and try installing the latest modules for Az.Accounts in a new powershell window: eg. 'Install-Module Az.Accounts -Repository PSGallery -Force'") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+
+            if ($null -eq $azOperationalInsights) {
+                try {
+                    Import-Module Az.OperationalInsights -ErrorAction Stop
+                }
+                catch {
+                    Write-Host("Could not import Az.OperationalInsights... Please reinstall this Module") -ForegroundColor Red
+                    Stop-Transcript
+                    exit
+                }
+            }
+
+        }
+        2 {
+            Write-Host("")
+            Stop-Transcript
+            exit
         }
     }
 }
@@ -245,7 +326,7 @@ try {
 
                     if ($null -eq $props.addonprofiles.omsagent.config) {
                         Write-Host("Your cluster isn't onboarded to Azure monitor for containers. Please refer to the following documentation to onboard:") -ForegroundColor Red;
-                        Write-Host($OptInLink) -ForegroundColor Red;
+                        Write-Host($AksOptInLink) -ForegroundColor Red;
                         Write-Host("");
                         Stop-Transcript
                         exit
@@ -276,7 +357,7 @@ try {
         $monitorProfile = $ResourceDetail.aroproperties.monitorprofile
         if (($null -eq $monitorProfile) -or ($monitorProfile.enabled -eq $false)) {
             Write-Host("Your cluster isn't onboarded to Azure monitor for containers. Please refer to the following documentation to onboard:") -ForegroundColor Red;
-            Write-Host($OptInLink) -ForegroundColor Red;
+            Write-Host($AksOptInLink) -ForegroundColor Red;
             Write-Host("");
             Stop-Transcript
             exit
@@ -299,69 +380,64 @@ if ("AKS" -eq $ClusterType ) {
     Write-Host("Currently checking if the cluster is onboarded to custom metrics for Azure monitor for containers...");
     #Pre requisite - need cluster spn object Id
     try {
-        $clusterDetails = Get-AzAks -Id $ClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue;
-        Write-Host($clusterDetails | Format-List | Out-String);
-        $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId;
-        $clusterLocation = $clusterDetails.Location;
+        $clusterDetails = Get-AzAks -Id $ClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue
+        Write-Host($clusterDetails | Format-List | Out-String)
+        $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId
+        $clusterLocation = $clusterDetails.Location
 
         if ($MdmCustomMetricAvailabilityLocations -contains $clusterLocation) {
-            Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green;
+            Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green
             if ($null -eq $clusterSPNClientID ) {
-                Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red;
+                Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red
                 Write-Host("");
             }
             else {
                 # Convert the client ID to the Object ID
-                $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSPNClientID;
-                $clusterSPNObjectID = $clusterSPN.Id;
+                $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSPNClientID
+                $clusterSPNObjectID = $clusterSPN.Id
                 if ($null -eq $clusterSPNObjectID) {
-                    Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red;
-                    Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red;
+                    Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red
+                    Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
                     Write-Host("");
                 }
 
                 $MonitoringMetricsPublisherCandidates = Get-AzRoleAssignment -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -Scope $ClusterResourceId -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
                 if ($notPresent) {
-                    Write-Host("Error in fetching monitoring metrics publisher candidates for " + $ClusterName) -ForegroundColor Red;
-                    Write-Host($notPresent);
-                    Write-Host("");
+                    Write-Host("Error in fetching monitoring metrics publisher candidates for " + $ClusterName) -ForegroundColor Red
+                    Write-Host($notPresent)
+                    Write-Host("")
                 }
                 else {
-                    $TryToOnboardToCustomMetrics = "false";
+                    $TryToOnboardToCustomMetrics = $false
                     if ($MonitoringMetricsPublisherCandidates) {
-                        Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String);
+                        Write-Host($MonitoringMetricsPublisherCandidates | Format-List | Out-String)
 
-                        $totalCandidates = $MonitoringMetricsPublisherCandidates.ObjectId.Length;
-                        $metricsPublisherRoleAlreadyExists = "false";
+                        $metricsPublisherRoleAlreadyExists = $false
 
-                        for ($index = 0; $index -lt $totalCandidates; $index++) {
-                            if ($MonitoringMetricsPublisherCandidates.ObjectId[$index] -eq $clusterSPNObjectID) {
-                                $metricsPublisherRoleAlreadyExists = "true";
-                            }
+                        if ($MonitoringMetricsPublisherCandidates.ObjectId -eq $clusterSPNObjectID) {
+                            $metricsPublisherRoleAlreadyExists = $true
                         }
-
-                        if ($metricsPublisherRoleAlreadyExists -eq "true") {
-                            Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green;
+                        if ($metricsPublisherRoleAlreadyExists) {
+                            Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green
                         }
                         else {
-                            $TryToOnboardToCustomMetrics = "true";
+                            $TryToOnboardToCustomMetrics = $true
                         }
                     }
                     else {
-                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal to the Monitoring Metrics Publisher role");
-                        $TryToOnboardToCustomMetrics = "true";
+                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal with the Monitoring Metrics Publisher role")
+                        $TryToOnboardToCustomMetrics = $true
                     }
-                    if ($TryToOnboardToCustomMetrics -eq "true") {
-                        $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation.";
-                        Write-Host($message);
-                        $question = " Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
+                    if ($TryToOnboardToCustomMetrics) {
+                        $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation."
+                        $question = "Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
 
                         $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
                         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
                         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
 
-                        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0);
+                        $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
                         if ($decision -eq 0) {
                             New-AzRoleAssignment -ObjectId $clusterSPNObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
@@ -381,13 +457,13 @@ if ("AKS" -eq $ClusterType ) {
         }
         else {
             Write-Host('Cluster is in a location where Custom metrics are not available') -ForegroundColor Red;
-            Write-Host("");
+            Write-Host("")
         }
     }
     catch {
-        Write-Host("Error in fetching Cluster details for " + $ClusterName) -ForegroundColor Red;
+        Write-Host("Error in fetching Cluster details for " + $ClusterName) -ForegroundColor Red
         Write-Host("Please check that you have access to the cluster: " + $ClusterName) -ForegroundColor Red;
-        Write-Host("");
+        Write-Host("")
     }
 }
 
@@ -395,8 +471,14 @@ if ($null -eq $LogAnalyticsWorkspaceResourceID) {
     Write-Host("")
     Write-Host("Onboarded  log analytics workspace to this cluster either deleted or moved.This requires Opt-out and Opt-in back to Monitoring") -ForegroundColor Red
     Write-Host("Please try to opt out of monitoring and opt-in following the instructions in below links:") -ForegroundColor Red
-    Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-    Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+    if ("ARO" -eq $ClusterType) {
+        Write-Host("Opt-out - " + $AroOptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $AroOptInLink) -ForegroundColor Red
+    }
+    else {
+        Write-Host("Opt-out - " + $AksOptOutLink) -ForegroundColor Red
+        Write-Host("Opt-in - " + $AksOptInLink) -ForegroundColor Red
+    }
     Write-Host("")
     Stop-Transcript
     exit
@@ -434,8 +516,14 @@ else {
         Write-Host("")
         Write-Host("The subscription containing the workspace (" + $LogAnalyticsWorkspaceResourceID + ") looks like it was deleted or you do NOT have access to this workspace") -ForegroundColor Red
         Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+        if ("ARO" -eq $ClusterType) {
+            Write-Host("Opt-out - " + $AroOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AroOptInLink) -ForegroundColor Red
+        }
+        else {
+            Write-Host("Opt-out - " + $AksOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AksOptInLink) -ForegroundColor Red
+        }
         Write-Host("")
         Stop-Transcript
         exit
@@ -452,8 +540,15 @@ else {
         Write-Host("")
         Write-Host("Could not find resource group. Please make sure that the resource group name: '" + $ResourceGroupName + "'is correct and you have access to the workspace") -ForegroundColor Red
         Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+
+        if ("ARO" -eq $ClusterType) {
+            Write-Host("Opt-out - " + $AroOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AroOptInLink) -ForegroundColor Red
+        }
+        else {
+            Write-Host("Opt-out - " + $AksOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AksOptInLink) -ForegroundColor Red
+        }
         Stop-Transcript
         exit
     }
@@ -473,8 +568,15 @@ else {
         Write-Host("")
         Write-Host("Could not fetch details for the workspace : '" + $workspaceName + "'. Please make sure that it hasn't been deleted and you have access to it.") -ForegroundColor Red
         Write-Host("Please try to opt out of monitoring and opt-in using the following links:") -ForegroundColor Red
-        Write-Host("Opt-out - " + $OptOutLink) -ForegroundColor Red
-        Write-Host("Opt-in - " + $OptInLink) -ForegroundColor Red
+
+        if ("ARO" -eq $ClusterType) {
+            Write-Host("Opt-out - " + $AroOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AroOptInLink) -ForegroundColor Red
+        }
+        else {
+            Write-Host("Opt-out - " + $AksOptOutLink) -ForegroundColor Red
+            Write-Host("Opt-in - " + $AksOptInLink) -ForegroundColor Red
+        }
         Write-Host("")
         Stop-Transcript
         exit
@@ -506,7 +608,7 @@ else {
     }
 
     try {
-        $ContainerInsightsIndex = $WorkspaceIPDetails.Name.IndexOf("ContainerInsights");
+        $ContainerInsightsIndex = $WorkspaceIPDetails.Name.IndexOf("ContainerInsights")
         Write-Host("Successfully located ContainerInsights solution") -ForegroundColor Green
         Write-Host("")
     }
@@ -527,7 +629,7 @@ else {
         #
         # Check contributor access to WS
         #
-        $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $workspaceName + "' in subscription '" + $workspaceSubscriptionId + "' IS NOT ONBOARDED with container health solution.";
+        $message = "Detected that there is a workspace associated with this cluster, but workspace - '" + $workspaceName + "' in subscription '" + $workspaceSubscriptionId + "' IS NOT ONBOARDED with container health solution."
         Write-Host($message)
         $question = " Do you want to onboard container health to the workspace?"
 
@@ -581,7 +683,7 @@ try {
             exit
         }
     }
-    Write-Host("Workspace doesnt have daily cap") -ForegroundColor Green
+    Write-Host("Workspace doesnt have daily cap configured") -ForegroundColor Green
 }
 catch {
     Write-Host("Failed to get  usage details of the workspace") -ForegroundColor Red
@@ -601,14 +703,14 @@ if ("AKS" -eq $ClusterType ) {
         Write-Host("Successful got the Kubeconfig of the cluster.")
 
         Write-Host("Check whether the omsagent replicaset pod running correctly ...")
-        $rsPod = kubectl get deployments -n kube-system -o json --selector='rsName=omsagent-rs' | ConvertFrom-Json
-        if ($rsPod.Items.Length -ne 1) {
-            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage)
+        $rsPod = kubectl get deployments omsagent-rs -n kube-system -o json | ConvertFrom-Json
+        if ($null -eq $rsPod) {
+            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage) -ForegroundColor Red
             Stop-Transcript
             exit
         }
 
-        $rsPodStatus = $rsPod.Items[0].status
+        $rsPodStatus = $rsPod.status
         if ((($rsPodStatus.availableReplicas -eq 1) -and
                 ($rsPodStatus.readyReplicas -eq 1 ) -and
                 ($rsPodStatus.replicas -eq 1 )) -eq $false
@@ -631,7 +733,7 @@ if ("AKS" -eq $ClusterType ) {
     Write-Host("Checking whether the omsagent daemonset pod running correctly ...")
     try {
         $ds = kubectl get ds -n kube-system -o json --field-selector metadata.name=omsagent | ConvertFrom-Json
-        if ($ds.Items.Length -ne 1) {
+        if (($null -eq $ds) -or ($null -eq $ds.Items) -or ($ds.Items.Length -ne 1)) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to schedule." + $contactUSMessage)
             Stop-Transcript
             exit
@@ -668,7 +770,7 @@ if ("AKS" -eq $ClusterType ) {
             exit
         }
 
-        Write-Host( "omsagent healthservice pod running OK.") -ForegroundColor Green
+        Write-Host( "omsagent healthservice running OK.") -ForegroundColor Green
     }
     catch {
         Write-Host ("Failed to execute kubectl get services command : '" + $Error[0] + "' ") -ForegroundColor Red

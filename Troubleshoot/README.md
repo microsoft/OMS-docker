@@ -31,7 +31,8 @@ The table below summarizes known issues you may face while using Azure Monitor f
 # Troubleshooting script
 
 Prequisites:
-- Collect Subscription ID, Resource group name and AKS Cluster name from the 'Overview' page of your AKS cluster
+- For AKS or ARO Cluster, Collect ResourceId of the cluster
+- For AKS-Engine Cluster, Collect SubscriptionId and ResourceGroupName of the cluster where are resources exists
 
 # AKS or ARO
 
@@ -39,12 +40,16 @@ You can use the troubleshooting script provided [here](https://raw.githubusercon
 
 Steps:
 - Open powershell using the [cloudshell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview) in the azure portal.
+ > Note: This script supported on any Powershell supported environment: Windows and Non-Windows.
+ For Linux, refer [Install-Powershell-On-Linux](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux?view=powershell-6) and
+ For Mac OS, refer [install-powershell-core-on-mac](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-macos?view=powershell-6) how to install powershell
 - Make sure that you're using powershell (selected by default)
 - Run the following command to change the directory - `cd ~`
-- Run the following command to download the script - `curl https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1 -o TroubleshootError.ps1`
-- Run the following command to execute the script - `~/TroubleshootError.ps1 -ClusterResourceId <resourceIdoftheCluster>`.
-This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
-Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
+- Run the following command to download the script - `curl -LO https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1`
+- Run the following command to execute the script - `~/TroubleshootError.ps1 -ClusterResourceId <resourceIdoftheCluster>`
+    > Note: For AKS, resourceIdoftheCluster should be in this format `/subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>`.For ARO, should be in this format `/subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>`.
+- This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
+- Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
 
 # Aks-Engine Kubernetes
 

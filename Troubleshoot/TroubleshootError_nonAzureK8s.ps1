@@ -360,16 +360,14 @@ $Env:KUBECONFIG = $kubeConfig
 Write-Host $Env:KUBECONFIG
 Write-Host("Check whether the omsagent replicaset pod running correctly ...")
 try {
-    $rsPod = kubectl get rs -n kube-system -o json --selector='rsName=omsagent-rs' | ConvertFrom-Json
-    if ($rsPod.Items.Length -ne 1) {
-        Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage)
+    $rsPod = kubectl get deployments omsagent-rs -n kube-system -o json | ConvertFrom-Json
+    if ($null -eq $rsPod) {
+        Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage) -ForegroundColor Red
         Stop-Transcript
         exit
     }
-
-    $rsPodStatus = $rsPod.Items[0].status
+    $rsPodStatus = $rsPod.status
     if ((($rsPodStatus.availableReplicas -eq 1) -and
-            ($rsPodStatus.fullyLabeledReplicas -eq 1 ) -and
             ($rsPodStatus.readyReplicas -eq 1 ) -and
             ($rsPodStatus.replicas -eq 1 )) -eq $false
     ) {
