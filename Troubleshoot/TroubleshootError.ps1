@@ -706,6 +706,8 @@ if ("AKS" -eq $ClusterType ) {
         $rsPod = kubectl get deployments omsagent-rs -n kube-system -o json | ConvertFrom-Json
         if ($null -eq $rsPod) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage) -ForegroundColor Red
+            Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red;
+            Write-Host($AksOptInLink) -ForegroundColor Red
             Stop-Transcript
             exit
         }
