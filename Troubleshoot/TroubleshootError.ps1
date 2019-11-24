@@ -702,11 +702,21 @@ if ("AKS" -eq $ClusterType ) {
         Import-AzAksCredential -Id $ClusterResourceId -Force -ErrorAction Stop
         Write-Host("Successful got the Kubeconfig of the cluster.")
 
+        Write-Host("Get current context of the k8s cluster")
+        $clusterContext = kubectl config current-context
+        Write-Host $clusterContext
+
+        if ($clusterContext -ne $ClusterName) {
+            Write-Host("Switch to cluster context to:", $ClusterName )
+            kubectl config use-context $ClusterName
+            Write-Host("Successfully switche current context of the k8s cluster to:", $ClusterName)
+        }
+
         Write-Host("Check whether the omsagent replicaset pod running correctly ...")
         $rsPod = kubectl get deployments omsagent-rs -n kube-system -o json | ConvertFrom-Json
         if ($null -eq $rsPod) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage) -ForegroundColor Red
-            Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red;
+            Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
             Write-Host($AksOptInLink) -ForegroundColor Red
             Stop-Transcript
             exit
@@ -718,6 +728,8 @@ if ("AKS" -eq $ClusterType ) {
                 ($rsPodStatus.replicas -eq 1 )) -eq $false
         ) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled.") -ForegroundColor Red
+            Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
+            Write-Host($AksOptInLink) -ForegroundColor Red
             Write-Host($rsPodStatus)
             Write-Host($contactUSMessage)
             Stop-Transcript
