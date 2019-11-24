@@ -44,9 +44,9 @@ Steps:
  For Linux, refer [Install-Powershell-On-Linux](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux?view=powershell-6) and
  For Mac OS, refer [install-powershell-core-on-mac](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-macos?view=powershell-6) how to install powershell
 - Make sure that you're using powershell (selected by default)
-- Run the following command to change the directory - `cd ~`
+- Run the following command to change home directory - `cd ~`
 - Run the following command to download the script - `curl -LO https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/Troubleshoot/TroubleshootError.ps1`
-- Run the following command to execute the script - `~/TroubleshootError.ps1 -ClusterResourceId <resourceIdoftheCluster>`
+- Run the following command to execute the script - `./TroubleshootError.ps1 -ClusterResourceId <resourceIdoftheCluster>`
     > Note: For AKS, resourceIdoftheCluster should be in this format `/subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>`.For ARO, should be in this format `/subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>`.
 - This script will generate a TroubleshootDump.txt which collects detailed information about container health onboarding.
 - Please send this file to [AskCoin](mailto:askcoin@microsoft.com). We will respond back to you.
