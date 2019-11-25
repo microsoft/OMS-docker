@@ -23,6 +23,7 @@ $AksOptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/
 $AksOptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard"
 $AroOptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout-openshift"
 $AroOptInLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-azure-redhat-setup"
+$contactUSMessage = "Please contact us by emailing askcoin@microsoft.com if you need any help"
 
 $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
@@ -715,9 +716,10 @@ if ("AKS" -eq $ClusterType ) {
         Write-Host("Check whether the omsagent replicaset pod running correctly ...")
         $rsPod = kubectl get deployments omsagent-rs -n kube-system -o json | ConvertFrom-Json
         if ($null -eq $rsPod) {
-            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled." + $contactUSMessage) -ForegroundColor Red
+            Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled.") -ForegroundColor Red
             Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
             Write-Host($AksOptInLink) -ForegroundColor Red
+            Write-Host($contactUSMessage)
             Stop-Transcript
             exit
         }
@@ -728,9 +730,11 @@ if ("AKS" -eq $ClusterType ) {
                 ($rsPodStatus.replicas -eq 1 )) -eq $false
         ) {
             Write-Host( "omsagent replicaset pod not scheduled or failed to scheduled.") -ForegroundColor Red
+            Write-Host("Available omsagent replicas:", $rsPodStatus.availableReplicas)
+            Write-Host("Ready omsagent replicas:", $rsPodStatus.readyReplicas)
+            Write-Host("Total omsagent replicas:", $rsPodStatus.replicas)
             Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
             Write-Host($AksOptInLink) -ForegroundColor Red
-            Write-Host($rsPodStatus)
             Write-Host($contactUSMessage)
             Stop-Transcript
             exit
