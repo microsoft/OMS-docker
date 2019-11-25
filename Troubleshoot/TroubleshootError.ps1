@@ -733,6 +733,8 @@ if ("AKS" -eq $ClusterType ) {
             Write-Host("Available omsagent replicas:", $rsPodStatus.availableReplicas)
             Write-Host("Ready omsagent replicas:", $rsPodStatus.readyReplicas)
             Write-Host("Total omsagent replicas:", $rsPodStatus.replicas)
+            $rsPod = kubectl get pods -n kube-system -l rsName=omsagent-rs -o json | ConvertFrom-Json
+            Write-Host($rsPod) -ForegroundColor Red
             Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
             Write-Host($AksOptInLink) -ForegroundColor Red
             Write-Host($contactUSMessage)
