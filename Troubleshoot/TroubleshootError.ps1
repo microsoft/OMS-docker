@@ -736,7 +736,7 @@ if ("AKS" -eq $ClusterType ) {
             Write-Host($rsPod) -ForegroundColor Red
             Write-Host("get omsagent rs pod details ...")
             $omsagentrsPod = kubectl get pods -n kube-system -l rsName=omsagent-rs -o json | ConvertFrom-Json
-            Write-Host($omsagentrsPod) -ForegroundColor Red
+            Write-Host("status of the omsagent rs pod is :", $omsagentrsPod.Items[0].Status) -ForegroundColor Red
             Write-Host("successfully got omsagent rs pod details ...")
             Write-Host("Please refer to the following documentation to onboard and validate:") -ForegroundColor Red
             Write-Host($AksOptInLink) -ForegroundColor Red
@@ -770,7 +770,7 @@ if ("AKS" -eq $ClusterType ) {
                 ($dsStatus.numberAvailable -eq $dsStatus.numberReady)) -eq $false) {
 
             Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.")
-            Write-Host($rsPodStatus)
+            Write-Host($dsStatus)
             Write-Host($contactUSMessage)
             Stop-Transcript
             exit
