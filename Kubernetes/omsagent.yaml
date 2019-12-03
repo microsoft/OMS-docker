@@ -38,12 +38,13 @@ kind: ConfigMap
 apiVersion: v1
 data:
   kube.conf: |-
-    # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+   # Fluentd config file for OMS Docker - cluster components (kubeAPI)
     #fluent forward plugin
     <source>
      type forward
      port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
      bind 0.0.0.0
+     chunk_size_limit 4m
     </source>
 
     #Kubernetes pod inventory
@@ -109,104 +110,104 @@ data:
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match oms.containerinsights.KubeEvents**>
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 5m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
-     buffer_queue_limit 10
+     buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match oms.containerinsights.KubeServices**>
      type out_oms
      log_level debug
      num_threads 2
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match oms.containerinsights.KubeNodeInventory**>
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match oms.containerinsights.ContainerNodeInventory**>
      type out_oms
      log_level debug
      num_threads 3
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
      buffer_queue_limit 20
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match oms.api.KubePerf**>	
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
      type out_mdm
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
      retry_mdm_post_wait_minutes 60
     </match>
 
@@ -214,30 +215,30 @@ data:
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 20s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 
     <match mdm.cadvisorperf**>
      type out_mdm
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
      retry_mdm_post_wait_minutes 60
     </match>
 
@@ -245,15 +246,15 @@ data:
      type out_oms
      log_level debug
      num_threads 5
-     buffer_chunk_limit 20m
+     buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
      retry_limit 10
-     retry_wait 30s
-     max_retry_wait 9m
+     retry_wait 5s
+     max_retry_wait 5m
     </match>
 metadata:
   name: omsagent-rs-config
@@ -287,13 +288,13 @@ spec:
         dsName: "omsagent-ds"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-6"
+        dockerProviderVersion: "8.0.0-0"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12032019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -403,18 +404,18 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "7.0.0-6"
+        dockerProviderVersion: "8.0.0-0"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12032019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
-              cpu: 300m
-              memory: 500Mi
+              cpu: 1
+              memory: 750Mi
             requests:
               cpu: 150m
               memory: 250Mi
