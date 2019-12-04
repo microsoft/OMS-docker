@@ -36,23 +36,23 @@ if [ -S ${DOCKER_SOCKET} ]; then
     groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
     echo "adding omsagent user to local docker group"
     usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi 
+fi
 
 #Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	#kubernetes treats node names as lower case.
+	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
-	curl --unix-socket /var/run/host/docker.sock "http:/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully.
-cat /var/opt/microsoft/docker-cimprov/state/containerhostname 
+cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
 #resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
-      echo "not setting customResourceId" 
+      echo "not setting customResourceId"
 else
       export customResourceId=$AKS_RESOURCE_ID
       echo "export customResourceId=$AKS_RESOURCE_ID" >> ~/.bashrc
@@ -63,7 +63,7 @@ fi
 #set agent config schema version
 if [  -e "/etc/config/settings/schema-version" ] && [  -s "/etc/config/settings/schema-version" ]; then
       #trim
-      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)" 
+      config_schema_version="$(cat /etc/config/settings/schema-version | xargs)"
       #remove all spaces
       config_schema_version="${config_schema_version//[[:space:]]/}"
       #take first 10 characters
@@ -91,8 +91,8 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
 fi
 
 # Check for internet connectivity
-echo "Making curl request to blob end-point"
-RET=`curl -s -o /dev/null -w "%{http_code}" https://azmonagentpingtest.blob.core.windows.net`
+echo "Making curl request to ifconfig"
+RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
 if [ $RET -ne 000 ]; then 
       # Check for workspace existence
       if [ -e "/etc/omsagent-secret/WSID" ]; then
@@ -187,7 +187,7 @@ rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.c
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
-  elif [ -a /etc/omsagent-secret/WSID ]; then  
+  elif [ -a /etc/omsagent-secret/WSID ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
   elif [ -a /run/secrets/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
@@ -215,7 +215,7 @@ service cron start
 
 #get omsagent and docker-provider versions
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
-dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}' 
+dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
@@ -252,11 +252,11 @@ echo "export TELEMETRY_ACS_RESOURCE_NAME=$telemetry_acs_resource_name" >> ~/.bas
 export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type
 echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 
-if [ ! -e "/etc/config/kube.conf" ]; then
-   nodename=$(cat /hostfs/etc/hostname)
-else
-   nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
-fi
+#if [ ! -e "/etc/config/kube.conf" ]; then
+#   nodename=$(cat /hostfs/etc/hostname)
+#else
+nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+#fi
 echo "nodename: $nodename"
 echo "replacing nodename in telegraf config"
 sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
@@ -283,7 +283,7 @@ source ~/.bashrc
 /opt/telegraf --version
 dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
-#dpkg -l | grep telegraf | awk '{print $2 " " $3}' 
+#dpkg -l | grep telegraf | awk '{print $2 " " $3}'
 
 shutdown() {
 	/opt/microsoft/omsagent/bin/service_control stop
