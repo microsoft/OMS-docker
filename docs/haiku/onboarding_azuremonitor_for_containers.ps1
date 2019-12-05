@@ -18,12 +18,10 @@
       -  Azure Arc cluster Resource Id
       -  Contributor role permission on the Subscription of the Azure Arc Cluster
       -  kubectl https://kubernetes.io/docs/tasks/tools/install-kubectl/
-      -  HELM https://github.com/helm/helm/releases
+      -  Helm v3.0.0 or higher  https://github.com/helm/helm/releases
       -  Kubeconfig of the K8s cluster
-      -  clone this repo https://github.com/ganga1980/charts/tree/gangams/haiku-integration
-
  Note: 1. Please make sure you have all the pre-requisistes before running this script.
-       2. This script MUST be executed from cloned charts directory.
+
 #>
 param(
     [Parameter(mandatory = $true)]
@@ -360,7 +358,7 @@ catch {
 
 
 Write-Host("Attaching logAnalyticsWorkspaceResourceId tag on the cluster ResourceId")
-$clusterResource.Tags.Add("logAnalyticsWorkspaceResourceId", $WorkspaceInformation.ResourceId)
+$clusterResource.Tags["logAnalyticsWorkspaceResourceId"] = $WorkspaceInformation.ResourceId
 Set-AzResource -Tag $clusterResource.Tags -ResourceId $clusterResource.ResourceId -Force
 
 $workspaceGUID = "";
@@ -380,39 +378,14 @@ Write-Host("set KUBECONFIG environment variable for the current session")
 $Env:KUBECONFIG = $kubeConfig
 Write-Host $Env:KUBECONFIG
 
-Write-Host("Configure the tiller and required pre-requisites ...")
-try {
+$helmVersion = helm version
+Write-Host "Helm version" : $helmVersion
 
+Write-Host("Adding incubator repo to helm: https://kubernetes-charts-incubator.storage.googleapis.com/")
+helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
 
-    Write-Host("Creating service account: tiller in kube-system namespace ...")
-    kubectl --namespace kube-system create serviceaccount tiller
-    Write-Host("Creating cluster role bindings ...")
-    kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-    Write-Host("Executing HELM Init with service account: tiller and provided kubeconfig with default context in the config ...")
-    helm init --service-account tiller --upgrade
-
-}
-catch {
-    Write-Host ("Failed to configure Tiller  : '" + $Error[0] + "' ") -ForegroundColor Red
-    exit
-}
-
-Write-Host("Add node labels on worker nodes for the Azure Monitor for containers replicaset pod scheduling if not extists already ...")
-$workernodesInfo = kubectl get nodes -o json --selector='node-role.kubernetes.io/controlplane!=true,node-role.kubernetes.io/etcd!=true,node-role.kubernetes.io/master!=true,node-role.kubernetes.io/master!=""'
-$workernodes = $workernodesInfo | ConvertFrom-Json
-
-for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
-    $nodeName = $workernodes.Items[$index].metadata.name
-    $nodeLabels = $workernodes.Items[$index].metadata.labels
-    if (($nodeLabels.PSObject.Properties.Name.Contains("node-role.kubernetes.io/worker") -eq $false) -and ($nodeLabels.PSObject.Properties.Name.Contains("kubernetes.io/role") -eq $false)) {
-        Write-Host("Attaching node label:node-role.kubernetes.io/worker=true for node:" + $nodeName)
-        kubectl label node $nodeName node-role.kubernetes.io/worker=true
-        kubectl label node $nodeName kubernetes.io/role=agent
-    }
-}
-
-Write-Host("Sleep for 10 secs to get tiller running state on the cluster ...")
-Start-Sleep -Seconds 10
+Write-Host("updating helm repo to get latest version of charts")
+helm repo update
 
 Write-Host("Installing Azure Monitor for containers HELM chart ...")
 try {
@@ -427,6 +400,7 @@ catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
 }
 
+Write-Host("Proceed to https://aka.ms/azmon-containers-azurearc to view your newly onboarded Azure Arc cluster") -ForegroundColor Green
 
 
 
