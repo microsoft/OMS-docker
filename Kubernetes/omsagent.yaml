@@ -288,13 +288,13 @@ spec:
         dsName: "omsagent-ds"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-0"
+        dockerProviderVersion: "8.0.0-1"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12032019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12042019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -404,13 +404,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-0"
+        dockerProviderVersion: "8.0.0-1"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12032019"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12042019"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
