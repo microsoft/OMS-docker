@@ -164,7 +164,3 @@ helm install myrelease-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secr
 echo "chart installation done."
 
 echo "Proceed to https://aka.ms/azmon-containers-azurearc to view health of your newly onboarded Azure Arc cluster"
-
-
-
-
