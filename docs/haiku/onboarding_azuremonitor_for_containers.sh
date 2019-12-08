@@ -101,8 +101,9 @@ declare -A AzureCloudRegionToOmsRegionMap=(
 [westus2]=westus2
 )
 
-export workspaceRegionCode="EUS"
-export workspaceRegion="eastus"
+export workspaceRegionCode="NEU"
+export workspaceRegion="northeurope"
+
 
 if [ -n "${AzureCloudRegionToOmsRegionMap[$clusterRegion]}" ];
 then
@@ -132,8 +133,7 @@ workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
 if [ -n "$workspaceResourceId" ];
 then echo "using existing default workspace:"$defaultWorkspaceName
 else
-workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p '{
-  "location": $workspaceRegion, "properties": {"sku": {"name": "standalone"}}}')
+workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p `{"location": $workspaceRegion, "properties": {"sku": {"name": "standalone"}}}`)
 fi
 
 export workspaceGuid=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query properties.customerId)
