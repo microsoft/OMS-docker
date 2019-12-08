@@ -375,10 +375,11 @@ Write-Host("Installing Azure Monitor for containers HELM chart ...")
 try {
 
     # uncomment below line when all the required changes merged to HELM charts repo
-    # helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+    helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+    helm repo update
     # $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
     $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
-    helm install --generate-name --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
+    helm install az-mon-container-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
