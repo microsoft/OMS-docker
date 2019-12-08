@@ -379,7 +379,7 @@ try {
     helm repo update
     # $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
     $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
-    helm install az-mon-container-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
+    helm install azmon-containers-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red

@@ -160,7 +160,7 @@ helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.c
 echo "updating helm repo to get latest charts"
 helm repo update
 
-helm install az-mon-container-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=${1} incubator/azuremonitor-containers --kube-context ${2}
+helm install azmon-containers-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=${1} incubator/azuremonitor-containers --kube-context ${2}
 echo "chart installation done."
 
 echo "Proceed to https://aka.ms/azmon-containers-azurearc to view health of your newly onboarded Azure Arc cluster"
