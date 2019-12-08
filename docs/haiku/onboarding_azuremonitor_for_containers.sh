@@ -10,15 +10,10 @@
 #      4. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
-#           jq : sudo apt-get install jq
-#
-#  [Required]  ${1}
+#     Helm3 : https://helm.sh/docs/intro/install/
 #
 #  For example:
-#
-#  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/aks/mdmonboarding/mdm_onboarding_atscale.sh | bash -s "00000000-0000-0000-0000-000000000000"
-# /subscriptions/cd45f23b-b832-4fa4-a434-1bf7e6f14a5a/resourceGroups/KubernetesDemo/providers/Microsoft.Kubernetes/connectedClusters/ake3Connected
-
+#  bash <script> <azureArcResourceId> <kube-context>
 
 echo "clusterResourceId:"${1}
 echo "kubeconfig context:"${2}
