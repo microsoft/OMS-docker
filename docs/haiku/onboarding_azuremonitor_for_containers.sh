@@ -130,11 +130,14 @@ fi
 export workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
 workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
 
-if [ -n "$workspaceResourceId" ];
-then echo "using existing default workspace:"$defaultWorkspaceName
-else
-workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p `{"location": $workspaceRegion, "properties": {"sku": {"name": "standalone"}}}`)
-fi
+# if [ -n "$workspaceResourceId" ];
+# then echo "using existing default workspace:"$defaultWorkspaceName
+# else
+workspace=$(az resource update -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p `{"location": ${workspaceRegion}, "properties": {"sku": {"name": "standalone"}}}`)
+# fi
+
+export workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
+workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
 
 export workspaceGuid=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query properties.customerId)
 workspaceGuid=$(echo $workspaceGuid | tr -d '"')
