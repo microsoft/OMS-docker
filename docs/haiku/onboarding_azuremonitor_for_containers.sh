@@ -101,9 +101,8 @@ declare -A AzureCloudRegionToOmsRegionMap=(
 [westus2]=westus2
 )
 
-export workspaceRegionCode="NEU"
-export workspaceRegion="northeurope"
-
+export workspaceRegionCode="EUS"
+export workspaceRegion="eastus"
 
 if [ -n "${AzureCloudRegionToOmsRegionMap[$clusterRegion]}" ];
 then
@@ -127,18 +126,30 @@ else
   az group create -g $defaultWorkspaceResourceGroup -l $workspaceRegion
 fi
 
-export workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
+export workspaceList=$(az resource list -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces)
+if [ $workspaceList = "[]" ];
+then
+# create new default workspace since no mapped existing default workspace
+echo '{"location":"'"$workspaceRegion"'", "properties":{"sku":{"name": "standalone"}}}' > WorkspaceProps.json
+cat WorkspaceProps.json
+workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p @WorkspaceProps.json)
+fi
+
+workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
 workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
 
-# if [ -n "$workspaceResourceId" ];
-# then echo "using existing default workspace:"$defaultWorkspaceName
-# else
-workspace=$(az resource update -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p `{"location": ${workspaceRegion}, "properties": {"sku": {"name": "standalone"}}}`)
-# fi
-
-export workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
+if [ -n "$workspaceResourceId" ];
+ then echo "using existing default workspace:"$defaultWorkspaceName
+else
+echo '{"location":"'"$workspaceRegion"'", "properties":{"sku":{"name": "standalone"}}}' > WorkspaceProps.json
+cat WorkspaceProps.json
+workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p @WorkspaceProps.json)
+# get the resource id of the newly created workspace
+workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
 workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
+fi
 
+# get the workspace guid
 export workspaceGuid=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query properties.customerId)
 workspaceGuid=$(echo $workspaceGuid | tr -d '"')
 
@@ -164,6 +175,6 @@ echo "updating helm repo to get latest charts"
 helm repo update
 
 helm install azmon-containers-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=${1} incubator/azuremonitor-containers --kube-context ${2}
-echo "chart installation done."
+echo "chart installation completed."
 
 echo "Proceed to https://aka.ms/azmon-containers-azurearc to view health of your newly onboarded Azure Arc cluster"
