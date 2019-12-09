@@ -6,20 +6,18 @@
       1. Creates the Default Azure log analytics workspace if doesn't exist one in specified subscription
       2. Adds the ContainerInsights solution to the Azure log analytics workspace
       3. Adds the logAnalyticsWorkspaceResourceId tag on the provided Azure Arc Cluster
-      4. Add the required node labels on the worker nodes if doesnt exists already
-      5. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
+      4. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
 
     .PARAMETER azureArcClusterResourceId
         Id of the Azure Arc Cluster
-    .PARAMETER kubeConfig
-        kubeconfig of the k8 cluster
+    .PARAMETER kubeContext
+        kube-context of the k8 cluster to install Azure Monitor for containers HELM chart
 
      Pre-requisites:
       -  Azure Arc cluster Resource Id
       -  Contributor role permission on the Subscription of the Azure Arc Cluster
-      -  kubectl https://kubernetes.io/docs/tasks/tools/install-kubectl/
       -  Helm v3.0.0 or higher  https://github.com/helm/helm/releases
-      -  Kubeconfig of the K8s cluster
+      -  kube-context of the K8s cluster
  Note: 1. Please make sure you have all the pre-requisistes before running this script.
 
 #>
@@ -27,7 +25,7 @@ param(
     [Parameter(mandatory = $true)]
     [string]$azureArcClusterResourceId,
     [Parameter(mandatory = $true)]
-    [string]$kubeConfig
+    [string]$kubeContext
 )
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
@@ -158,17 +156,6 @@ if ([string]::IsNullOrEmpty($azureArcClusterResourceId)) {
     Write-Host("Specified Azure Arc ClusterResourceId should not be NULL or empty") -ForegroundColor Red
     exit
 }
-
-if ([string]::IsNullOrEmpty($kubeConfig)) {
-    Write-Host("kubeConfig should not be NULL or empty") -ForegroundColor Red
-    exit
-}
-
-if ((Test-Path $kubeConfig -PathType Leaf) -ne $true) {
-    Write-Host("provided kubeConfig path : '" + $kubeConfig + "' doesnt exist or you dont have read access") -ForegroundColor Red
-    exit
-}
-
 
 if (($azureArcClusterResourceId.Contains("Microsoft.Kubernetes/connectedClusters") -ne $true) -or ($azureArcClusterResourceId.Split("/").Length -ne 9)) {
     Write-Host("Provided cluster resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.Kubernetes/connectedClusters/<clusterName>") -ForegroundColor Red
@@ -374,9 +361,6 @@ catch {
     Write-Host ("Failed to workspace details. Please validate whether you have Log Analytics Contributor role on the workspace error: '" + $Error[0] + "' ") -ForegroundColor Red
     exit
 }
-Write-Host("set KUBECONFIG environment variable for the current session")
-$Env:KUBECONFIG = $kubeConfig
-Write-Host $Env:KUBECONFIG
 
 $helmVersion = helm version
 Write-Host "Helm version" : $helmVersion
@@ -390,11 +374,10 @@ helm repo update
 Write-Host("Installing Azure Monitor for containers HELM chart ...")
 try {
 
-    # uncomment below line when all the required changes merged to HELM charts repo
-    # helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
-    # $releaseName = "azmoncontainers-" + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')
+    helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
+    helm repo update
     $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
-    helm install --generate-name --set $helmParameters incubator/azuremonitor-containers
+    helm install azmon-containers-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
