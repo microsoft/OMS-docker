@@ -134,13 +134,14 @@ else
 fi
 
 export workspaceList=$(az resource list -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces)
-if [ $workspaceList = "[]" ];
+if [ "$workspaceList" = "[]" ];
 then
 # create new default workspace since no mapped existing default workspace
 echo '{"location":"'"$workspaceRegion"'", "properties":{"sku":{"name": "standalone"}}}' > WorkspaceProps.json
 cat WorkspaceProps.json
 workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p @WorkspaceProps.json)
-else echo "using existing default workspace:"$defaultWorkspaceName
+else
+  echo "using existing default workspace:"$defaultWorkspaceName
 fi
 
 workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
