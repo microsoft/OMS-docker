@@ -12,8 +12,15 @@
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
 #     Helm3 : https://helm.sh/docs/intro/install/
 #
-#  For example:
-#  bash <script> <azureArcResourceId> <kube-context>
+# bash <script> <azureArcResourceId> <kube-context>
+# For example:
+# bash onboarding_azuremonitor_for_containers.sh /subscriptions/57ac26cf-a9f0-4908-b300-9a4e9a0fb205/resourceGroups/AzureArcTest/providers/Microsoft.Kubernetes/connectedClusters/AzureArcTest1 MyK8sTestCluster
+
+if [ $# -le 1 ]
+then
+  echo "Error: This should be invoked with 2 arguments, clusterResourceId and kubeContext name"
+  exit 1
+fi
 
 echo "clusterResourceId:"${1}
 echo "kubeconfig context:"${2}
@@ -133,21 +140,11 @@ then
 echo '{"location":"'"$workspaceRegion"'", "properties":{"sku":{"name": "standalone"}}}' > WorkspaceProps.json
 cat WorkspaceProps.json
 workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p @WorkspaceProps.json)
+else echo "using existing default workspace:"$defaultWorkspaceName
 fi
 
 workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
 workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
-
-if [ -n "$workspaceResourceId" ];
- then echo "using existing default workspace:"$defaultWorkspaceName
-else
-echo '{"location":"'"$workspaceRegion"'", "properties":{"sku":{"name": "standalone"}}}' > WorkspaceProps.json
-cat WorkspaceProps.json
-workspace=$(az resource create -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName --resource-type Microsoft.OperationalInsights/workspaces --is-full-object -p @WorkspaceProps.json)
-# get the resource id of the newly created workspace
-workspaceResourceId=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query id)
-workspaceResourceId=$(echo $workspaceResourceId | tr -d '"')
-fi
 
 # get the workspace guid
 export workspaceGuid=$(az resource show -g $defaultWorkspaceResourceGroup -n $defaultWorkspaceName  --resource-type Microsoft.OperationalInsights/workspaces --query properties.customerId)
