@@ -173,6 +173,31 @@ if [ -e "telemetry_prom_config_env_var" ]; then
       source telemetry_prom_config_env_var
 fi
 
+#Setting environment variable for CAdvisor metrics to use port 10255/10250 based on curl request
+echo "Making wget request to cadvisor endpoint with port 10250"
+#Defaults to use port 10255
+cAdvisorIsSecure=false
+RET_CODE=`wget --server-response https://$NODE_IP:10250/stats/summary --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" 2>&1 | awk '/^  HTTP/{print $2}'`
+if [ $RET_CODE -eq 200 ]; then 
+      cAdvisorIsSecure=true
+fi
+
+if [ "$cAdvisorIsSecure" = true ] ; then
+      echo "Wget request using port 10250 succeeded. Using 10250"
+      export IS_SECURE_CADVISOR_PORT=true
+      echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
+      export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
+      echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
+else
+      echo "Wget request using port 10250 failed. Using port 10255"
+      export IS_SECURE_CADVISOR_PORT=false
+      echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
+      export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
+      echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
+fi
+
+source ~/.bashrc
+
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
