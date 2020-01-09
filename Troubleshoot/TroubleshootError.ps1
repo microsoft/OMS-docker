@@ -10,11 +10,16 @@
         Example :
         AKS cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>
         ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>
+
+    .PARAMETER kubeConfig
+        kubeconfig of the k8 cluster
 #>
 
 param(
     [Parameter(mandatory = $true)]
-    [string]$ClusterResourceId
+    [string]$ClusterResourceId,
+    [Parameter(mandatory = $true)]
+    [string]$KubeConfig
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,6 +39,18 @@ if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne
     Write-Host("Provided Cluster resource id should be fully qualified resource id of AKS or ARO cluster") -ForegroundColor Red
     Write-Host("Resource Id Format for AKS cluster is : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>") -ForegroundColor Red
     Write-Host("Resource Id Format for ARO cluster is : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>") -ForegroundColor Red
+    Stop-Transcript
+    exit
+}
+
+if ([string]::IsNullOrEmpty($KubeConfig)) {
+    Write-Host("KubeConfig should not be NULL or empty") -ForegroundColor Red
+    Stop-Transcript
+    exit
+}
+
+if ((Test-Path $KubeConfig -PathType Leaf) -ne $true) {
+    Write-Host("provided KubeConfig path : '" + $KubeConfig + "' doesnt exist or you dont have read access") -ForegroundColor Red
     Stop-Transcript
     exit
 }
@@ -769,7 +786,7 @@ if ("AKS" -eq $ClusterType ) {
                 ($dsStatus.numberAvailable -eq $dsStatus.currentNumberScheduled) -and
                 ($dsStatus.numberAvailable -eq $dsStatus.numberReady)) -eq $false) {
 
-            Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.")
+            Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.") -ForegroundColor Red
             Write-Host($dsStatus)
             Write-Host($contactUSMessage)
             Stop-Transcript
@@ -832,6 +849,21 @@ if ("AKS" -eq $ClusterType ) {
         Stop-Transcript
         exit
     }
+}
+
+Write-Host("Checking agent version...")
+try {
+    Write-Host("KubeConfig: " + $KubeConfig)
+
+    $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
+    $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
+
+    Write-Host('The version of the omsagent running on your cluster is ' + $omsagentImage)
+    Write-Host('You can encounter problems with your cluster if your omsagent isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
+} catch {
+    Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
+    exit
 }
 
 Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
