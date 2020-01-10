@@ -9,10 +9,7 @@
         Resource Id of the AKS (Azure Kubernetes Service) or ARO (Azure Redhat Openshift)
         Example :
         AKS cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>
-        ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>
-
-    .PARAMETER kubeConfig
-        kubeconfig of the k8 cluster
+        ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName> 
 #>
 
 param(
