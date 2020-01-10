@@ -10,6 +10,9 @@
 
     .PARAMETER ResourceGroupName
         Resource Group name where the ACS-Engine Kubernetes or AKS-Engine cluster is in
+
+    .PARAMETER KubeConfig
+        Kubeconfig of the k8 cluster
     
 #>
 
@@ -17,7 +20,9 @@ param(
     [Parameter(mandatory = $true)]
     [string]$SubscriptionId,
     [Parameter(mandatory = $true)]
-    [string]$ResourceGroupName	
+    [string]$ResourceGroupName,
+    [Parameter(mandatory = $true)]
+    [string]$KubeConfig
 )
 
 $ErrorActionPreference = "Stop";
@@ -185,6 +190,21 @@ if ($notPresent) {
     exit
 }
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
+
+#
+#   Kube config existance and path check
+#
+if ([string]::IsNullOrEmpty($KubeConfig)) {
+    Write-Host("KubeConfig should not be NULL or empty") -ForegroundColor Red
+    Stop-Transcript
+    exit
+}
+
+if ((Test-Path $KubeConfig -PathType Leaf) -ne $true) {
+    Write-Host("provided KubeConfig path : '" + $KubeConfig + "' doesnt exist or you dont have read access") -ForegroundColor Red
+    Stop-Transcript
+    exit
+}
 
 #
 #  Validate the specified Resource Group has the AKS-Engine or ACS-Engine Kuberentes cluster resources 
@@ -464,6 +484,21 @@ else {
             Write-Host("The container health solution isn't onboarded to your cluster. This required for the monitoring to work. Please contact us by emailing askcoin@microsoft.com if you need any help on this") -ForegroundColor Red
         }
     }
+}
+
+Write-Host("Checking agent version...")
+try {
+    Write-Host("KubeConfig: " + $KubeConfig)
+    
+    $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
+    $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
+
+    Write-Host('The version of the omsagent running on your cluster is' + $omsagentImage)
+    Write-Host('You can encounter problems with your cluster if your omsagent isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
+} catch {
+    Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
+    exit
 }
 
 Write-Host("")

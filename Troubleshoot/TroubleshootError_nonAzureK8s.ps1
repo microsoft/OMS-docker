@@ -13,6 +13,7 @@
       6. Azure Log AnalyticsWorkspaceGuid and key configured on the agent matching with configured log analytics workspace
       7. validate all the linux worker nodes has kubernetes.io/role=agent label to schedule rs pod. If doesnt exist, add it.
       8. provide the warn message to validate  cAdvisor configured to readOnlyPort:10255
+      9. Advises the user to check the version of the omsagent running on the cluster, and update it to the latest version if it isn't the latest version already
 
     .PARAMETER azureLogAnalyticsWorkspaceResourceId
         Id of the Azure Log Analytics Workspace
@@ -39,7 +40,7 @@ Start-Transcript -path .\TroubleshootDumpForNonAzureK8s.txt -Force
 $contactUSMessage = "Please contact us by emailing askcoin@microsoft.com for help"
 
 Write-Host("LogAnalyticsWorkspaceResourceId: : '" + $azureLogAnalyticsWorkspaceResourceId + "' ")
-if (($azureLogAnalyticsWorkspaceResourceId.Contains("Microsoft.OperationalInsights/workspaces") -ne $true) -or ($azureLogAnalyticsWorkspaceResourceId.Split("/").Length -ne 9)) {
+if (($azureLogAnalyticsWorkspaceResourceId.ToLower().Contains("microsoft.operationalinsights/workspaces") -ne $true) -or ($azureLogAnalyticsWorkspaceResourceId.Split("/").Length -ne 9)) {
     Write-Host("Provided Azure Log Analytics resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>") -ForegroundColor Red
     Stop-Transcript
     exit
@@ -390,7 +391,7 @@ Write-Host("Checking whether the omsagent daemonset pod running correctly ...")
 try {
     $ds = kubectl get ds -n kube-system -o json --field-selector metadata.name=omsagent | ConvertFrom-Json
     if ($ds.Items.Length -ne 1) {
-        Write-Host( "omsagent replicaset pod not scheduled or failed to schedule." + $contactUSMessage)
+        Write-Host( "omsagent replicaset pod not scheduled or failed to schedule." + $contactUSMessage) -ForegroundColor Red
         Stop-Transcript
         exit
     }
@@ -402,7 +403,7 @@ try {
             ($dsStatus.numberAvailable -eq $dsStatus.currentNumberScheduled) -and
             ($dsStatus.numberAvailable -eq $dsStatus.numberReady)) -eq $false) {
 
-        Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.")
+        Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.") -ForegroundColor Red
         Write-Host($rsPodStatus)
         Write-Host($contactUSMessage)
         Stop-Transcript
@@ -477,6 +478,21 @@ for ($index = 0; $index -lt $workernodes.Items.length; $index++) {
         Write-Host("Attaching node label:kubernetes.io/role=agent for node:" + $nodeName)
         kubectl label node $nodeName kubernetes.io/role=agent
     }
+}
+
+Write-Host("Checking agent version...")
+try {
+    Write-Host("kubeConfig: " + $kubeConfig)
+
+    $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
+    $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
+    
+    Write-Host('The version of the omsagent running on your cluster is ' + $omsagentImage)
+    Write-Host('You can encounter problems with your cluster if your omsagent isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
+} catch {
+    Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+    Stop-Transcript
+    exit
 }
 
 Write-Host("Performance charts (CPU or Memory) blank indicates that cAdvisor on the Kubelet not configured for readOnlyPort:10255") -ForegroundColor Yellow
