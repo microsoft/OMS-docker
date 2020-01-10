@@ -40,7 +40,7 @@ Start-Transcript -path .\TroubleshootDumpForNonAzureK8s.txt -Force
 $contactUSMessage = "Please contact us by emailing askcoin@microsoft.com for help"
 
 Write-Host("LogAnalyticsWorkspaceResourceId: : '" + $azureLogAnalyticsWorkspaceResourceId + "' ")
-if (($azureLogAnalyticsWorkspaceResourceId.Contains("microsoft.operationalinsights/workspaces") -ne $true) -or ($azureLogAnalyticsWorkspaceResourceId.Split("/").Length -ne 9)) {
+if (($azureLogAnalyticsWorkspaceResourceId.ToLower().Contains("microsoft.operationalinsights/workspaces") -ne $true) -or ($azureLogAnalyticsWorkspaceResourceId.Split("/").Length -ne 9)) {
     Write-Host("Provided Azure Log Analytics resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>") -ForegroundColor Red
     Stop-Transcript
     exit

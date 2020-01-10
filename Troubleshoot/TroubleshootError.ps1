@@ -17,9 +17,7 @@
 
 param(
     [Parameter(mandatory = $true)]
-    [string]$ClusterResourceId,
-    [Parameter(mandatory = $true)]
-    [string]$KubeConfig
+    [string]$ClusterResourceId   
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,7 +32,7 @@ $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 Write-Host("ClusterResourceId: '" + $ClusterResourceId + "' ")
 
-if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne 9) -or (($ClusterResourceId.Contains("Microsoft.ContainerService/managedClusters") -ne $true) -and ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -ne $true))
+if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne 9) -or (($ClusterResourceId.ToLower().Contains("microsoft.containerservice/managedclusters") -ne $true) -and ($ClusterResourceId.ToLower().Contains("microsoft.containerservice/openshiftmanagedclusters") -ne $true))
 ) {
     Write-Host("Provided Cluster resource id should be fully qualified resource id of AKS or ARO cluster") -ForegroundColor Red
     Write-Host("Resource Id Format for AKS cluster is : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>") -ForegroundColor Red
@@ -43,20 +41,8 @@ if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne
     exit
 }
 
-if ([string]::IsNullOrEmpty($KubeConfig)) {
-    Write-Host("KubeConfig should not be NULL or empty") -ForegroundColor Red
-    Stop-Transcript
-    exit
-}
-
-if ((Test-Path $KubeConfig -PathType Leaf) -ne $true) {
-    Write-Host("provided KubeConfig path : '" + $KubeConfig + "' doesnt exist or you dont have read access") -ForegroundColor Red
-    Stop-Transcript
-    exit
-}
-
 $ClusterType = "AKS"
-if ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -eq $true) {
+if ($ClusterResourceId.ToLower().Contains("microsoft.containerservice/openshiftmanagedclusters") -eq $true) {
     $ClusterType = "ARO";
 }
 
@@ -108,7 +94,7 @@ if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAcco
             if ($null -eq $azARGModule) {
                 try {
                     Write-Host("Installing Az.ResourceGraph...")
-                    Install-Module Az.ResourceGraph -Force -ErrorAction Stop
+                    Install-Module Az.ResourceGraph -Force -AllowClobber -ErrorAction Stop 
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for Az.ResourceGraph in a new powershell window: eg. 'Install-Module Az.ResourceGraph -Force'") -ForegroundColor Red
@@ -119,7 +105,7 @@ if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAcco
             if ($null -eq $azAksModule) {
                 try {
                     Write-Host("Installing Az.Aks...")
-                    Install-Module Az.Aks -Force -ErrorAction Stop
+                    Install-Module Az.Aks -Force -AllowClobber -ErrorAction Stop
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
@@ -849,21 +835,21 @@ if ("AKS" -eq $ClusterType ) {
         Stop-Transcript
         exit
     }
-}
 
-Write-Host("Checking agent version...")
-try {
-    Write-Host("KubeConfig: " + $KubeConfig)
+    Write-Host("Checking agent version...")
+    try {
+        Write-Host("KubeConfig: " + $KubeConfig)
 
-    $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
-    $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
+        $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
+        $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
 
-    Write-Host('The version of the omsagent running on your cluster is ' + $omsagentImage)
-    Write-Host('You can encounter problems with your cluster if your omsagent isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
-} catch {
-    Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
-    Stop-Transcript
-    exit
+        Write-Host('The version of the omsagent running on your cluster is ' + $omsagentImage)
+        Write-Host('You can encounter problems with your cluster if your omsagent version isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
+    } catch {
+        Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
 }
 
 Write-Host("Everything looks good according to this script. Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Green
