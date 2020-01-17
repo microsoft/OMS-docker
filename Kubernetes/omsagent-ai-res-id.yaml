@@ -351,6 +351,8 @@ spec:
               value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
+            - name: HEALTHMODEL_REPLICASET_SERVICE_ENDPOINT
+              value: "healthmodel-replicaset-service.kube-system"
             - name: NODE_IP
               valueFrom:
                 fieldRef:

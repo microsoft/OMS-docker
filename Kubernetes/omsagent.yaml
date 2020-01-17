@@ -322,6 +322,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            - name: HEALTHMODEL_REPLICASET_SERVICE_ENDPOINT
+              value: "healthmodel-replicaset-service.kube-system"
           securityContext:
             privileged: true
           ports:
