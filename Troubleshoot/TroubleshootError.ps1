@@ -391,7 +391,7 @@ if ("AKS" -eq $ClusterType ) {
             $isServicePrincipal = $true
         }
         else if ($ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
-            $clusterSpnMsiID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
+            $clusterSpnMsiObjectID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
             $isServicePrincipal = $false
         }
 
@@ -404,11 +404,13 @@ if ("AKS" -eq $ClusterType ) {
                 Write-Host("");
             }
             else {
-                # Convert the client ID to the Object ID
-                $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSPNClientID
-                $clusterSPNObjectID = $clusterSPN.Id
-                if ($null -eq $clusterSPNObjectID) {
-                    Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red
+                # Convert the client ID to the Object ID if SP is present
+                if ($isServicePrincipal -eq $true) {
+                    $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSpnMsiID
+                    $clusterSpnMsiObjectID = $clusterSPN.Id
+                }
+                if ($null -eq $clusterSpnMsiObjectID) {
+                    Write-Host("Couldn't convert Client ID to Object ID or msi for omsagent is not present") -ForegroundColor Red
                     Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
                     Write-Host("");
                 }
@@ -427,23 +429,23 @@ if ("AKS" -eq $ClusterType ) {
 
                         $metricsPublisherRoleAlreadyExists = $false
 
-                        if ($MonitoringMetricsPublisherCandidates.ObjectId -eq $clusterSPNObjectID) {
+                        if ($MonitoringMetricsPublisherCandidates.ObjectId -eq $clusterSpnMsiObjectID) {
                             $metricsPublisherRoleAlreadyExists = $true
                         }
                         if ($metricsPublisherRoleAlreadyExists) {
-                            Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green
+                            Write-Host("Cluster SPN/ omsagent MSI has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green
                         }
                         else {
                             $TryToOnboardToCustomMetrics = $true
                         }
                     }
                     else {
-                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal with the Monitoring Metrics Publisher role")
+                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal/msi with the Monitoring Metrics Publisher role")
                         $TryToOnboardToCustomMetrics = $true
                     }
                     if ($TryToOnboardToCustomMetrics) {
                         $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation."
-                        $question = "Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
+                        $question = "Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN/MSI?"
 
                         $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
                         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
@@ -452,7 +454,7 @@ if ("AKS" -eq $ClusterType ) {
                         $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
                         if ($decision -eq 0) {
-                            New-AzRoleAssignment -ObjectId $clusterSPNObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                            New-AzRoleAssignment -ObjectId $clusterSpnMsiObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
                             if ($assignmentFailed) {
                                 Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
                                 Write-Host("You can find more information on this here: https://aka.ms/ci-enable-mdm") -ForegroundColor Red;
