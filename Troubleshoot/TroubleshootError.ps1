@@ -13,10 +13,11 @@
 #>
 
 param(
-    [Parameter(mandatory = $true)]
+    [Parameter(mandatory = $false)]
     [string]$ClusterResourceId   
 )
 
+$ClusterResourceId = "/subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourcegroups/rashmi-msi-10/providers/Microsoft.ContainerService/managedClusters/rashmi-msi-10"
 $ErrorActionPreference = "Stop"
 Start-Transcript -path .\TroubleshootDump.txt -Force
 $AksOptOutLink = "https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-optout"
@@ -307,6 +308,7 @@ if ($notPresent) {
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
 Write-Host("Checking '" + $ClusterType + "' Cluster details...")
+$ResourceDetailsArray = ""
 try {
     if ("AKS" -eq $ClusterType) {
         $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ClusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
@@ -383,13 +385,22 @@ if ("AKS" -eq $ClusterType ) {
     try {
         $clusterDetails = Get-AzAks -Id $ClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue
         Write-Host($clusterDetails | Format-List | Out-String)
-        $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId
+
+        if ($clusterDetails.ServicePrincipalProfile -ne $null ) {
+            $clusterSpnMsiID = $clusterDetails.ServicePrincipalProfile.ClientId
+            $isServicePrincipal = $true
+        }
+        else if ($ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
+            $clusterSpnMsiID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
+            $isServicePrincipal = $false
+        }
+
         $clusterLocation = $clusterDetails.Location
 
         if ($MdmCustomMetricAvailabilityLocations -contains $clusterLocation) {
             Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green
-            if ($null -eq $clusterSPNClientID ) {
-                Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red
+            if ($null -eq $clusterSpnMsiID -or $clusterSpnMsiID -eq "") {
+                Write-Host("There is no service principal or msi associated with this cluster.") -ForegroundColor Red
                 Write-Host("");
             }
             else {
