@@ -195,42 +195,48 @@ $clustersCount = $allClusters.Id.Length
 
 Write-Host("Adding role assignment for the clusters ...")
 
-for ($index = 0 ; $index -lt $clustersCount ; $index++) {  
-
+for ($index = 0 ; $index -lt $clustersCount ; $index++) {
     #
     #  Add Monitoring Metrics Publisher role assignment to the AKS cluster resource
     #
-
-    $servicePrincipalClientId = $allClusters.ServicePrincipalProfile[$index].ClientId
-    $clusterResourceId = $allClusters.Id[$index]
-    $clusterName = $allClusters.Name[$index]
-
-
-    Write-Host("Adding role assignment for the cluster: $clusterResourceId, servicePrincipalClientId: $servicePrincipalClientId ...")
-
-  
-    New-AzRoleAssignment -ApplicationId $servicePrincipalClientId -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher"  -ErrorVariable assignmentError -ErrorAction SilentlyContinue
-
-    if ($assignmentError) {
-
-        $roleAssignment = Get-AzRoleAssignment -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher" -ErrorVariable getAssignmentError -ErrorAction SilentlyContinue		
-        if ($assignmentError.Exception -match "role assignment already exists" -or ( $roleAssignment -and $roleAssignment.ObjectType -like "ServicePrincipal" )) {
-            Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+    $servicePrincipalMsiClientId = ""
+    if ($allClusters.ServicePrincipalProfile[$index] -ne $null -and $allClusters.ServicePrincipalProfile[$index].ClientId -ne $null -and $allClusters.ServicePrincipalProfile[$index].ClientId -ne "")
+    {
+        $servicePrincipalMsiClientId = $allClusters.ServicePrincipalProfile[$index].ClientId
+        $clusterResourceId = $allClusters.Id[$index]
+        $clusterName = $allClusters.Name[$index]
+    } else {
+        $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ClusterResourceGroup -Name $clusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+        if ($ResourceDetailsArray -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
+            $servicePrincipalMsiClientId = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.clientId
+            $clusterResourceId = $ResourceDetailsArray[0].ResourceId
+            $clusterName = $ResourceDetailsArray[0].Name
         }
-        else { 
-        
-            Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
-        }
-
     }
+
+    if ($servicePrincipalMsiClientId -ne "") {
+        Write-Host("Adding role assignment for the cluster: $clusterResourceId, servicePrincipalMsiClientId: $servicePrincipalMsiClientId ...")
+
+        New-AzRoleAssignment -ApplicationId $servicePrincipalMsiClientId -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher"  -ErrorVariable assignmentError -ErrorAction SilentlyContinue
+
+        if ($assignmentError) {
+
+            $roleAssignment = Get-AzRoleAssignment -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher" -ErrorVariable getAssignmentError -ErrorAction SilentlyContinue		
+            if ($assignmentError.Exception -match "role assignment already exists" -or ( $roleAssignment -and $roleAssignment.ObjectType -like "ServicePrincipal" )) {
+                Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+            }
+            else { 
+                Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
+            }
+        }
+        else {
+            Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
+        }   
+        Write-Host("Completed adding role assignment for the cluster: $clusterName ...")
+    } 
     else {
-
-        Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
-   
-    }   
-
-    Write-Host("Completed adding role assignment for the cluster: $clusterName ...")
-        
+        Write-Host("Unable to find service principal/msi associated with the cluster : '" + $clusterName + "'") -ForegroundColor Green       
+    }
 }
 
 Write-Host("Completed adding role assignment for the aks clusters in subscriptionId :$SubscriptionId")
