@@ -30,18 +30,34 @@ az account set -s ${1}
 export CLUSTERS_LIST=$(az aks list  --query '[].{clusterId:id, name:name, rg:resourceGroup}' -o json)
 
 for cluster in $(echo $CLUSTERS_LIST | jq -c '.[]'); do
-      
     export clusterRG=$(echo $cluster | jq -r  '.rg')
     export clusterName=$(echo $cluster | jq -r  '.name')
     export clusterId=$(echo $cluster | jq -r  '.clusterId')
 
-    # get the client id of the cluster service principal
+    # get the clientId of cluster service principal if it exists, else get msi
     export SP_ID=$(az aks show -g $clusterRG -n $clusterName --query servicePrincipalProfile.clientId -o tsv)
-       
-    # add the service principal with Monitoring Metrics Publisher role assignment
-    echo "adding service principal for aks cluster $clusterName"
-    az role assignment create --assignee $SP_ID --scope $clusterId --role "Monitoring Metrics Publisher"
-    echo "role assignment completed for aks cluster $clusterName"       
+
+    if [ -z $SP_ID ]; then
+        export MSI_ID=$(az aks show -g $clusterRG -n $clusterName --query addonProfiles.omsagent.identity.clientId -o tsv)
+        if [ -z $MSI_ID ]; then
+            echo "No service principal or msi found"
+        else
+            echo "Found msi for the cluster" = $MSI_ID
+            export CLIENT_ID=$MSI_ID
+        fi
+    else
+        echo "Found service principal for the cluster" = $SP_ID
+        export CLIENT_ID=$SP_ID
+    fi
+
+    if [ ! -z $CLIENT_ID ]; then
+        echo " - Running .."
+        echo "adding role assignment for aks cluster $clusterName"
+        #  assign the cluster spn with Monitoring Metrics Publisher role to the cluster resource
+        az role assignment create --assignee $CLIENT_ID --scope $clusterId --role "Monitoring Metrics Publisher"
+        # completed the role assignment
+        echo "role assignment completed for aks cluster $clusterName"
+    fi
 done
 
 echo "completed role assignments for all AKS clusters in subscription: ${1}"
