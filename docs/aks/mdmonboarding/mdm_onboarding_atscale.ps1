@@ -200,17 +200,20 @@ for ($index = 0 ; $index -lt $clustersCount ; $index++) {
     #  Add Monitoring Metrics Publisher role assignment to the AKS cluster resource
     #
     $servicePrincipalMsiClientId = ""
+    $clusterResourceId = $allClusters.Id[$index]
+    $clusterName = $allClusters.Name[$index]
     if ($allClusters.ServicePrincipalProfile[$index] -ne $null -and $allClusters.ServicePrincipalProfile[$index].ClientId -ne $null -and $allClusters.ServicePrincipalProfile[$index].ClientId -ne "")
-    {
+    {   
+        Write-Host("Found service principal for the cluster: $clusterResourceId...")
         $servicePrincipalMsiClientId = $allClusters.ServicePrincipalProfile[$index].ClientId
-        $clusterResourceId = $allClusters.Id[$index]
-        $clusterName = $allClusters.Name[$index]
-    } else {
+    } 
+    else {
+        $splitId = $allCLusters[$index].Id -split "(/)"
+        $ClusterResourceGroup = $splitId[8]
         $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ClusterResourceGroup -Name $clusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
         if ($ResourceDetailsArray -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
+            Write-Host("Found MSI for the cluster: $clusterResourceId...")
             $servicePrincipalMsiClientId = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.clientId
-            $clusterResourceId = $ResourceDetailsArray[0].ResourceId
-            $clusterName = $ResourceDetailsArray[0].Name
         }
     }
 

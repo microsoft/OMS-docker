@@ -388,13 +388,19 @@ if ("AKS" -eq $ClusterType ) {
         # Check to see if SP exists, if it does use it. Else use MSI
         if ($clusterDetails.ServicePrincipalProfile -ne $null -and $clusterDetails.ServicePrincipalProfile.ClientId -ne $null -and $clusterDetails.ServicePrincipalProfile.ClientId -ne "") {
             Write-Host('Attempting to provide permissions to service principal...') -ForegroundColor Green
-            $clusterSpnClientID = $clusterDetails.ServicePrincipalProfile.ClientId
-            $isServicePrincipal = $true
+            if ($clusterDetails.ServicePrincipalProfile.ClientId -ne "")
+            {
+                $clusterSpnClientID = $clusterDetails.ServicePrincipalProfile.ClientId
+                $isServicePrincipal = $true
+            }
         }
         elseif ($ResourceDetailsArray -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
             Write-Host('Attempting to provide permissions to MSI...') -ForegroundColor Green
-            $clusterSpnMsiObjectID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
-            $isServicePrincipal = $false
+            if ($ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid -ne "")
+            {
+                $clusterSpnMsiObjectID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
+                $isServicePrincipal = $false
+            }
         }
 
         $clusterLocation = $clusterDetails.Location
