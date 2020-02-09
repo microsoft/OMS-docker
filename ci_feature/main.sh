@@ -42,12 +42,12 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
       podsResponse=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
-      if [ -z $podsResponse ]; then
+      if [ -z "$podsResponse" ]; then
             echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
             # should we default to container runtime docker?
       else 
             containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $response | jq -r '.items[0].spec.nodeName')
+            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
             export CONTAINER_RUN_TIME=$containerRuntime
             export NODE_NAME=$nodeName
             echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
@@ -63,12 +63,12 @@ else
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"      
       podsResponse=$(wget -O- --server-response http://$NODE_IP:10255/pods)
-      if [ -z $podsResponse ]; then
+      if [ -z "$podsResponse" ]; then
             echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
             # should we default to container runtime docker?
       else 
             containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $response | jq -r '.items[0].spec.nodeName')
+            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
             export CONTAINER_RUN_TIME=$containerRuntime
             export NODE_NAME=$nodeName
             echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
