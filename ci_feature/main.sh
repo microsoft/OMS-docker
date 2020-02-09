@@ -25,26 +25,86 @@ sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
 # add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Investigate why.
 sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
 
-DOCKER_SOCKET=/var/run/host/docker.sock
-DOCKER_GROUP=docker
-REGULAR_USER=omsagent
-
-if [ -S ${DOCKER_SOCKET} ]; then
-    echo "getting gid for docker.sock"
-    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
-    echo "creating a local docker group"
-    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
-    echo "adding omsagent user to local docker group"
-    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+#Setting environment variable for CAdvisor metrics to use port 10255/10250 based on curl request
+echo "Making wget request to cadvisor endpoint with port 10250"
+#Defaults to use port 10255
+cAdvisorIsSecure=false
+RET_CODE=`wget --server-response https://$NODE_IP:10250/stats/summary --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" 2>&1 | awk '/^  HTTP/{print $2}'`
+if [ $RET_CODE -eq 200 ]; then 
+      cAdvisorIsSecure=true
 fi
+
+if [ "$cAdvisorIsSecure" = true ] ; then
+      echo "Wget request using port 10250 succeeded. Using 10250"
+      export IS_SECURE_CADVISOR_PORT=true
+      echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
+      export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
+      echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
+      echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
+      podsResponse=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
+      if [ -z $podsResponse ]; then
+            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
+            # should we default to container runtime docker?
+      else 
+            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+            nodeName=$(echo $response | jq -r '.items[0].spec.nodeName')
+            export CONTAINER_RUN_TIME=$containerRuntime
+            export NODE_NAME=$nodeName
+            echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
+            echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
+            echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
+      fi 
+
+else
+      echo "Wget request using port 10250 failed. Using port 10255"
+      export IS_SECURE_CADVISOR_PORT=false
+      echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
+      export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
+      echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
+      echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"      
+      podsResponse=$(wget -O- --server-response http://$NODE_IP:10255/pods)
+      if [ -z $podsResponse ]; then
+            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
+            # should we default to container runtime docker?
+      else 
+            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+            nodeName=$(echo $response | jq -r '.items[0].spec.nodeName')
+            export CONTAINER_RUN_TIME=$containerRuntime
+            export NODE_NAME=$nodeName
+            echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
+            echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
+            echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
+      fi
+
+fi
+
+source ~/.bashrc
+
+#if container run time is docker then add omsagent user to local docker group to get access to docker.sock
+if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
+      DOCKER_SOCKET=/var/run/host/docker.sock
+      DOCKER_GROUP=docker
+      REGULAR_USER=omsagent
+
+      if [ -S ${DOCKER_SOCKET} ]; then
+      echo "getting gid for docker.sock"
+      DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+      echo "creating a local docker group"
+      groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+      echo "adding omsagent user to local docker group"
+      usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+      fi
+fi
+
 
 #Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
 	#kubernetes treats node names as lower case.
-	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
+	echo $NODE_NAME > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
+      # do we need this since we only support k8s?
 	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
 fi
 #check if file was written successfully.
@@ -173,31 +233,6 @@ if [ -e "telemetry_prom_config_env_var" ]; then
       source telemetry_prom_config_env_var
 fi
 
-#Setting environment variable for CAdvisor metrics to use port 10255/10250 based on curl request
-echo "Making wget request to cadvisor endpoint with port 10250"
-#Defaults to use port 10255
-cAdvisorIsSecure=false
-RET_CODE=`wget --server-response https://$NODE_IP:10250/stats/summary --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" 2>&1 | awk '/^  HTTP/{print $2}'`
-if [ $RET_CODE -eq 200 ]; then 
-      cAdvisorIsSecure=true
-fi
-
-if [ "$cAdvisorIsSecure" = true ] ; then
-      echo "Wget request using port 10250 succeeded. Using 10250"
-      export IS_SECURE_CADVISOR_PORT=true
-      echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
-      export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
-      echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
-else
-      echo "Wget request using port 10250 failed. Using port 10255"
-      export IS_SECURE_CADVISOR_PORT=false
-      echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
-      export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
-      echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
-fi
-
-source ~/.bashrc
-
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
 #chmod +w /etc/sudoers.d/omsagent
@@ -244,8 +279,15 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
-      /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-      telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
+            /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+            telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      else 
+            echo "since container run time is $CONTAINER_RUN_TIME update the container log fluentbit Parser to crio from docker"
+            sed -i 's/Parser.docker*/Parser crio/' /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf
+            /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+            telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      fi
 else
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"
