@@ -41,7 +41,7 @@ sudo apt-get update
 sudo apt-get install inotify-tools -y
 
 #used to parse response of kubelet apis
-sudo apt-get install jq
+sudo apt-get install jq -y
 
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
