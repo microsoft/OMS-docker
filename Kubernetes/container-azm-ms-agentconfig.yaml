@@ -9,6 +9,8 @@ data:
     ver1
   log-data-collection-settings: |-
     # Log data collection settings
+    # Any errors related to config map settings can be found in the KubeMonAgentEvents table in the Log Analytics workspace that the cluster is sending data to.
+
     [log_collection_settings]
        [log_collection_settings.stdout]
           # In the absense of this configmap, default value for enabled is true
@@ -39,6 +41,7 @@ data:
     # Custom Prometheus metrics data collection settings
     [prometheus_data_collection_settings.cluster]
         # Cluster level scrape endpoint(s). These metrics will be scraped from agent's Replicaset (singleton)
+        # Any errors related to prometheus scraping can be found in the KubeMonAgentEvents table in the Log Analytics workspace that the cluster is sending data to.
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
         interval = "1m"
@@ -69,6 +72,7 @@ data:
 
     [prometheus_data_collection_settings.node]
         # Node level scrape endpoint(s). These metrics will be scraped from agent's DaemonSet running in every node in the cluster
+        # Any errors related to prometheus scraping can be found in the KubeMonAgentEvents table in the Log Analytics workspace that the cluster is sending data to.
 
         #Interval specifying how often to scrape for metrics. This is duration of time and can be specified for supporting settings by combining an integer value and time unit as a string value. Valid time units are ns, us (or µs), ms, s, m, h.
         interval = "1m"
