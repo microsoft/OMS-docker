@@ -219,7 +219,7 @@ data:
       retry_limit 10
       retry_wait 5s
       max_retry_wait 5m
-      retry_mdm_post_wait_minutes 60
+      retry_mdm_post_wait_minutes 30
      </match>
 
      <match oms.api.wincadvisorperf**>
@@ -250,7 +250,7 @@ data:
       retry_limit 10
       retry_wait 5s
       max_retry_wait 5m
-      retry_mdm_post_wait_minutes 60
+      retry_mdm_post_wait_minutes 30
      </match>
 
      <match kubehealth.Signals**>
@@ -333,6 +333,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            # Update this with the user assigned msi client id for omsagent
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
@@ -462,6 +465,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            # Update this with the user assigned msi client id for omsagent
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
