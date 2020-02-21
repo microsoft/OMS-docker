@@ -106,7 +106,14 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
             if [ $RET -eq 000 ]; then
                   echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
             else
-                  echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+                  # Retrying here to work around network timing issue
+                  echo "ifconfig check succeeded, retrying oms endpoint..."
+                  curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+                  if [ $? -ne 0 ]; then
+                        echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+                  else
+                        echo "curl request to oms endpoint succeeded with retry."
+                  fi
             fi
       else
             echo "curl request to oms endpoint succeeded."
