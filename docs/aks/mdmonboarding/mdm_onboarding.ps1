@@ -22,7 +22,6 @@ param(
     [string] $clusterName
 )
 
-
 # checks the required Powershell modules exist and if not exists, request the user permission to install
 $azAccountModule = Get-Module -ListAvailable -Name Az.Accounts
 $azAksModule = Get-Module -ListAvailable -Name Az.Aks 
@@ -201,32 +200,43 @@ if ($notPresent) {
 }
 Write-Host("Successfully checked specified cluster exists details...") -ForegroundColor Green
 
-$servicePrincipalClientId = $cluster.ServicePrincipalProfile.clientId
-$clusterResourceId = $cluster.Id
+# Check to see if Service Principal exists, if it does, use that. Else, use MSI
+$servicePrincipalMsiClientId = ""
+if ($cluster.ServicePrincipalProfile -ne $null -and $cluster.ServicePrincipalProfile.clientId -ne $null -and $cluster.ServicePrincipalProfile.clientId -ne "") {
+    $servicePrincipalMsiClientId = $cluster.ServicePrincipalProfile.clientId
+    $clusterResourceId = $cluster.Id
+} else {
+    $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ClusterResourceGroup -Name $clusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
+    if ($ResourceDetailsArray -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
+        $servicePrincipalMsiClientId = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.clientId
+        $clusterResourceId = $ResourceDetailsArray[0].ResourceId
+    }
+}
 
 #
 #  Add Monitoring Metrics Publisher role assignment to the AKS cluster resource
 #
 
-New-AzRoleAssignment -ApplicationId $servicePrincipalClientId -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher"  -ErrorVariable assignmentError -ErrorAction SilentlyContinue
+if ($servicePrincipalMsiClientId -ne "") {
+    New-AzRoleAssignment -ApplicationId $servicePrincipalMsiClientId -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher"  -ErrorVariable assignmentError -ErrorAction SilentlyContinue
 
-if ($assignmentError) {
+    if ($assignmentError) {
 
-    $roleAssignment = Get-AzRoleAssignment -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher" -ErrorVariable getAssignmentError -ErrorAction SilentlyContinue		
+        $roleAssignment = Get-AzRoleAssignment -scope $clusterResourceId -RoleDefinitionName "Monitoring Metrics Publisher" -ErrorVariable getAssignmentError -ErrorAction SilentlyContinue		
 
-    if ($assignmentError.Exception -match "role assignment already exists" -or ( $roleAssignment -and $roleAssignment.ObjectType -like "ServicePrincipal" )) {           
-        Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+        if ($assignmentError.Exception -match "role assignment already exists" -or ( $roleAssignment -and $roleAssignment.ObjectType -like "ServicePrincipal" )) {           
+            Write-Host("Monitoring Metrics Publisher role assignment already exists on the cluster resource : '" + $clusterName + "'") -ForegroundColor Green 
+        }
+        else { 
+            Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
+        }
     }
-    else { 
-        
-        Write-Host("Failed to add Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "' , error : $assignmentError") -ForegroundColor Red      
+    else {
+        Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
     }
-
 }
 else {
-
-    Write-Host("Successfully added Monitoring Metrics Publisher role assignment to cluster : '" + $clusterName + "'") -ForegroundColor Green 
-   
+    Write-Host("Unable to find service principal/msi associated with the cluster : '" + $clusterName + "'") -ForegroundColor Green       
 }
 
 
