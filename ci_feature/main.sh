@@ -150,28 +150,36 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
 fi
 
-# Check for internet connectivity
-echo "Making curl request to ifconfig"
-RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
-if [ $RET -ne 000 ]; then 
-      # Check for workspace existence
-      if [ -e "/etc/omsagent-secret/WSID" ]; then
-            workspaceId=$(cat /etc/omsagent-secret/WSID)
-            if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
-                  domain=$(cat /etc/omsagent-secret/DOMAIN)
+# Check for internet connectivity or workspace deletion
+if [ -e "/etc/omsagent-secret/WSID" ]; then
+      workspaceId=$(cat /etc/omsagent-secret/WSID)
+      if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
+            domain=$(cat /etc/omsagent-secret/DOMAIN)
+      else
+            domain="opinsights.azure.com"
+      fi
+      echo "Making curl request to oms endpint with domain: $domain"
+      curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+      if [ $? -ne 0 ]; then
+            echo "Making curl request to ifconfig"
+            RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
+            if [ $RET -eq 000 ]; then
+                  echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
             else
-                  domain="opinsights.azure.com"
-            fi
-            echo "Making curl request to oms endpint with domain: $domain"
-            curl https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
-            if [ $? -ne 0 ]; then
-                  echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+                  # Retrying here to work around network timing issue
+                  echo "ifconfig check succeeded, retrying oms endpoint..."
+                  curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+                  if [ $? -ne 0 ]; then
+                        echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
+                  else
+                        echo "curl request to oms endpoint succeeded with retry."
+                  fi
             fi
       else
-            echo "LA Onboarding:Workspace Id not mounted"
+            echo "curl request to oms endpoint succeeded."
       fi
-else 
-      echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
+else
+      echo "LA Onboarding:Workspace Id not mounted, skipping the telemetry check"
 fi
 
 #Parse the configmap to set the right environment variables.
