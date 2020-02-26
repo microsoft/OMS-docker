@@ -9,12 +9,12 @@
         Resource Id of the AKS (Azure Kubernetes Service) or ARO (Azure Redhat Openshift)
         Example :
         AKS cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>
-        ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName>
+        ARO Cluster ResourceId should be in this format : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/openShiftManagedClusters/<clusterName> 
 #>
 
 param(
     [Parameter(mandatory = $true)]
-    [string]$ClusterResourceId
+    [string]$ClusterResourceId   
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,7 +29,7 @@ $MonitoringMetricsRoleDefinitionName = "Monitoring Metrics Publisher"
 
 Write-Host("ClusterResourceId: '" + $ClusterResourceId + "' ")
 
-if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne 9) -or (($ClusterResourceId.Contains("Microsoft.ContainerService/managedClusters") -ne $true) -and ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -ne $true))
+if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne 9) -or (($ClusterResourceId.ToLower().Contains("microsoft.containerservice/managedclusters") -ne $true) -and ($ClusterResourceId.ToLower().Contains("microsoft.containerservice/openshiftmanagedclusters") -ne $true))
 ) {
     Write-Host("Provided Cluster resource id should be fully qualified resource id of AKS or ARO cluster") -ForegroundColor Red
     Write-Host("Resource Id Format for AKS cluster is : /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.ContainerService/managedClusters/<clusterName>") -ForegroundColor Red
@@ -39,7 +39,7 @@ if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne
 }
 
 $ClusterType = "AKS"
-if ($ClusterResourceId.Contains("Microsoft.ContainerService/openShiftManagedClusters") -eq $true) {
+if ($ClusterResourceId.ToLower().Contains("microsoft.containerservice/openshiftmanagedclusters") -eq $true) {
     $ClusterType = "ARO";
 }
 
@@ -91,7 +91,7 @@ if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAcco
             if ($null -eq $azARGModule) {
                 try {
                     Write-Host("Installing Az.ResourceGraph...")
-                    Install-Module Az.ResourceGraph -Force -ErrorAction Stop
+                    Install-Module Az.ResourceGraph -Force -AllowClobber -ErrorAction Stop 
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for Az.ResourceGraph in a new powershell window: eg. 'Install-Module Az.ResourceGraph -Force'") -ForegroundColor Red
@@ -102,7 +102,7 @@ if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAcco
             if ($null -eq $azAksModule) {
                 try {
                     Write-Host("Installing Az.Aks...")
-                    Install-Module Az.Aks -Force -ErrorAction Stop
+                    Install-Module Az.Aks -Force -AllowClobber -ErrorAction Stop
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for Az.Aks in a new powershell window: eg. 'Install-Module Az.Aks -Force'") -ForegroundColor Red
@@ -307,6 +307,7 @@ if ($notPresent) {
 Write-Host("Successfully checked resource groups details...") -ForegroundColor Green
 
 Write-Host("Checking '" + $ClusterType + "' Cluster details...")
+$ResourceDetailsArray = $null
 try {
     if ("AKS" -eq $ClusterType) {
         $ResourceDetailsArray = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ClusterName -ResourceType "Microsoft.ContainerService/managedClusters" -ExpandProperties -ErrorAction Stop -WarningAction Stop
@@ -383,21 +384,38 @@ if ("AKS" -eq $ClusterType ) {
     try {
         $clusterDetails = Get-AzAks -Id $ClusterResourceId -ErrorVariable clusterFetchError -ErrorAction SilentlyContinue
         Write-Host($clusterDetails | Format-List | Out-String)
-        $clusterSPNClientID = $clusterDetails.ServicePrincipalProfile.ClientId
+
+        # Check to see if SP exists, if it does use it. Else use MSI
+        if ($clusterDetails.ServicePrincipalProfile -ne $null -and $clusterDetails.ServicePrincipalProfile.ClientId -ne $null -and $clusterDetails.ServicePrincipalProfile.ClientId -ne "") {
+            Write-Host('Attempting to provide permissions to service principal...') -ForegroundColor Green
+            $clusterSpnClientID = $clusterDetails.ServicePrincipalProfile.ClientId
+            $isServicePrincipal = $true
+        }
+        elseif ($ResourceDetailsArray -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent -ne $null -and $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity -ne $null) {
+            Write-Host('Attempting to provide permissions to MSI...') -ForegroundColor Green
+            if ($ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid -ne "")
+            {
+                $clusterSpnMsiObjectID = $ResourceDetailsArray[0].properties.addonprofiles.omsagent.identity.objectid
+                $isServicePrincipal = $false
+            }
+        }
+
         $clusterLocation = $clusterDetails.Location
 
         if ($MdmCustomMetricAvailabilityLocations -contains $clusterLocation) {
             Write-Host('Cluster is in a location where Custom metrics are available') -ForegroundColor Green
-            if ($null -eq $clusterSPNClientID ) {
-                Write-Host("There is no service principal associated with this cluster.") -ForegroundColor Red
+            if ($null -eq $clusterSpnMsiObjectID -and $clusterSpnClientID -eq $null) {
+                Write-Host("There is no service principal or msi associated with this cluster.") -ForegroundColor Red
                 Write-Host("");
             }
             else {
-                # Convert the client ID to the Object ID
-                $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSPNClientID
-                $clusterSPNObjectID = $clusterSPN.Id
-                if ($null -eq $clusterSPNObjectID) {
-                    Write-Host("Couldn't convert Client ID to Object ID.") -ForegroundColor Red
+                # Convert the client ID to the Object ID if SP is present
+                if ($isServicePrincipal -eq $true) {
+                    $clusterSPN = Get-AzADServicePrincipal -ServicePrincipalName $clusterSpnClientID
+                    $clusterSpnMsiObjectID = $clusterSPN.Id
+                }
+                if ($null -eq $clusterSpnMsiObjectID) {
+                    Write-Host("Couldn't convert Client ID to Object ID or msi for omsagent is not present") -ForegroundColor Red
                     Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
                     Write-Host("");
                 }
@@ -416,23 +434,23 @@ if ("AKS" -eq $ClusterType ) {
 
                         $metricsPublisherRoleAlreadyExists = $false
 
-                        if ($MonitoringMetricsPublisherCandidates.ObjectId -eq $clusterSPNObjectID) {
+                        if ($MonitoringMetricsPublisherCandidates.ObjectId -eq $clusterSpnMsiObjectID) {
                             $metricsPublisherRoleAlreadyExists = $true
                         }
                         if ($metricsPublisherRoleAlreadyExists) {
-                            Write-Host("Cluster SPN has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green
+                            Write-Host("Cluster SPN/ omsagent MSI has the Monitoring Metrics Publisher Role assigned already") -ForegroundColor Green
                         }
                         else {
                             $TryToOnboardToCustomMetrics = $true
                         }
                     }
                     else {
-                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal with the Monitoring Metrics Publisher role")
+                        Write-Host("No monitoring metrics publisher candidates present, We need to onboard the cluster service prinicipal/msi with the Monitoring Metrics Publisher role")
                         $TryToOnboardToCustomMetrics = $true
                     }
                     if ($TryToOnboardToCustomMetrics) {
                         $message = "Detected that custom metrics is not enabled for this cluster. You need to be an owner on the cluster resource to do the following operation operation."
-                        $question = "Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN?"
+                        $question = "Do you want this script to enable it by adding the role 'Monitoring Metrics Publisher' to your clusters SPN/MSI?"
 
                         $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
                         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
@@ -441,7 +459,7 @@ if ("AKS" -eq $ClusterType ) {
                         $decision = $Host.UI.PromptForChoice($message, $question, $choices, 0)
 
                         if ($decision -eq 0) {
-                            New-AzRoleAssignment -ObjectId $clusterSPNObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
+                            New-AzRoleAssignment -ObjectId $clusterSpnMsiObjectID -Scope $ClusterResourceId -RoleDefinitionName $MonitoringMetricsRoleDefinitionName -ErrorAction SilentlyContinue -ErrorVariable assignmentFailed;
                             if ($assignmentFailed) {
                                 Write-Host("Couldn't assign the new role. You need the cluster owner role to do this action. Please contact your cluster administrator to onboard.") -ForegroundColor Red;
                                 Write-Host("You can find more information on this here: https://aka.ms/ci-enable-mdm") -ForegroundColor Red;
@@ -769,7 +787,7 @@ if ("AKS" -eq $ClusterType ) {
                 ($dsStatus.numberAvailable -eq $dsStatus.currentNumberScheduled) -and
                 ($dsStatus.numberAvailable -eq $dsStatus.numberReady)) -eq $false) {
 
-            Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.")
+            Write-Host( "omsagent daemonset pod not scheduled or failed to schedule.") -ForegroundColor Red
             Write-Host($dsStatus)
             Write-Host($contactUSMessage)
             Stop-Transcript
@@ -828,6 +846,21 @@ if ("AKS" -eq $ClusterType ) {
         Write-Host("Workspace Guid and Key on the agent matching with the Workspace") -ForegroundColor Green
     }
     catch {
+        Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    Write-Host("Checking agent version...")
+    try {
+        Write-Host("KubeConfig: " + $KubeConfig)
+
+        $omsagentInfo = kubectl get pods -n kube-system -o json -l  rsName=omsagent-rs | ConvertFrom-Json
+        $omsagentImage = $omsagentInfo.items.spec.containers.image.split(":")[1]
+
+        Write-Host('The version of the omsagent running on your cluster is ' + $omsagentImage)
+        Write-Host('You can encounter problems with your cluster if your omsagent version isnt on the latest version. Please go to https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-manage-agent and validate that you have the latest omsagent version running.') -ForegroundColor Yellow
+    } catch {
         Write-Host ("Failed to execute the script  : '" + $Error[0] + "' ") -ForegroundColor Red
         Stop-Transcript
         exit

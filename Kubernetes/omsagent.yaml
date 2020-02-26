@@ -10,7 +10,17 @@ metadata:
   name: omsagent-reader
 rules:
   - apiGroups: [""]
-    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "namespaces", "services"]
+    resources:
+      [
+        "pods",
+        "events",
+        "nodes",
+        "nodes/stats",
+        "nodes/metrics",
+        "nodes/spec",
+        "namespaces",
+        "services",
+      ]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["apps", "extensions"]
     resources: ["replicasets"]
@@ -38,209 +48,210 @@ kind: ConfigMap
 apiVersion: v1
 data:
   kube.conf: |-
-   # Fluentd config file for OMS Docker - cluster components (kubeAPI)
-    #fluent forward plugin
-    <source>
-     type forward
-     port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
-     bind 0.0.0.0
-     chunk_size_limit 4m
-    </source>
-
-    #Kubernetes pod inventory
-    <source>
-     type kubepodinventory
-     tag oms.containerinsights.KubePodInventory
-     run_interval 60
-     log_level debug
-    </source>
-
-    #Kubernetes events
-    <source>
-     type kubeevents
-     tag oms.containerinsights.KubeEvents
-     run_interval 60
-     log_level debug
+    # Fluentd config file for OMS Docker - cluster components (kubeAPI)
+     #fluent forward plugin
+     <source>
+      type forward
+      port "#{ENV['HEALTHMODEL_REPLICASET_SERVICE_SERVICE_PORT']}"
+      bind 0.0.0.0
+      chunk_size_limit 4m
      </source>
 
-    #Kubernetes Nodes
-    <source>
-     type kubenodeinventory
-     tag oms.containerinsights.KubeNodeInventory
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes pod inventory
+     <source>
+      type kubepodinventory
+      tag oms.containerinsights.KubePodInventory
+      run_interval 60
+      log_level debug
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+     </source>
 
-    #Kubernetes health
-    <source>
-     type kubehealth
-     tag kubehealth.ReplicaSet
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes events
+     <source>
+      type kubeevents
+      tag oms.containerinsights.KubeEvents
+      run_interval 60
+      log_level debug
+      </source>
 
-    #cadvisor perf- Windows nodes
-    <source>
-     type wincadvisorperf
-     tag oms.api.wincadvisorperf
-     run_interval 60
-     log_level debug
-    </source>
+     #Kubernetes Nodes
+     <source>
+      type kubenodeinventory
+      tag oms.containerinsights.KubeNodeInventory
+      run_interval 60
+      log_level debug
+     </source>
 
-    <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
-     type filter_inventory2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-     log_level info
-    </filter>
+     #Kubernetes health
+     <source>
+      type kubehealth
+      tag kubehealth.ReplicaSet
+      run_interval 60
+      log_level debug
+     </source>
 
-    #custom_metrics_mdm filter plugin for perf data from windows nodes
-    <filter mdm.cadvisorperf**>
-     type filter_cadvisor2mdm
-     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-     metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
-     log_level info
-    </filter>
+     #cadvisor perf- Windows nodes
+     <source>
+      type wincadvisorperf
+      tag oms.api.wincadvisorperf
+      run_interval 60
+      log_level debug
+     </source>
 
-    #health model aggregation filter
-    <filter kubehealth**>
-     type filter_health_model_builder
-    </filter>
+     <filter mdm.kubenodeinventory**>
+      type filter_inventory2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+      log_level info
+     </filter>
 
-    <match oms.containerinsights.KubePodInventory**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     #custom_metrics_mdm filter plugin for perf data from windows nodes
+     <filter mdm.cadvisorperf**>
+      type filter_cadvisor2mdm
+      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
+      log_level info
+     </filter>
 
-    <match oms.containerinsights.KubeEvents**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     #health model aggregation filter
+     <filter kubehealth**>
+      type filter_health_model_builder
+     </filter>
 
-    <match oms.containerinsights.KubeServices**>
-     type out_oms
-     log_level debug
-     num_threads 2
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubePodInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubepods*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.containerinsights.KubeNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeEvents**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeevents*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.containerinsights.ContainerNodeInventory**>
-     type out_oms
-     log_level debug
-     num_threads 3
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
-     buffer_queue_limit 20
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeServices**>
+      type out_oms
+      log_level debug
+      num_threads 2
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeservices*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.api.KubePerf**>	
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.containerinsights.KubeNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/state/out_oms_kubenodes*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match mdm.kubepodinventory** mdm.kubenodeinventory** >
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
-    </match>
+     <match oms.containerinsights.ContainerNodeInventory**>
+      type out_oms
+      log_level debug
+      num_threads 3
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_containernodeinventory*.buffer
+      buffer_queue_limit 20
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match oms.api.wincadvisorperf**>
-     type out_oms
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-    </match>
+     <match oms.api.KubePerf**>	
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_kubeperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
 
-    <match mdm.cadvisorperf**>
-     type out_mdm
-     log_level debug
-     num_threads 5
-     buffer_chunk_limit 4m
-     buffer_type file
-     buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
-     buffer_queue_limit 20
-     buffer_queue_full_action drop_oldest_chunk
-     flush_interval 20s
-     retry_limit 10
-     retry_wait 5s
-     max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
-    </match>
+     <match mdm.kubepodinventory** mdm.kubenodeinventory** >
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
+
+     <match oms.api.wincadvisorperf**>
+      type out_oms
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_oms_api_wincadvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+     </match>
+
+     <match mdm.cadvisorperf**>
+      type out_mdm
+      log_level debug
+      num_threads 5
+      buffer_chunk_limit 4m
+      buffer_type file
+      buffer_path %STATE_DIR_WS%/out_mdm_cdvisorperf*.buffer
+      buffer_queue_limit 20
+      buffer_queue_full_action drop_oldest_chunk
+      flush_interval 20s
+      retry_limit 10
+      retry_wait 5s
+      max_retry_wait 5m
+      retry_mdm_post_wait_minutes 30
+     </match>
 
     <match kubehealth.Signals**>
      type out_oms
@@ -256,6 +267,22 @@ data:
      retry_wait 5s
      max_retry_wait 5m
     </match>
+
+    <match oms.api.InsightsMetrics**>
+     type out_oms
+     log_level debug
+     num_threads 5
+     buffer_chunk_limit 4m
+     buffer_type file
+     buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
+     buffer_queue_limit 20
+     buffer_queue_full_action drop_oldest_chunk
+     flush_interval 20s
+     retry_limit 10
+     retry_wait 5s
+     max_retry_wait 5m
+    </match>
+
 metadata:
   name: omsagent-rs-config
   namespace: kube-system
@@ -293,13 +320,13 @@ spec:
         tier: node
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-2"
+        dockerProviderVersion: "8.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -322,6 +349,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            # Update this with the user assigned msi client id for omsagent
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
@@ -360,19 +390,19 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - labelSelector:
-              matchExpressions:
-                - key: type
-                  operator: NotIn
-                  values:
-                  - virtual-kubelet
+              - labelSelector:
+                matchExpressions:
+                  - key: type
+                    operator: NotIn
+                    values:
+                      - virtual-kubelet
       # Tolerate a NoSchedule taint on master that ACS Engine sets.
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: host-root
@@ -422,13 +452,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-2"
+        dockerProviderVersion: "8.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -451,6 +481,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
+            # Update this with the user assigned msi client id for omsagent
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
@@ -493,18 +526,19 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - labelSelector:
-              matchExpressions:
-                - key: type
-                  operator: NotIn
-                  values:
-                  - virtual-kubelet
+              - labelSelector:
+                matchExpressions:
+                  - key: type
+                    operator: NotIn
+                    values:
+                      - virtual-kubelet
+      # The following tolerations are removed for AKS, this is only required for non AKS
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock
