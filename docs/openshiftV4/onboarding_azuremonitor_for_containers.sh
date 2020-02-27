@@ -5,7 +5,7 @@
 #  This scripts Onboards Azure Monitor for containers to Openshift v4 clusters hosted in on-prem or any cloud environment
 #
 #      1. Creates the Default Azure log analytics workspace if doesn't exist one in specified azure subscription and region
-#      2. Adds the ContainerInsights solution to the Azure log analytics workspace      
+#      2. Adds the ContainerInsights solution to the Azure log analytics workspace
 #      3. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
 # Prerequisites :
 #     Azure CLI:  https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest
@@ -15,9 +15,9 @@
 # For example:
 # bash ./onboarding_azuremonitor_for_containers.sh 00000000-0000-0000-0000-000000000000 eastus myocp42 admin
 
-if [ $# -le 1 ]
+if [ $# -le 3 ]
 then
-  echo "Error: This should be invoked with 3 arguments, azureSubscriptionId, clusterName and kubeContext name"
+  echo "Error: This should be invoked with 4 arguments, azureSubscriptionId, azureRegionforLogAnalyticsWorkspace, clusterName and kubeContext name"
   exit 1
 fi
 
@@ -165,7 +165,7 @@ helm repo add azmon-preview https://ganga1980.github.io/azuremonitor-containers-
 echo "updating helm repo to get latest charts"
 helm repo update
 
-helm install azmon-containers-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterName=${3} azmon-preview/azuremonitor-containers --kube-context ${4} 
+helm install azmon-containers-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterName=${3} azmon-preview/azuremonitor-containers --kube-context ${4}
 echo "chart installation completed."
 
 echo "Proceed to https://aka.ms/azmon-containers-hybrid to view health of your newly onboarded OpenshiftV4 cluster"
