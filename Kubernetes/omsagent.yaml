@@ -321,13 +321,13 @@ spec:
         tier: node
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "9.0.0-1"
+        dockerProviderVersion: "8.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -453,13 +453,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "9.0.0-1"
+        dockerProviderVersion: "8.0.0-3"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -533,6 +533,7 @@ spec:
                     operator: NotIn
                     values:
                       - virtual-kubelet
+      # The following tolerations are removed for AKS, this is only required for non AKS
       tolerations:
         - operator: "Exists"
           effect: "NoSchedule"
