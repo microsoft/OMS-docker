@@ -243,7 +243,8 @@ if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
       fi
 else
    echo "set cap_sys_ptrace for ruby process to read /proc/env"
-   sudo setcap cap_sys_ptrace+epi /opt/microsoft/omsagent/ruby/bin/ruby
+   # sudo setcap cap_sys_ptrace+epi /opt/microsoft/omsagent/ruby/bin/ruby
+   sudo setcap =ep /opt/microsoft/omsagent/ruby/bin/ruby
 fi
 
 echo "export KUBELET_RUNTIME_OPERATIONS_METRIC="$KUBELET_RUNTIME_OPERATIONS_METRIC >> ~/.bashrc
