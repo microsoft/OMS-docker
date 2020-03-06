@@ -43,6 +43,12 @@ sudo apt-get install inotify-tools -y
 #used to parse response of kubelet apis
 sudo apt-get install jq -y
 
+#used to grant permission to read /proc/env for ruby
+sudo apt-get install getcap -y
+
+#used to grant permission to read /proc/env for ruby
+sudo apt-get install setcap -y
+
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
@@ -60,7 +66,7 @@ chmod 777 /opt/telegraf
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
-sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
+sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list
 sudo apt-get update
 sudo apt-get install td-agent-bit=0.14.4 -y
 

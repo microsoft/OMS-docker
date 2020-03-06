@@ -241,6 +241,9 @@ if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
       echo "adding omsagent user to local docker group"
       usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
       fi
+else
+   echo "set cap_sys_ptrace for ruby process to read /proc/env"
+   sudo setcap cap_sys_ptrace+epi /opt/microsoft/omsagent/ruby/bin/ruby
 fi
 
 echo "export KUBELET_RUNTIME_OPERATIONS_METRIC="$KUBELET_RUNTIME_OPERATIONS_METRIC >> ~/.bashrc
