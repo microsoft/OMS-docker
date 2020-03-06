@@ -44,10 +44,8 @@ sudo apt-get install inotify-tools -y
 sudo apt-get install jq -y
 
 #used to grant permission to read /proc/env for ruby
-sudo apt-get install getcap -y
-
-#used to grant permission to read /proc/env for ruby
-sudo apt-get install setcap -y
+echo "installing libcap2-bin"
+sudo apt-get install libcap2-bin -y
 
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
