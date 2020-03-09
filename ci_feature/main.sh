@@ -168,6 +168,10 @@ if [ $RET_CODE -eq 200 ]; then
       cAdvisorIsSecure=true
 fi
 
+# default to docker since this default in AKS as of now and change to containerd once this becomes default in AKS
+export CONTAINER_RUN_TIME="docker"
+export NODE_NAME=""
+
 if [ "$cAdvisorIsSecure" = true ] ; then
       echo "Wget request using port 10250 succeeded. Using 10250"
       export IS_SECURE_CADVISOR_PORT=true
@@ -175,18 +179,19 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      podsResponse=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
-      if [ -z "$podsResponse" ]; then
-            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
-            # should we default to container runtime docker?
+      IS_SUCCESS=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" podsResponse 2>&1 | grep -c '200 OK')      
+      if [ $IS_SUCCESS == 0 ]; then
+            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"          
       else
-            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-            export CONTAINER_RUN_TIME=$containerRuntime
-            export NODE_NAME=$nodeName
-            echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
-            echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
-            echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
+            ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+            if [ $ITEMS_COUNT -gt 0 ]; then 
+                  containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
+                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export NODE_NAME=$nodeName    
+            else
+               echo "-e error  items in the /pods response is 0"                           
+            fi
       fi
 
 else
@@ -196,21 +201,29 @@ else
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      podsResponse=$(wget -O- --server-response http://$NODE_IP:10255/pods)
-      if [ -z "$podsResponse" ]; then
-            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
-            # should we default to container runtime docker?
+      IS_SUCCESS=$(wget -O- --server-response http://$NODE_IP:10255/pods podsResponse 2>&1 | grep -c '200 OK')
+      if [ $IS_SUCCESS == 0 ]; then
+            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"           
+            # default to docker since this default in aks as of now and change to containerd once this becomes default in AKS
+            export CONTAINER_RUN_TIME="docker"
+            export NODE_NAME=""
       else
-            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-            export CONTAINER_RUN_TIME=$containerRuntime
-            export NODE_NAME=$nodeName
-            echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
-            echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
-            echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
+            ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+            if [ $ITEMS_COUNT -gt 0 ]; then 
+                  containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
+                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export NODE_NAME=$nodeName 
+            else
+                echo "-e error  items in the /pods response is 0"           
+            fi
       fi
 
 fi
+
+echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
+echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
+echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 # _total metrics will be available starting from k8s version 1.18 and current _docker_* and _runtime metrics will be deprecated
 # enable these when we add support for 1.18
