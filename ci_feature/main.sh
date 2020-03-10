@@ -349,8 +349,8 @@ if [ ! -e "/etc/config/kube.conf" ]; then
             /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
             telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
       else
-            echo "since container run time is $CONTAINER_RUN_TIME update the container log fluentbit Parser to crio from docker"
-            sed -i 's/Parser.docker*/Parser crio/' /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf
+            echo "since container run time is $CONTAINER_RUN_TIME update the container log fluentbit Parser to cri from docker"
+            sed -i 's/Parser.docker*/Parser cri/' /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf
             /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
             telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
       fi
