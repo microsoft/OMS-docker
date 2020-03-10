@@ -187,8 +187,12 @@ if [ "$cAdvisorIsSecure" = true ] ; then
             podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
             ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
             if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
-                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  # containerId name contract https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#pod-v1-core
+                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)                  
                   nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
+                  # convert to lower case so that everywhere else can be used in lowercase
+                  containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
+                  nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
                   export CONTAINER_RUN_TIME=$containerRuntime
                   export NODE_NAME=$nodeName 
             else
@@ -218,6 +222,9 @@ else
             if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
                   containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
                   nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
+                  # convert to lower case so that everywhere else can be used in lowercase
+                  containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
+                  nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
                   export CONTAINER_RUN_TIME=$containerRuntime
                   export NODE_NAME=$nodeName 
             else
