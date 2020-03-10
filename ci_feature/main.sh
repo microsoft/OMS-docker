@@ -179,9 +179,11 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      IS_SUCCESS=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" podsResponse 2>&1 | grep -c '200 OK')      
-      if [ $IS_SUCCESS == 1 ]; then            
+      IS_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')      
+      if [ $IS_SUCCESS == 1 ]; then    
+         podsResponse=$(cat podsResponseFile)        
          ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+         echo "found items count: $ITEMS_COUNT"
          if [ $ITEMS_COUNT -gt 0 ]; then 
             # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
             podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
@@ -212,9 +214,11 @@ else
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      IS_SUCCESS=$(wget -O- --server-response http://$NODE_IP:10255/pods podsResponse 2>&1 | grep -c '200 OK')
+      IS_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')
       if [ $IS_SUCCESS == 1 ]; then
+         podsResponse=$(cat podsResponseFile)
          ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+         echo "found items count: $ITEMS_COUNT"
          if [ $ITEMS_COUNT -gt 0 ]; then 
             # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
             podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
