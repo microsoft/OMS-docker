@@ -531,6 +531,7 @@ spec:
                     operator: NotIn
                     values:
                       - virtual-kubelet
+      # The following label selector is removed for AKS, this is only required for non AKS
                   - key: kubernetes.io/role
                     operator: NotIn
                     values:
