@@ -168,7 +168,7 @@ if [ $RET_CODE -eq 200 ]; then
       cAdvisorIsSecure=true
 fi
 
-# default to docker since this default in AKS as of now and change to containerd once this becomes default in AKS
+# default to docker since this is default in AKS as of now and change to containerd once this becomes default in AKS
 export CONTAINER_RUN_TIME="docker"
 export NODE_NAME=""
 
@@ -180,18 +180,18 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
       IS_SUCCESS=$(wget -O- --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" podsResponse 2>&1 | grep -c '200 OK')      
-      if [ $IS_SUCCESS == 0 ]; then
-            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"          
+      if [ $IS_SUCCESS == 1 ]; then            
+         ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+         if [ $ITEMS_COUNT -gt 0 ]; then 
+            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
+            export CONTAINER_RUN_TIME=$containerRuntime
+            export NODE_NAME=$nodeName    
+        else
+             echo "-e error  items in the /pods response is 0"                           
+        fi      
       else
-            ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
-            if [ $ITEMS_COUNT -gt 0 ]; then 
-                  containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-                  nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-                  export CONTAINER_RUN_TIME=$containerRuntime
-                  export NODE_NAME=$nodeName    
-            else
-               echo "-e error  items in the /pods response is 0"                           
-            fi
+          echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"    
       fi
 
 else
@@ -202,23 +202,20 @@ else
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
       IS_SUCCESS=$(wget -O- --server-response http://$NODE_IP:10255/pods podsResponse 2>&1 | grep -c '200 OK')
-      if [ $IS_SUCCESS == 0 ]; then
-            echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"           
-            # default to docker since this default in aks as of now and change to containerd once this becomes default in AKS
-            export CONTAINER_RUN_TIME="docker"
-            export NODE_NAME=""
+      if [ $IS_SUCCESS == 1 ]; then
+         ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+         if [ $ITEMS_COUNT -gt 0 ]; then 
+            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
+            export CONTAINER_RUN_TIME=$containerRuntime
+            export NODE_NAME=$nodeName 
+         else
+            echo "-e error  items in the /pods response is 0"           
+         fi
+            
       else
-            ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
-            if [ $ITEMS_COUNT -gt 0 ]; then 
-                  containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-                  nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-                  export CONTAINER_RUN_TIME=$containerRuntime
-                  export NODE_NAME=$nodeName 
-            else
-                echo "-e error  items in the /pods response is 0"           
-            fi
+        echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"                     
       fi
-
 fi
 
 echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
@@ -232,29 +229,31 @@ echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 # export KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC="kubelet_runtime_operations_errors_total"
 # echo "export KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC="$KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC >> ~/.bashrc
 
-# these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
-export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
-export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"
+# default to docker metrics
+export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
+export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
 
 #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
-if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
-      # override to _docker_operations metric if the container runtime is docker
-      export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
-      export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
-
+if [ "$CONTAINER_RUN_TIME" == "docker" ]; then     
       DOCKER_SOCKET=/var/run/host/docker.sock
       DOCKER_GROUP=docker
       REGULAR_USER=omsagent
 
       if [ -S ${DOCKER_SOCKET} ]; then
-      echo "getting gid for docker.sock"
-      DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
-      echo "creating a local docker group"
-      groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
-      echo "adding omsagent user to local docker group"
-      usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-      fi
+            echo "getting gid for docker.sock"
+            DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+            echo "creating a local docker group"
+            groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+            echo "adding omsagent user to local docker group"
+            usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+      fi    
+
+     export NODE_NAME=$(curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname)
 else
+   
+   # these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
+   export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
+   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"         
    echo "set caps for ruby process to read container env from proc"
    sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
 fi
@@ -265,7 +264,7 @@ echo "export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="$KUBELET_RUNTIME_OPERATIO
 source ~/.bashrc
 
 if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case.
+	#kubernetes treats node names as lower case.            	
 	echo $NODE_NAME > /var/opt/microsoft/docker-cimprov/state/containerhostname
 else
       # do we need this since we only support k8s?
