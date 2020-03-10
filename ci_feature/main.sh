@@ -183,10 +183,17 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       if [ $IS_SUCCESS == 1 ]; then            
          ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
          if [ $ITEMS_COUNT -gt 0 ]; then 
-            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-            export CONTAINER_RUN_TIME=$containerRuntime
-            export NODE_NAME=$nodeName    
+            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
+            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
+            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
+            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
+                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
+                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export NODE_NAME=$nodeName 
+            else
+              echo "-e error  none of the pods in the /pods response has valid containerID"                           
+            fi   
         else
              echo "-e error  items in the /pods response is 0"                           
         fi      
@@ -205,10 +212,17 @@ else
       if [ $IS_SUCCESS == 1 ]; then
          ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
          if [ $ITEMS_COUNT -gt 0 ]; then 
-            containerRuntime=$(echo $podsResponse | jq -r '.items[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-            nodeName=$(echo $podsResponse | jq -r '.items[0].spec.nodeName')
-            export CONTAINER_RUN_TIME=$containerRuntime
-            export NODE_NAME=$nodeName 
+            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
+            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
+            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
+            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
+                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
+                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export NODE_NAME=$nodeName 
+            else
+              echo "-e error  none of the pods in the /pods response has valid containerID"                           
+            fi   
          else
             echo "-e error  items in the /pods response is 0"           
          fi
