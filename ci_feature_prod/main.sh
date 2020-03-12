@@ -169,7 +169,7 @@ if [ $RET_CODE -eq 200 ]; then
 fi
 
 # default to docker since this is default in AKS as of now and change to containerd once this becomes default in AKS
-export CONTAINER_RUN_TIME="docker"
+export CONTAINER_RUNTIME="docker"
 export NODE_NAME=""
 
 if [ "$cAdvisorIsSecure" = true ] ; then
@@ -195,7 +195,7 @@ if [ "$cAdvisorIsSecure" = true ] ; then
                   # convert to lower case so that everywhere else can be used in lowercase
                   containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export CONTAINER_RUNTIME=$containerRuntime
                   export NODE_NAME=$nodeName 
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
@@ -229,7 +229,7 @@ else
                   # convert to lower case so that everywhere else can be used in lowercase
                   containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  export CONTAINER_RUN_TIME=$containerRuntime
+                  export CONTAINER_RUNTIME=$containerRuntime
                   export NODE_NAME=$nodeName 
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
@@ -243,8 +243,8 @@ else
       fi
 fi
 
-echo "configured container runtime on kubelet is : "$CONTAINER_RUN_TIME
-echo "export CONTAINER_RUN_TIME="$CONTAINER_RUN_TIME >> ~/.bashrc
+echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
+echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
 echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 # _total metrics will be available starting from k8s version 1.18 and current _docker_* and _runtime metrics will be deprecated
@@ -259,7 +259,7 @@ export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
 export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
 
 #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
-if [ "$CONTAINER_RUN_TIME" == "docker" ]; then     
+if [ "$CONTAINER_RUNTIME" == "docker" ]; then     
       DOCKER_SOCKET=/var/run/host/docker.sock
       DOCKER_GROUP=docker
       REGULAR_USER=omsagent
@@ -345,11 +345,11 @@ dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
-      if [ "$CONTAINER_RUN_TIME" == "docker" ]; then
+      if [ "$CONTAINER_RUNTIME" == "docker" ]; then
             /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
             telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
       else
-            echo "since container run time is $CONTAINER_RUN_TIME update the container log fluentbit Parser to cri from docker"
+            echo "since container run time is $CONTAINER_RUNTIME update the container log fluentbit Parser to cri from docker"
             sed -i 's/Parser.docker*/Parser cri/' /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf
             /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
             telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
