@@ -195,8 +195,13 @@ if [ "$cAdvisorIsSecure" = true ] ; then
                   # convert to lower case so that everywhere else can be used in lowercase
                   containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  export CONTAINER_RUNTIME=$containerRuntime
-                  export NODE_NAME=$nodeName 
+                  # update runtime only if its not empty and not startswith docker
+                  if [ -z $containerRuntime ]; then
+                      echo "using default container runtime as docker since got containeRuntime as empty string"                              
+                  elif [[ $containerRuntime != docker* ]]; then                     
+                       export CONTAINER_RUNTIME=$containerRuntime
+                       export NODE_NAME=$nodeName                       
+                  fi
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
             fi   
@@ -229,8 +234,13 @@ else
                   # convert to lower case so that everywhere else can be used in lowercase
                   containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  export CONTAINER_RUNTIME=$containerRuntime
-                  export NODE_NAME=$nodeName 
+                  # update runtime only if its not empty and not startswith docker
+                  if [ -z $containerRuntime ]; then
+                      echo "using default container runtime as docker since got containeRuntime as empty string"                              
+                  elif [[ $containerRuntime != docker* ]]; then                     
+                       export CONTAINER_RUNTIME=$containerRuntime
+                       export NODE_NAME=$nodeName                       
+                  fi
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
             fi   
@@ -260,6 +270,7 @@ export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_error
 
 #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
 if [ "$CONTAINER_RUNTIME" == "docker" ]; then     
+      echo "since container run time is docker then adding omsagent user to local docker group to get access to docker.sock"
       DOCKER_SOCKET=/var/run/host/docker.sock
       DOCKER_GROUP=docker
       REGULAR_USER=omsagent
