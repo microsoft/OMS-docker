@@ -269,43 +269,21 @@ export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
 export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
 
 #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
-if [ "$CONTAINER_RUNTIME" == "docker" ]; then     
-      echo "since container run time is docker then adding omsagent user to local docker group to get access to docker.sock"
-      DOCKER_SOCKET=/var/run/host/docker.sock
-      DOCKER_GROUP=docker
-      REGULAR_USER=omsagent
-
-      if [ -S ${DOCKER_SOCKET} ]; then
-            echo "getting gid for docker.sock"
-            DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
-            echo "creating a local docker group"
-            groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
-            echo "adding omsagent user to local docker group"
-            usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-      fi    
-
-     export NODE_NAME=$(curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname)
-else
-   
+if [ "$CONTAINER_RUNTIME" != "docker" ]; then          
    # these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
    export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
-   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"         
-   echo "set caps for ruby process to read container env from proc"
-   sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
+   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"           
 fi
+
+echo "set caps for ruby process to read container env from proc"
+sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
 
 echo "export KUBELET_RUNTIME_OPERATIONS_METRIC="$KUBELET_RUNTIME_OPERATIONS_METRIC >> ~/.bashrc
 echo "export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="$KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC >> ~/.bashrc
 
 source ~/.bashrc
 
-if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case.            	
-	echo $NODE_NAME > /var/opt/microsoft/docker-cimprov/state/containerhostname
-else
-      # do we need this since we only support k8s?
-	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
-fi
+echo $NODE_NAME > /var/opt/microsoft/docker-cimprov/state/containerhostname
 #check if file was written successfully.
 cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 

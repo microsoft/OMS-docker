@@ -43,7 +43,7 @@ sudo apt-get install inotify-tools -y
 #used to parse response of kubelet apis
 sudo apt-get install jq -y
 
-#used to grant permission to read /proc/env for ruby
+#used to setcaps for ruby process to read /proc/env 
 echo "installing libcap2-bin"
 sudo apt-get install libcap2-bin -y
 
