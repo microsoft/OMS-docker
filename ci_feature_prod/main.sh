@@ -278,11 +278,24 @@ echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
 export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
 
-#if container run time is docker then add omsagent user to local docker group to get access to docker.sock
 if [ "$CONTAINER_RUNTIME" != "docker" ]; then          
    # these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
    export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
-   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"           
+   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"    
+else
+   #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
+   # docker.sock only use for the telemetry to get the docker version
+   DOCKER_SOCKET=/var/run/host/docker.sock
+   DOCKER_GROUP=docker
+   REGULAR_USER=omsagent
+   if [ -S ${DOCKER_SOCKET} ]; then
+      echo "getting gid for docker.sock"
+      DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+      echo "creating a local docker group"
+      groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+      echo "adding omsagent user to local docker group"
+      usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+   fi          
 fi
 
 echo "set caps for ruby process to read container env from proc"
