@@ -199,9 +199,14 @@ if [ "$cAdvisorIsSecure" = true ] ; then
                   if [ -z $containerRuntime ]; then
                       echo "using default container runtime as docker since got containeRuntime as empty string"                              
                   elif [[ $containerRuntime != docker* ]]; then                     
-                       export CONTAINER_RUNTIME=$containerRuntime
-                       export NODE_NAME=$nodeName                       
+                       export CONTAINER_RUNTIME=$containerRuntime                                          
                   fi
+
+                  if [ -z $nodeName ]; then
+                      echo "-e error nodeName in /pods API response is empty"
+                  else
+                     export NODE_NAME=$nodeName   
+                  fi                   
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
             fi   
@@ -238,9 +243,14 @@ else
                   if [ -z $containerRuntime ]; then
                       echo "using default container runtime as docker since got containeRuntime as empty string"                              
                   elif [[ $containerRuntime != docker* ]]; then                     
-                       export CONTAINER_RUNTIME=$containerRuntime
-                       export NODE_NAME=$nodeName                       
+                       export CONTAINER_RUNTIME=$containerRuntime                       
                   fi
+
+                  if [ -z $nodeName ]; then
+                    echo "-e error nodeName in /pods API response is empty"
+                  else
+                     export NODE_NAME=$nodeName   
+                  fi           
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
             fi   
