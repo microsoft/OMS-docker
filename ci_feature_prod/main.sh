@@ -250,6 +250,11 @@ service cron start
 dpkg -l | grep omsagent | awk '{print $2 " " $3}'
 dpkg -l | grep docker-cimprov | awk '{print $2 " " $3}'
 
+DOCKER_CIMPROV_VERSION=$(dpkg -l | grep docker-cimprov | awk '{print $3}')
+echo "DOCKER_CIMPROV_VERSION=$DOCKER_CIMPROV_VERSION"
+export DOCKER_CIMPROV_VERSION=$DOCKER_CIMPROV_VERSION
+echo "export DOCKER_CIMPROV_VERSION=$DOCKER_CIMPROV_VERSION" >> ~/.bashrc
+
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
