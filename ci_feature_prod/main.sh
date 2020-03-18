@@ -179,43 +179,7 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      IS_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')      
-      if [ $IS_SUCCESS == 1 ]; then    
-         podsResponse=$(cat podsResponseFile)        
-         ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
-         echo "found items count: $ITEMS_COUNT"
-         if [ $ITEMS_COUNT -gt 0 ]; then 
-            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
-            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
-            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
-            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
-                  # containerId name contract https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#pod-v1-core
-                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)                  
-                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
-                  # convert to lower case so that everywhere else can be used in lowercase
-                  containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
-                  nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  # update runtime only if its not empty and not startswith docker
-                  if [ -z $containerRuntime ]; then
-                      echo "using default container runtime as docker since got containeRuntime as empty string"                              
-                  elif [[ $containerRuntime != docker* ]]; then                     
-                       export CONTAINER_RUNTIME=$containerRuntime                                          
-                  fi
-
-                  if [ -z $nodeName ]; then
-                      echo "-e error nodeName in /pods API response is empty"
-                  else
-                     export NODE_NAME=$nodeName   
-                  fi                   
-            else
-              echo "-e error  none of the pods in the /pods response has valid containerID"                           
-            fi   
-        else
-             echo "-e error  items in the /pods response is 0"                           
-        fi      
-      else
-          echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"    
-      fi
+      IS_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')           
 
 else
       echo "Wget request using port 10250 failed. Using port 10255"
@@ -224,12 +188,14 @@ else
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      IS_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')
-      if [ $IS_SUCCESS == 1 ]; then
-         podsResponse=$(cat podsResponseFile)
-         ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
-         echo "found items count: $ITEMS_COUNT"
-         if [ $ITEMS_COUNT -gt 0 ]; then 
+      IS_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')   
+fi
+
+if [ $IS_SUCCESS == 1 ]; then
+      podsResponse=$(cat podsResponseFile)
+      ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+      echo "found items count: $ITEMS_COUNT"
+      if [ $ITEMS_COUNT -gt 0 ]; then 
             # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
             podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
             ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
@@ -254,15 +220,14 @@ else
             else
               echo "-e error  none of the pods in the /pods response has valid containerID"                           
             fi   
-         else
-            echo "-e error  items in the /pods response is 0"           
-         fi
-            
       else
-        echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"                     
+            echo "-e error  items in the /pods response is 0"           
       fi
-fi
-
+            
+else
+    echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"                     
+fi 
+      
 echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
 echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
 echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
