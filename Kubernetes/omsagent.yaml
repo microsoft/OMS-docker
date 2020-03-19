@@ -327,7 +327,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -459,7 +459,7 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod02252020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -522,7 +522,6 @@ spec:
             periodSeconds: 60
       nodeSelector:
         beta.kubernetes.io/os: linux
-        kubernetes.io/role: agent
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -533,6 +532,11 @@ spec:
                     operator: NotIn
                     values:
                       - virtual-kubelet
+      # The following label selector is removed for AKS, this is only required for non AKS
+                  - key: kubernetes.io/role
+                    operator: NotIn
+                    values:
+                      - master
       # The following tolerations are removed for AKS, this is only required for non AKS
       tolerations:
         - operator: "Exists"
