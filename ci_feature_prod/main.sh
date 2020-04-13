@@ -418,10 +418,10 @@ dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
 
 #start oneagent
 if [ ! -e "/etc/config/kube.conf" ]; then
-   if [ ! -z $CONTAINER_LOGS_ROUTE ]; then
-      echo "container logs route is defined as $CONTAINER_LOGS_ROUTE"
+   if [ ! -z $AZMON_CONTAINER_LOGS_ROUTE ]; then
+      echo "container logs route is defined as $AZMON_CONTAINER_LOGS_ROUTE"
       #trim
-      containerlogsroute=$CONTAINER_LOGS_ROUTE | xargs
+      containerlogsroute=$AZMON_CONTAINER_LOGS_ROUTE | xargs
       # convert to lowercase
       typeset -l containerlogsroute=$containerlogsroute
       if [ "$containerlogsroute" == "v2" ]; then
