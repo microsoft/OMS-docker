@@ -1,0 +1,67 @@
+
+ENABLE_ODS_TELEMETRY_FILE
+
+
+    
+
+ODS_TELEMETRY_FILEPATH (defaults=/var/log/ODSUpload.txt)
+
+ENABLE_ODS_TELEMETRY_FILE="true"
+
+
+MA_QOS_ODS_REQUEST line in mdsd.qos
+// TODO: Qos for HOBO agents when there isn't a Geneva account
+                    auto now = OMSHomingService::GetCurrentTime();                  
+                    ofstream ofs(telemetryFilePath.c_str(), std::ios_base::out | std::ios_base::app );
+                    ofs << now << '\t' << totalSuccess << '\t' << totalFailed << '\t' << totalBytes << '\n';
+                    ofs.close();
+                    totalSuccess = totalFailed = totalBytes = 0;
+
+Tracked issues -
+
+1) If cert & key paths are set, do not generate cert (just crash if no cert and/or key is foun in the specified paths)
+2) _ResourceId
+3) Telemetry
+   3.1) # items flushed
+   3.2) # of items dropped from buffer
+   3.3) # of non-200 to ODS
+4) Heartbeat - no config ? whats the default ?
+5) 2020-03-27T01:17:57.6401160Z: Error: Config invalid or not useful (if there's no config parse error). Abort mdsd.
+2020-03-29T18:40:14.3260540Z: Fatal errors while loading configuration /etc/mdsd.d/config-cache/708447abcb3d670390231534c16ca92d.try.xml:
+/etc/mdsd.d/config-cache/708447abcb3d670390231534c16ca92d.try.xml(104) Fatal: AddMonikerEventInfo() failed: No default credential is found.
+6) /etc/mdsd.d/config-cache/1cf774cc3e79f99faff18c8c3e89783e.try.xml(102) Warning: Minimum supported duration is ten (10) seconds; using minimum
+/etc/mdsd.d/config-cache/1cf774cc3e79f99faff18c8c3e89783e.try.xml(104) Warning: Minimum supported duration is ten (10) seconds; using minimum
+
+7)
+2020-03-29T18:43:08.9886650Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240531.745669000
+2020-03-29T18:43:16.4426350Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:16.4426580Z: Listener 0x3971c00 dropped 2490 since last warning
+2020-03-29T18:43:18.4488350Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240541.202958000
+2020-03-29T18:43:24.2455030Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:24.2455610Z: Listener 0x3971c00 dropped 341 since last warning
+2020-03-29T18:43:24.8486140Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240547.603139300
+2020-03-29T18:43:31.9450280Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:31.9450500Z: Listener 0x3971c00 dropped 574 since last warning
+2020-03-29T18:43:32.2502780Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240555.3904200
+2020-03-29T18:43:39.5448340Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:39.5448610Z: Listener 0x3971c00 dropped 877 since last warning
+2020-03-29T18:43:39.7463370Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240562.499839100
+2020-03-29T18:43:47.2403800Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:47.2404390Z: Listener 0x3971c00 dropped 2856 since last warning
+2020-03-29T18:43:50.5482730Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240573.298138700
+2020-03-29T18:43:54.5446000Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:43:54.5448590Z: Listener 0x3971c00 dropped 753 since last warning
+2020-03-29T18:43:54.8536190Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240577.607603200
+2020-03-29T18:44:02.3430420Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:44:02.3430700Z: Listener 0x3971c00 dropped 426 since last warning
+2020-03-29T18:44:02.4477790Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240585.200560400
+2020-03-29T18:44:10.0452460Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:44:10.0452690Z: Listener 0x3971c00 dropped 1145 since last warning
+2020-03-29T18:44:10.4466070Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240593.199408200
+2020-03-29T18:44:17.7394430Z: Tag count (40961) exceeded maximum supported value(40960). Rotating tag sets.
+2020-03-29T18:44:17.7394700Z: Listener 0x3971c00 dropped 1782 since last warning
+2020-03-29T18:44:17.7489100Z: Event source tag-reader for 0x3971c00 is slow; dropping tag 1585271224:240600.502471600
+
+8) how does 1agent chooses mooncake ingestion endpoint/domain ?
+OMS_TLD
+9) heartbeat containe name instead of hostname

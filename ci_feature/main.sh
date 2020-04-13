@@ -287,19 +287,34 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 #/opt/microsoft/omsconfig/Scripts/OMS_MetaConfigHelper.py --disable
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
+CIWORKSPACE_id=""
+CIWORKSPACE_key=""
+
 if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
+        CIWORKSPACE_id="$(cat /etc/omsagent-secret/WSID)"
+        CIWORKSPACE_key="$(cat /etc/omsagent-secret/KEY)"
   elif [ -a /etc/omsagent-secret/WSID ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
+        CIWORKSPACE_id="$(cat /etc/omsagent-secret/WSID)"
+        CIWORKSPACE_key="$(cat /etc/omsagent-secret/KEY)"
   elif [ -a /run/secrets/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY` -d `cat /run/secrets/DOMAIN`
+        CIWORKSPACE_id="$(cat /run/secrets/WSID)"
+        CIWORKSPACE_key="$(cat /run/secrets/KEY)"
   elif [ -a /run/secrets/WSID ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /run/secrets/WSID` -s `cat /run/secrets/KEY`
+        CIWORKSPACE_id="$(cat /run/secrets/WSID)"
+        CIWORKSPACE_key="$(cat /run/secrets/KEY)"
   elif [ -z $DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY
+        CIWORKSPACE_id="$(cat /etc/omsagent-secret/WSID)"
+        CIWORKSPACE_key="$(cat /etc/omsagent-secret/KEY)"
   else
         /opt/microsoft/omsagent/bin/omsadmin.sh -w $WSID -s $KEY -d $DOMAIN
+        CIWORKSPACE_id="$(cat /etc/omsagent-secret/WSID)"
+        CIWORKSPACE_key="$(cat /etc/omsagent-secret/KEY)"
   fi
 else
 #To onboard to INT workspace - workspace-id (WSID-not base64 encoded), workspace-key (KEY-not base64 encoded), Domain(DOMAIN-int2.microsoftatlanta-int.com)
@@ -308,6 +323,9 @@ else
 	echo SHARED_KEY=$KEY >> /etc/omsagent-onboard.conf
       echo URL_TLD=$DOMAIN >> /etc/omsagent-onboard.conf
 	/opt/microsoft/omsagent/bin/omsadmin.sh
+
+      CIWORKSPACE_id="$WSID"
+      CIWORKSPACE_key="$KEY"
 fi
 
 #start cron daemon for logrotate
@@ -397,6 +415,38 @@ source ~/.bashrc
 /opt/telegraf --config $telegrafConfFile &
 /opt/telegraf --version
 dpkg -l | grep td-agent-bit | awk '{print $2 " " $3}'
+
+#start oneagent
+if [ ! -e "/etc/config/kube.conf" ]; then
+   if [ ! -z $CONTAINER_LOGS_ROUTE ]; then
+      echo "container logs route is defined as $CONTAINER_LOGS_ROUTE"
+      #trim
+      containerlogsroute=$CONTAINER_LOGS_ROUTE | xargs
+      # convert to lowercase
+      typeset -l containerlogsroute=$containerlogsroute
+      if [ "$containerlogsroute" == "v2" ]; then
+            echo "containerlogsroute $containerlogsroute"
+            echo "configuring mdsd..."
+            cat /etc/mdsd.d/envmdsd | while read line; do
+                  echo $line >> ~/.bashrc
+            done
+            source /etc/mdsd.d/envmdsd
+
+            echo "setting mdsd workspaceid & key for workspace:$CIWORKSPACE_id"
+            export CIWORKSPACE_id=$CIWORKSPACE_id
+            echo "export CIWORKSPACE_id=$CIWORKSPACE_id" >> ~/.bashrc
+            export CIWORKSPACE_key=$CIWORKSPACE_key
+            echo "export CIWORKSPACE_key=$CIWORKSPACE_key" >> ~/.bashrc
+            
+            source ~/.bashrc
+            
+            dpkg -l | grep mdsd | awk '{print $2 " " $3}'
+
+            echo "starting mdsd ..."
+            mdsd -l -e ${MDSD_LOG}/mdsd.err -w ${MDSD_LOG}/mdsd.warn -o ${MDSD_LOG}/mdsd.info -q ${MDSD_LOG}/mdsd.qos &
+      fi
+   fi
+fi
 
 #dpkg -l | grep telegraf | awk '{print $2 " " $3}'
 
