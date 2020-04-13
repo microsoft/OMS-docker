@@ -18,10 +18,9 @@
   -->
   <Accounts>
     <!-- <Account moniker="MySvcMDS" isDefault="true" autoKey="true" /> -->
-<!--<SharedAccessSignature account="omstestvmdiag " isDefault="true" key="ss=bt&#38;sp=wlacu&#38;sv=2016-05-31&#38;st=2019-05-23T19%3A46%3A38Z&#38;sig=kXxFTlvW9nriTdrBTh%2BPLIAOtg6w8ROBNSfSHIoGkIE%3D&#38;srt=co&#38;se=2019-06-03T19%3A46%3A38Z" moniker="moniker" tableEndpoint="https://omstestvmdiag.table.core.windows.net" />-->
-<!--<Account moniker="MySvcMDS" isDefault="true" account="omstestvmdiag" tableEndpoint="https://omstestvmdiag.table.core.windows.net" key="GUIy47z86cpmzgiNRHAXFSGDo7muMXrNjVdfWIU3m3CppXTEw+LZaK04IJks53HCc+JAmfYHK2wdsgExjdAh7g=="/>
+<!--<Account moniker="MySvcMDS" isDefault="true" account="omstestvmdiag" tableEndpoint="https://omstestvmdiag.table.core.windows.net" key=""/>
   </Accounts>-->
-  <!--<Account moniker="MySvcMDS" isDefault="true" account="dockerprovider" tableEndpoint="https://dockerprovider.table.core.windows.net" key="vLuB2as6LYkr2d1PxOIi5lc23xjTH25YfKQfRJe6sUulpdij445OU9ejXlLxu/k3I96TfBlnHNtWnWfK9sjxag=="/> -->
+  <!--<Account moniker="MySvcMDS" isDefault="true" account="dockerprovider" tableEndpoint="https://dockerprovider.table.core.windows.net" key=""/> -->
   </Accounts>
 
   <!--
