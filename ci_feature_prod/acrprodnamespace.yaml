@@ -1,5 +1,5 @@
 version: 1.0-preview-1
 steps:
-  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:cioneagent04132020-2 .
+  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:cioneagent04152020 .
     workingDirectory: ci_feature_prod
-  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:cioneagent04132020-2"]
+  - push: ["{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:cioneagent04152020"]
