@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/microsoft/Docker-Provider/releases/download/v8.0.0.3/docker-cimprov-8.0.0-3.universal.x86_64.sh
+wget https://github.com/microsoft/Docker-Provider/releases/download/9.0.0.1/docker-cimprov-9.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -40,6 +40,12 @@ sudo apt-get install acl
 sudo apt-get update
 sudo apt-get install inotify-tools -y
 
+#used to parse response of kubelet apis
+sudo apt-get install jq -y
+
+#used to setcaps for ruby process to read /proc/env 
+echo "installing libcap2-bin"
+sudo apt-get install libcap2-bin -y
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
@@ -53,7 +59,7 @@ wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0.0/tele
 
 chmod 777 /opt/telegraf
 
-/$TMPDIR/docker-cimprov-8.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-9.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
