@@ -14,7 +14,7 @@
 
 param(
     [Parameter(mandatory = $true)]
-    [string]$ClusterResourceId   
+    [string]$ClusterResourceId
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,6 +38,7 @@ if (($null -eq $ClusterResourceId) -or ($ClusterResourceId.Split("/").Length -ne
     exit
 }
 
+$isClusterAndWorkspaceInDifferentSubs = $false
 $ClusterType = "AKS"
 if ($ClusterResourceId.ToLower().Contains("microsoft.containerservice/openshiftmanagedclusters") -eq $true) {
     $ClusterType = "ARO";
@@ -91,7 +92,7 @@ if (($null -eq $azAksModule) -or ($null -eq $azARGModule) -or ($null -eq $azAcco
             if ($null -eq $azARGModule) {
                 try {
                     Write-Host("Installing Az.ResourceGraph...")
-                    Install-Module Az.ResourceGraph -Force -AllowClobber -ErrorAction Stop 
+                    Install-Module Az.ResourceGraph -Force -AllowClobber -ErrorAction Stop
                 }
                 catch {
                     Write-Host("Close other powershell logins and try installing the latest modules for Az.ResourceGraph in a new powershell window: eg. 'Install-Module Az.ResourceGraph -Force'") -ForegroundColor Red
@@ -249,7 +250,7 @@ catch {
     Write-Host("")
 }
 
-$SubscriptionId = $ClusterResourceId.split("/")[2]
+$ClusterSubscriptionId = $ClusterResourceId.split("/")[2]
 $ResourceGroupName = $ClusterResourceId.split("/")[4]
 $ClusterName = $ClusterResourceId.split("/")[8]
 
@@ -259,31 +260,31 @@ $ClusterName = $ClusterResourceId.split("/")[8]
 if ($null -eq $account.Account) {
     try {
         Write-Host("Please login...")
-        Login-AzAccount -subscriptionid $SubscriptionId
+        Login-AzAccount -subscriptionid $ClusterSubscriptionId
     }
     catch {
         Write-Host("")
-        Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
+        Write-Host("Could not select subscription with ID : " + $ClusterSubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
         Write-Host("")
         Stop-Transcript
         exit
     }
 }
 else {
-    if ($account.Subscription.Id -eq $SubscriptionId) {
-        Write-Host("Subscription: $SubscriptionId is already selected. Account details: ")
+    if ($account.Subscription.Id -eq $ClusterSubscriptionId) {
+        Write-Host("Subscription: $ClusterSubscriptionId is already selected. Account details: ")
         $account
     }
     else {
         try {
             Write-Host("Current Subscription:")
             $account
-            Write-Host("Changing to subscription: $SubscriptionId")
-            Select-AzSubscription -SubscriptionId $SubscriptionId
+            Write-Host("Changing to subscription: $ClusterSubscriptionId")
+            Select-AzSubscription -SubscriptionId $ClusterSubscriptionId
         }
         catch {
             Write-Host("")
-            Write-Host("Could not select subscription with ID : " + $SubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
+            Write-Host("Could not select subscription with ID : " + $ClusterSubscriptionId + ". Please make sure the SubscriptionId you entered is correct and you have access to the Subscription" ) -ForegroundColor Red
             Write-Host("")
             Stop-Transcript
             exit
@@ -347,7 +348,7 @@ try {
     }
     else {
         $argQuery = "where resourceGroup =~ '" + $ResourceGroupName + "' and name=~ '" + $ClusterName + "' and type =~ 'Microsoft.ContainerService/openshiftmanagedclusters'  | project id, name, aroproperties = parse_json(tolower(properties)), location"
-        $ResourceDetail = Search-AzGraph -Subscription $SubscriptionId -Query $argQuery
+        $ResourceDetail = Search-AzGraph -Subscription $ClusterSubscriptionId -Query $argQuery
         if ($null -eq $ResourceDetail) {
             Write-Host("")
             Write-Host("Could not fetch cluster details: Please make sure that the '" + $ClusterType + "' Cluster name: '" + $ClusterName + "' is correct and you have access to the cluster") -ForegroundColor Red
@@ -510,8 +511,9 @@ else {
     $workspaceName = $LogAnalyticsWorkspaceResourceID.split("/")[8]
 
     try {
-        if ($SubscriptionId -ne $workspaceSubscriptionId) {
-            Write-Host("Changing to workspace's subscription")
+         $isClusterAndWorkspaceInDifferentSubs = $ClusterSubscriptionId -ne $workspaceSubscriptionId
+        if ($isClusterAndWorkspaceInDifferentSubs) {
+            Write-Host("Changing to workspace's subscription since cluster and workspace are in different subscriptions")
             Select-AzSubscription -SubscriptionId $workspaceSubscriptionId
         }
     }
@@ -717,6 +719,12 @@ if ("AKS" -eq $ClusterType ) {
     #    Check Agent pods running as expected
     #
     try {
+
+        if ($isClusterAndWorkspaceInDifferentSubs) {
+          Write-Host("Changing to cluster's subscription back")
+          Select-AzSubscription -SubscriptionId $ClusterSubscriptionId
+        }
+
         Write-Host("Getting Kubeconfig of the cluster...")
         Import-AzAksCredential -Id $ClusterResourceId -Force -ErrorAction Stop
         Write-Host("Successful got the Kubeconfig of the cluster.")
@@ -819,6 +827,10 @@ if ("AKS" -eq $ClusterType ) {
         exit
     }
 
+    if ($isClusterAndWorkspaceInDifferentSubs) {
+       Write-Host("Changing to workspace's subscription")
+       Select-AzSubscription -SubscriptionId $workspaceSubscriptionId
+    }
     Write-Host("Retrieving WorkspaceGUID and WorkspacePrimaryKey of the workspace : " + $WorkspaceInformation.Name)
     try {
 
