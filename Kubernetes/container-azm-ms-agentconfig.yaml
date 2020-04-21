@@ -90,6 +90,15 @@ data:
         #fieldpass = ["metric_to_pass1", "metric_to_pass12"]
 
         #fielddrop = ["metric_to_drop"]
+  mdm-metrics-configuration-settings: |-
+    # MDM metrics configuration settings for resource utilization
+    [mdm_metrics_configuration_settings.resource_utilization]
+        # Threshold for cpu, metric will be sent only when cpu utilization exceeds the following percentage
+        percentage_cpu_utilization_threshold = 95.0
+        # Threshold for memoryRss, metric will be sent only when memory rss exceeds the following percentage
+        percentage_memory_rss_threshold = 95.0
+        # Threshold for memoryWorkingSet, metric will be sent only when memory working set exceeds the following percentage
+        percentage_memory_working_set_threshold = 95.0
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
