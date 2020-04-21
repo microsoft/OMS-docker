@@ -101,7 +101,7 @@ module OMS
 
         # Call dotnet exectuable here to request new certificate
         def renew_certs
-            systemCommandResult = system("C:\\omsagentwindows\\ConsoleApp1.exe")
+            systemCommandResult = system("C:\\opt\omsagentwindows\\certgenerator\\CertificateGenerator.exe")
             if systemCommandResult == true
                 return 0;
             elsif systemCommandResult == false
