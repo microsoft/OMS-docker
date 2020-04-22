@@ -33,43 +33,9 @@ namespace CertificateGenerator
 
         internal static class Constants
         {
-            public const string DockerEndpointBaseUriString = "npipe://./pipe/docker_engine";
-            public const string KubernetesServiceAccountTokenFilPath = @"/var/run/secrets/kubernetes.io/serviceaccount/token";
-            public const string KubernetesServiceAccountCACertFilPath = @"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
-
-
-            // omsagent secret (LA workspace Id, key and domain name)
-            public const string OmsAgentSecretDir = @"C:\ProgramData";
-
-            public const string WorkspaceKeyFileName = "KEY";
-            public const string WorkspaceIdFileName = "WSID";
-            public const string WorkspaceDomain = "DOMAIN";
-
-
-            public const UInt64 BYTESPERMB = 1048576;
-            public const UInt64 CPUTICS = 1000000000;
-            public const int KBPERMB = 1024;
-            public const int CONTAINER_LIST_QUERY_TIMEOUT_SECONDS = 100;
-            public const int IMAGE_LIST_QUERY_TIMEOUT_SECONDS = 100;
-            public const int CONTAINER_EVENTS_QUERY_TIMEOUT_SECONDS = 100;
-            public const int CONTAINER_INSPECT_QUERY_TIMEOUT_SECONDS = 10;
-            public const int CONTAINER_STATS_QUERY_TIMEOUT_SECONDS = 5;
-            public const int CONTAINER_LOG_QUERY_TIMEOUT_SECONDS = 10;
-            public const int SYTEM_INFO_QUERY_TIMEOUT_SECONDS = 5;
-
-            public const int KUBE_SYSTEM_CONTAINER_IDs_REFRESH_INTERVAL_IN_SECONDS = 300;
-
-            public const int CONTAINER_LOG_UPLOAD_INTERVAL_IN_SECONDS = 60;
-
             /// <summary>
             /// constants related to masking the secrets in container environment variable
             /// </summary>
-            public static string LOGANALYTICS_CONTAINERS_MASK_ENVVAR_NAME = "LOGANALYTICS_CONTAINERS_MASK_ENVVAR_VALUE_REGEX_LIST";
-            public static string LOGANALYTICS_CONTAINER_MASKED_VALUE = "[EXCLUDED-BY-CONTAINERMONITORING]";
-
-            public const string CONTAINER_LOG_DATA_TYPE = "CONTAINER_LOG_BLOB";
-            public const string CONTAINER_INSIGHTS_IP_NAME = "ContainerInsights";
-
             public const string DEFAULT_LOG_ANALYTICS_WORKSPACE_DOMAIN = "opinsights.azure.com";
 
             public const string DEFAULT_SIGNATURE_ALOGIRTHM = "SHA256WithRSA";
@@ -118,23 +84,6 @@ namespace CertificateGenerator
 
             string privateKeyString = textWriter.ToString();
 
-
-            // The magic extension that on commenting made the certificate work with ODS!!!!!
-
-            //certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage.Id, false,
-            //  new ExtendedKeyUsage(new[] { KeyPurposeID.IdKPServerAuth, KeyPurposeID.IdKPClientAuth }));
-
-            //certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage.Id, false,
-            //  new AuthorityKeyIdentifier(
-            //      new GeneralNames(new GeneralName(certName)), serialNumber));
-
-
-            //certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage.Id, false,
-            //   new AuthorityKeyIdentifier(
-            //       SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(subjectKeyPair.Public),
-            //       new GeneralNames(new GeneralName(certName)), serialNumber));
-
-
             var issuerKeyPair = subjectKeyPair;
             var signatureFactory = new Asn1SignatureFactory(Constants.DEFAULT_SIGNATURE_ALOGIRTHM, issuerKeyPair.Private);
             var bouncyCert = certificateGenerator.Generate(signatureFactory);
@@ -169,18 +118,18 @@ namespace CertificateGenerator
 
             Console.WriteLine("Writing certificate and key to two files");
 
-            string crt_location = "C://oms.crt";
+            string cert_location = "C://oms.crt";
             string key_location = "C://oms.key";
             try
             {
-                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI_CRT_LOCATION")))
+                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI_CERT_LOCATION")))
                 {
-                    crt_location = Environment.GetEnvironmentVariable("CI_CRT_LOCATION");
+                    cert_location = Environment.GetEnvironmentVariable("CI_CERT_LOCATION");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Reading env variables (CI_CRT_LOCATION) is too much to ask for " + ex.Message);
+                Console.WriteLine("Failed to read env variables (CI_CERT_LOCATION)" + ex.Message);
             }
 
             try
@@ -192,19 +141,12 @@ namespace CertificateGenerator
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Reading env variables (CI_KEY_LOCATION) is too much to ask for " + ex.Message);
+                Console.WriteLine("Failed to read env variables (CI_KEY_LOCATION)" + ex.Message);
             }
 
 
-            File.WriteAllText(crt_location, builder.ToString());
+            File.WriteAllText(cert_location, builder.ToString());
             File.WriteAllText(key_location, privateKeyString);
-
-            // Saving certificate in the store
-            // SaveCertificate(certificate);
-
-            // For local testing : reading a random cert
-            // string newcer = "E://oms.crt";
-            //X509Certificate2 cert1 = new X509Certificate2(newcer);
 
             return certificate;
         }
@@ -351,7 +293,14 @@ namespace CertificateGenerator
 
             var agentGuid = Guid.NewGuid().ToString("B");
 
-            Environment.SetEnvironmentVariable("CI_AGENT_GUID", agentGuid);
+            try
+            {
+                Environment.SetEnvironmentVariable("CI_AGENT_GUID", agentGuid);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to set env variable (CI_AGENT_GUID)" + ex.Message);
+            }
 
             try
             {
@@ -386,80 +335,47 @@ namespace CertificateGenerator
         static void Main(string[] args)
         {
             Console.WriteLine("Dotnet executable starting :");
-
-
-            string logAnalyticsWorkspaceID = Environment.GetEnvironmentVariable("WSID");
-            string logAnalyticsWorkspaceSharedKey = Environment.GetEnvironmentVariable("WSKEY");
-            string logAnayticsDomain = Environment.GetEnvironmentVariable("DOMAIN");
-            X509Certificate2 clientCertificate = RegisterAgentWithOMS(logAnalyticsWorkspaceID, logAnalyticsWorkspaceSharedKey, logAnayticsDomain);
-        }
-
-        public static void SendDataToODS_ContainerLog(X509Certificate2 cert, string logAnalyticsWorkspaceId, string logAnalyticsWorkspaceDomain, string jsonContent)
-        {
-            string rawCert = Convert.ToBase64String(cert.GetRawCertData()); //base64 binary
-            string requestId = Guid.NewGuid().ToString("D");
-
-            string dateTime = DateTime.Now.ToString("O");
+            string logAnalyticsWorkspaceID = '';
+            string logAnalyticsWorkspaceSharedKey = ''Environment.GetEnvironmentVariable("WSKEY");
+            string logAnayticsDomain = DEFAULT_LOG_ANALYTICS_WORKSPACE_DOMAIN;
 
             try
             {
-                var clientHandler = new HttpClientHandler();
-                clientHandler.ClientCertificates.Add(cert);
-                var client = new HttpClient(clientHandler);
-
-                string url = "https://" + logAnalyticsWorkspaceId + ".ods." + logAnalyticsWorkspaceDomain + "/OperationalData.svc/PostJsonDataItems?api-version=2016-04-01";
-
-                Console.WriteLine("ODS endpoint url: {0}", url);
-
-                client.DefaultRequestHeaders.Add("X-Request-ID", requestId);
-
-                HttpContent httpContent = new StringContent(jsonContent, Encoding.UTF8);
-                httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                Task<HttpResponseMessage> response = client.PostAsync(new Uri(url), httpContent);
-
-                response.Wait();
-                HttpContent responseContent = response.Result.Content;
-                string result = responseContent.ReadAsStringAsync().Result;
-                Console.WriteLine("Return Result: " + result);
-                Console.WriteLine("requestId: " + requestId);
-                Console.WriteLine(response.Result);
-                Console.WriteLine("Finished registration call");
-                //TODO - update watermark only when the data ingestion successful
+                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("WSID")))
+                {
+                    logAnalyticsWorkspaceID = Environment.GetEnvironmentVariable("WSID");
+                }
             }
-            catch (Exception excep)
+            catch (Exception ex)
             {
-                Console.WriteLine("ODS API Post Exception: " + excep.Message);
+                Console.WriteLine("Failed to read env variables (WSID)" + ex.Message);
             }
+
+            try
+            {
+                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("WSKEY")))
+                {
+                    logAnalyticsWorkspaceSharedKey = Environment.GetEnvironmentVariable("WSKEY");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to read env variables (WSKEY)" + ex.Message);
+            }
+
+            try
+            {
+                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOMAIN")))
+                {
+                    logAnayticsDomain = Environment.GetEnvironmentVariable("DOMAIN");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to read env variables (DOMAIN)" + ex.Message);
+            }
+            
+            X509Certificate2 clientCertificate = RegisterAgentWithOMS(logAnalyticsWorkspaceID, logAnalyticsWorkspaceSharedKey, logAnayticsDomain);
         }
-
-
-        //public static void PostContainerLogs(object state)
-        //{
-        //    try
-        //    {
-
-        //        var containerLogs = new ContainerLogs();
-        //        var logs = containerLogs.GetContainerLogs();
-
-        //        Console.WriteLine("Total number of log lines : {0}", logs.DataItems.Count);
-
-        //        var json = JsonConvert.SerializeObject(logs);
-
-        //        SendDataToODS_ContainerLog(clientCertificate,
-        //            logAnalyticsWorkspaceId,
-        //            logAnalyticsWorkspaceDomain,
-        //            json
-        //            );
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("PostContainerLogs failed : {0}", ex.Message.ToString());
-        //    }
-
-        //    _uploadTimer.Change(
-        //           TimeSpan.FromSeconds(Constants.CONTAINER_LOG_UPLOAD_INTERVAL_IN_SECONDS),
-        //           TimeSpan.FromMilliseconds(-1));
-
-        //}
     }
 }
