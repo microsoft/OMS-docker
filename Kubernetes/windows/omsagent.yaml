@@ -30,7 +30,7 @@ spec:
          value: "West Europe"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
-       - name: CI_CRT_LOCATION
+       - name: CI_CERT_LOCATION
          value: "C://oms.crt"
        - name: CI_KEY_LOCATION
          value: "C://oms.key"
