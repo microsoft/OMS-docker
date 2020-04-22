@@ -28,7 +28,7 @@ module OMS
             @workspace_id = workspace_id
             @domain = domain
             @certificate_update_endpoint = "https://" + workspace_id + "." + domain + "/ConfigurationService.Svc/RenewCertificate"
-            @cert_path = ENV["CI_CRT_LOCATION"]
+            @cert_path = ENV["CI_CERT_LOCATION"]
             @key_path = ENV["CI_KEY_LOCATION"]
             @agent_guid = agent_guid #let's get this from certificate : more reliable?
         end
@@ -194,8 +194,8 @@ end
 if __FILE__ == $0
     ret_code = 0
     maintenance = OMS::OnboardingHelper.new(
-        ENV["CI_WSID"],
-        ENV["CI_DOMAIN"],
+        ENV["WSID"],
+        ENV["DOMAIN"],
         ENV["CI_AGENT_GUID"]
     )
     ret_code = maintenance.register_certs()
