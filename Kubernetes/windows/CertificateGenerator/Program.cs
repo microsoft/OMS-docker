@@ -335,9 +335,9 @@ namespace CertificateGenerator
         static void Main(string[] args)
         {
             Console.WriteLine("Dotnet executable starting :");
-            string logAnalyticsWorkspaceID = '';
-            string logAnalyticsWorkspaceSharedKey = ''Environment.GetEnvironmentVariable("WSKEY");
-            string logAnayticsDomain = DEFAULT_LOG_ANALYTICS_WORKSPACE_DOMAIN;
+            string logAnalyticsWorkspaceID = "";
+            string logAnalyticsWorkspaceSharedKey = "";
+            string logAnayticsDomain = Constants.DEFAULT_LOG_ANALYTICS_WORKSPACE_DOMAIN;
 
             try
             {
