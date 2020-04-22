@@ -26,9 +26,9 @@ COPY ./fluent/rubyKeepCertificateAlive/*.rb /etc/fluent/plugin/
 COPY ./fluent-bit/fluent-bit.conf /etc/fluent-bit
 COPY ./omsagentwindows/out_oms.conf /etc/omsagentwindows
 
-ENV CONTROLLER_TYPE="DaemonSet"
 ENV AGENT_VERSION="winakslogprivatepreview"
 ENV OS_TYPE "windows"
 ENV APPLICATIONINSIGHTS_AUTH "NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi"
 
 ENTRYPOINT ["powershell", "C:\\opt\\omsagentwindows\\scripts\\powershell\\main.ps1"]
+#ENTRYPOINT ["powershell"]
