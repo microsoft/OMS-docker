@@ -38,8 +38,6 @@ spec:
          valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-       - name: APPLICATIONINSIGHTS_AUTH
-         value: "NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi"
        volumeMounts:
         - mountPath: C:\ProgramData\docker\containers
           name: docker-windows-docker-containers
