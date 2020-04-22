@@ -54,5 +54,3 @@ Write-Host ('Finished Extracting Certificate Generator Package')
 Remove-Item /installation -Recurse
 
 Write-Host ("Removing Install folder")
-
-gem install gyoku

@@ -38,8 +38,8 @@ module Fluent
         def enumerate
             puts "Calling certificate renewal code..."
             maintenance = OMS::OnboardingHelper.new(
-                ENV["CI_WSID"],
-                ENV["CI_DOMAIN"],
+                ENV["WSID"],
+                ENV["DOMAIN"],
                 ENV["CI_AGENT_GUID"]
             )
             ret_code = maintenance.register_certs()

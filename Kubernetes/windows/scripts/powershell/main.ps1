@@ -18,43 +18,6 @@ function Remove-WindowsServiceIfItExists($name)
 
 function Start-FileSystemWatcher
 {
-    # Write-Host "Removing Existing Event Subscribers"
-    # Get-EventSubscriber -Force | ForEach-Object {$_.SubscriptionId} | ForEach-Object {Unregister-Event -SubscriptionId $_ }
-    # Write-Host "Starting File System Watcher for config map updates"
-    # $FileSystemWatcher = New-Object System.IO.FileSystemWatcher
-    # $Path = "C:\etc\config\settings"
-    # $FileSystemWatcher.Path = $Path
-    # $FileSystemWatcher.IncludeSubdirectories = $True
-    # $EventName = 'Changed', 'Created', 'Deleted', 'Renamed'
-    # $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    # Write-Host $user
-    # Write-Host $env:USERPROFILE
-
-    # $Action = {
-    #     $fileSystemWatcherStatusPath = "C:\opt\filesystemwatcher.txt"
-    #     $secondary = [Environment]::GetFolderPath("MyDocuments") + "\filewatcher.txt"
-    #     Write-Host $secondary
-    #     $fileSystemWatcherLog = "{0} was  {1} at {2}" -f $Event.SourceEventArgs.FullPath,
-    #     $Event.SourceEventArgs.ChangeType,
-    #     $Event.TimeGenerated
-    #     Write-Host $fileSystemWatcherLog
-    #     Add-Content -Path $fileSystemWatcherStatusPath -Value $fileSystemWatcherLog
-    #     Set-Content -Path $fileSystemWatcherStatusPath -Value $secondary
-    # }
-
-    # $ObjectEventParams = @{
-    #     InputObject = $FileSystemWatcher
-    #     Action      = $Action
-    # }
-
-    # ForEach ($Item in $EventName) {
-    #     $ObjectEventParams.EventName = $Item
-    #     $ObjectEventParams.SourceIdentifier = "File.$($Item)"
-    #     Write-Host  "Starting watcher for Event: $($Item)"
-    #     $Null = Register-ObjectEvent  @ObjectEventParams
-    # }
-
-    # Get-EventSubscriber -Force 
     Start-Process powershell -NoNewWindow .\filesystemwatcher.ps1
 }
 
