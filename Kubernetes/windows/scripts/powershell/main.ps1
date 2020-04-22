@@ -26,9 +26,9 @@ function Start-FileSystemWatcher
 function Set-EnvironmentVariables
 {
     $domain = "opinsights.azure.com"
-    if (Test-Path /etc/omsagent-secret-win/DOMAIN) {
+    if (Test-Path /etc/omsagent-secret/DOMAIN) {
         # TODO: Change to omsagent-secret before merging
-        $domain =  Get-Content /etc/omsagent-secret-win/DOMAIN
+        $domain =  Get-Content /etc/omsagent-secret/DOMAIN
     } 
     
     # Set DOMAIN
@@ -36,9 +36,9 @@ function Set-EnvironmentVariables
     [System.Environment]::SetEnvironmentVariable("DOMAIN", $domain, "Machine")
 
     $wsID = ""
-    if (Test-Path /etc/omsagent-secret-win/WSID) {
+    if (Test-Path /etc/omsagent-secret/WSID) {
         # TODO: Change to omsagent-secret before merging
-        $wsID =  Get-Content /etc/omsagent-secret-win/WSID
+        $wsID =  Get-Content /etc/omsagent-secret/WSID
     } 
     
     # Set DOMAIN
@@ -46,9 +46,9 @@ function Set-EnvironmentVariables
     [System.Environment]::SetEnvironmentVariable("WSID", $wsID, "Machine")
 
     $wsKey = ""
-    if (Test-Path /etc/omsagent-secret-win/KEY) {
+    if (Test-Path /etc/omsagent-secret/KEY) {
         # TODO: Change to omsagent-secret before merging
-        $wsKey =  Get-Content /etc/omsagent-secret-win/KEY
+        $wsKey =  Get-Content /etc/omsagent-secret/KEY
     } 
     
     # Set KEY

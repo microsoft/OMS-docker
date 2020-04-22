@@ -1,0 +1,98 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+ name: omsagent-private-preview-windows
+ namespace: kube-system
+spec:
+ updateStrategy:
+  type: RollingUpdate
+ template:
+  metadata:
+   labels:
+    dsName: "omsagent-private-preview-windows-ds"
+  spec:
+   serviceAccountName: omsagent
+   containers:
+     - name: omsagent-private-preview-windows 
+       image:  rdilip83/winakslog:04222020
+       imagePullPolicy: Always
+       resources:
+        limits:
+         cpu: 150m
+         memory: 600Mi
+        requests:
+         cpu: 75m
+         memory: 225Mi
+       env:       
+       - name: AKS_RESOURCE_ID
+         value: "/subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourcegroups/dr-win/providers/Microsoft.ContainerService/managedClusters/dr-win"
+       - name: AKS_REGION
+         value: "West Europe"
+       - name: CONTROLLER_TYPE
+         value: "DaemonSet"
+       - name: CI_CRT_LOCATION
+         value: "C://oms.crt"
+       - name: CI_KEY_LOCATION
+         value: "C://oms.key"
+       - name: HOSTNAME
+         valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+       - name: APPLICATIONINSIGHTS_AUTH
+         value: "NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi"
+       volumeMounts:
+        - mountPath: C:\ProgramData\docker\containers
+          name: docker-windows-docker-containers
+          readOnly: true
+        - mountPath: C:\var
+          name: docker-windows-kuberenetes-container-logs
+        - mountPath: C:\etc\config\settings
+          name: settings-vol-config
+          readOnly: true
+        - mountPath: C:\etc\omsagent-secret
+          name: omsagent-secret
+          readOnly: true
+       livenessProbe:
+        exec:
+          command:
+            - cmd
+            - /c
+            - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+        failureThreshold: 3
+        periodSeconds: 60
+        initialDelaySeconds: 120
+        successThreshold: 1
+        timeoutSeconds: 10
+   nodeSelector:
+    beta.kubernetes.io/os: windows    
+   # Tolerate a NoSchedule taint on master that ACS Engine sets.
+   tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
+   volumes:
+    - name: docker-windows-kuberenetes-container-logs
+      hostPath:
+        path: C:\var
+    - name: docker-windows-docker-containers
+      hostPath:
+        path: C:\ProgramData\docker\containers
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true  
+    - name: omsagent-secret
+      secret:
+       secretName: omsagent-secret          
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: omsagent-secret
+  namespace: kube-system
+type: Opaque
+data:
+  #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
+  KEY: "<base64_encode_shared_key>"
+  WSID: "<base64_encoded_ws_id>"
