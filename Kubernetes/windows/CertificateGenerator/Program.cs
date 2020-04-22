@@ -286,6 +286,7 @@ namespace CertificateGenerator
             }
         }
 
+        // Register certificate with Log Analytics
         public static X509Certificate2 RegisterAgentWithOMS(string logAnalyticsWorkspaceId,
             string logAnalyticsWorkspaceKey, string logAnalyticsWorkspaceDomain)
         {
