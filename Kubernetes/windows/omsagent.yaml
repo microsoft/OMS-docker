@@ -25,9 +25,9 @@ spec:
          memory: 225Mi
        env:       
        - name: AKS_RESOURCE_ID
-         value: "/subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourcegroups/kaveeshwin/providers/Microsoft.ContainerService/managedClusters/kaveeshwin"
+         value: "**"
        - name: AKS_REGION
-         value: "West Europe"
+         value: "**"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: CI_CERT_LOCATION
@@ -92,5 +92,5 @@ metadata:
 type: Opaque
 data:
   #BASE64 ENCODED (Both WSID & WSKEY) INSIDE DOUBLE QUOTE ("")
-  WSKEY: "bnFXSjBiU1pvN2c1cDRocjRRTEZxTUI0Mzhjc0F6UGI3NEhNVUhiODA4Nk5lNmxya0YvdlZVeWcvakhER1dIQUNhVUpWWDZXLzZoeFgyR2grMlVoY2c9PQ=="
-  WSID: "NWUwZTg3ZWEtNjdhYy00Nzc5LWI2ZjctMzAxNzNiNjkxMTJh"
+  WSKEY: "**"
+  WSID: "**"
