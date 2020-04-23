@@ -28,7 +28,7 @@ COPY ./omsagentwindows/out_oms.conf /etc/omsagentwindows
 
 ENV AGENT_VERSION="winakslogprivatepreview"
 ENV OS_TYPE "windows"
-ENV APPLICATIONINSIGHTS_AUTH "NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi"
+ENV APPLICATIONINSIGHTS_AUTH "OTQzNWI0M2YtOTdkNS00ZGVkLThkOTAtYjA0Nzk1OGU2ZTg3"
 
 ENTRYPOINT ["powershell", "C:\\opt\\omsagentwindows\\scripts\\powershell\\main.ps1"]
 #ENTRYPOINT ["powershell"]
