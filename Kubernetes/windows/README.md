@@ -8,7 +8,8 @@ There are multiple dependencies that are needed to build the windows container l
 2. Configuration files for fluent, fluent-bit and oms outplut plugin
 3. oms output plugin for fluent-bit
 4. Ruby scripts for configuration parsing
-5. Powershell scripts for setup and running the container on an AKS windows node
+5. Fluent heartbeat plugin
+6. Powershell scripts for setup and running the container on an AKS windows node
 
 ### Certificate Generator
 
@@ -41,10 +42,14 @@ This code is checked into the OMS-docker repo [here](https://github.com/microsof
   - Build the go plugin for windows on a windows build machine (Details to be provided later)
   - Check in the out_oms.so file at the following [location](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/omsagentwindows)
 
-### Ruby scripts
+### Ruby scripts for config parsing
   
-  These are duplicated from the Docker-Provider repo. Any change made there NEEDS to be replicated here.
+  These are duplicated from the Docker-Provider repo. Any change made there NEEDS to be replicated [here](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/scripts/ruby)
+
+### Fluent heartbeat plugin
+
+  These are checked in directly to the OMS-Docker repo. Edits can be made directly [here](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/fluent/rubyKeepCertificateAlive)
 
 ### Powershell scripts
 
-  These are checked in directly to the OMS-Docker repo. Edits can be made directly here.
+  These are checked in directly to the OMS-Docker repo. Edits can be made directly [here](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/scripts/powershell)
