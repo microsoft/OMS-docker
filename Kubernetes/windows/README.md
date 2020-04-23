@@ -1,51 +1,50 @@
-## How to use the Kubernetes yaml files for Windows Server
+# Windows AKS Log Containerized Agent
 
-In this folder, we have 2 yaml files.
-- OMS Agent deployment yaml file which uses secrets (ws-omsagent-de-secrets.yaml) with secret generation scripts which generates the secrets yaml (omsagentsecret.yaml).
+## How is the windows agent built
 
-### With Secret
-1. To use OMS Agent Daemon-set using Secrets, create the secrets first. 
+There are multiple dependencies that are needed to build the windows container log image
 
-  - Copy the script and secret template file and make sure they are on the same directory. 
-  	- secret generating script - secret-gen.sh
-	- secret template - secret-template.yaml
-  - Run the script. The script will ask for the OMS Workspace ID and Primary Key. Please insert that and the script will create a secret yaml file so you can run it.   
+1. Certificate Generator -- create a self signed certificate and register with the OMS workspace
+2. Configuration files for fluent, fluent-bit and oms outplut plugin
+3. oms output plugin for fluent-bit
+4. Ruby scripts for configuration parsing
+5. Powershell scripts for setup and running the container on an AKS windows node
 
-``` 
- #> sudo bash ./secret-gen.sh 
-``` 
+### Certificate Generator
 
-  - Create the secrets pod by running the following: 
-``` kubectl create -f omsagentsecret.yaml ```
-     
-  - To check, run the following: 
+This code is checked into the OMS-docker repo [here](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/CertificateGenerator)
 
-   ``` 
-   root@ubuntu16-13db:~# kubectl get secrets
-   NAME                  TYPE                                  DATA      AGE
-   default-token-gvl91   kubernetes.io/service-account-token   3         50d
-   omsagent-secret       Opaque                                2         1d
-   root@ubuntu16-13db:~# kubectl describe secrets omsagent-secret
-   Name:           omsagent-secret
-   Namespace:      default
-   Labels:         <none>
-   Annotations:    <none>
+- If any change needs to be made here
 
-   Type:   Opaque
+  - Open the folder in vscode and make your edits
+  - Run the following commands to install dependencies, build and publish
 
-   Data
-   ====
-   WSID:   36 bytes
-   KEY:    88 bytes 
-   ```
-						  
-- Create your omsagent daemon-set by running ``` kubectl create -f ws-omsagent-de-secrets.yaml ``` 
+         dotnet add package Newtonsoft.json
+         dotnet add package BouncyCastle
+         dotnet build
+         dotnet publish -c Release -r win10-x64
+  
+  - Zip the contents of bin\Release\<dotnetversion>\win10-x64\publish to a file called CertificateGenerator.zip
+  - Update the CertificateGenerator.zip file at the following [location](https://github.com/microsoft/OMS-docker/blob/dilipr/winakslog/Kubernetes/windows/omsagentwindows/certgenerator)
 
-2. Check to see whether the OMS Agent deployment is running fine. 
-   ``` 
-   root@ubuntu16-13db:~# kubectl get deployment omsagent
-   NAME       DESIRED   CURRENT   NODE-SELECTOR   AGE
-   omsagent   1         1         <none>          1h
-   ```
+### Configuration files
 
+  These are checked in directly to the OMS-docker repo and have no dependencies on their linux counterparts in the Docker-Provider repo
 
+### OMS output plugin
+  
+  This code comes from the Docker-Provider repo. The go plugin is shared between windows and linux.
+
+- If any changes need to be made to the plugin code
+
+  - Make the changes to the plugin [code](https://github.com/microsoft/Docker-Provider/tree/ci_feature/source/code/go/src/plugins)
+  - Build the go plugin for windows on a windows build machine (Details to be provided later)
+  - Check in the out_oms.so file at the following [location](https://github.com/microsoft/OMS-docker/tree/dilipr/winakslog/Kubernetes/windows/omsagentwindows)
+
+### Ruby scripts
+  
+  These are duplicated from the Docker-Provider repo. Any change made there NEEDS to be replicated here.
+
+### Powershell scripts
+
+  These are checked in directly to the OMS-Docker repo. Edits can be made directly here.
