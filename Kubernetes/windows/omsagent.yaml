@@ -91,6 +91,6 @@ metadata:
   namespace: kube-system
 type: Opaque
 data:
-  #BASE64 ENCODED (Both WSID & KEY) INSIDE DOUBLE QUOTE ("")
-  KEY: "<base64_encode_shared_key>"
+  #BASE64 ENCODED (Both WSID & WSKEY) INSIDE DOUBLE QUOTE ("")
+  WSKEY: "<base64_encode_shared_key>"
   WSID: "<base64_encoded_ws_id>"
