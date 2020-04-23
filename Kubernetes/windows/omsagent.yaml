@@ -14,7 +14,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent-private-preview-windows 
-       image:  rdilip83/winakslog:04222020
+       image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:windowsprivatepreview_04232020_v1
        imagePullPolicy: Always
        resources:
         limits:
@@ -25,9 +25,9 @@ spec:
          memory: 225Mi
        env:       
        - name: AKS_RESOURCE_ID
-         value: "/subscriptions/72c8e8ca-dc16-47dc-b65c-6b5875eb600a/resourcegroups/dr-win/providers/Microsoft.ContainerService/managedClusters/dr-win"
+         value: "**"
        - name: AKS_REGION
-         value: "West Europe"
+         value: "**"
        - name: CONTROLLER_TYPE
          value: "DaemonSet"
        - name: CI_CERT_LOCATION
@@ -58,7 +58,7 @@ spec:
             - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
         failureThreshold: 3
         periodSeconds: 60
-        initialDelaySeconds: 120
+        initialDelaySeconds: 180
         successThreshold: 1
         timeoutSeconds: 10
    nodeSelector:
@@ -92,5 +92,5 @@ metadata:
 type: Opaque
 data:
   #BASE64 ENCODED (Both WSID & WSKEY) INSIDE DOUBLE QUOTE ("")
-  WSKEY: "<base64_encode_shared_key>"
-  WSID: "<base64_encoded_ws_id>"
+  WSKEY: "**"
+  WSID: "**"
