@@ -93,6 +93,7 @@ data:
   mdm-metrics-configuration-settings: |-
     # MDM metrics configuration settings for resource utilization
     [mdm_metrics_configuration_settings.resource_utilization]
+        # The threshold will be rounded off to 2 decimal points
         # Threshold for cpu, metric will be sent only when cpu utilization exceeds the following percentage
         percentage_cpu_utilization_threshold = 95.0
         # Threshold for memoryRss, metric will be sent only when memory rss exceeds the following percentage
