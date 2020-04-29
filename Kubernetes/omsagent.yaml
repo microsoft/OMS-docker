@@ -350,7 +350,7 @@ spec:
         tier: node
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "9.0.0-1"
+        dockerProviderVersion: "9.0.0-2"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
@@ -482,7 +482,7 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "9.0.0-1"
+        dockerProviderVersion: "9.0.0-2"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
