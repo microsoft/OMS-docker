@@ -25,30 +25,8 @@ sudo setfacl -m user:omsagent:r /etc/kubernetes/host/azure.json
 # add permission for omsagent user to log folder. We also need 'x', else log rotation is failing. TODO: Investigate why.
 sudo setfacl -m user:omsagent:rwx /var/opt/microsoft/docker-cimprov/log
 
-DOCKER_SOCKET=/var/run/host/docker.sock
-DOCKER_GROUP=docker
-REGULAR_USER=omsagent
-
-if [ -S ${DOCKER_SOCKET} ]; then
-    echo "getting gid for docker.sock"
-    DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
-    echo "creating a local docker group"
-    groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
-    echo "adding omsagent user to local docker group"
-    usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-fi
-
 #Run inotify as a daemon to track changes to the mounted configmap.
 inotifywait /etc/config/settings --daemon --recursive --outfile "/opt/inotifyoutput.txt" --event create,delete --format '%e : %T' --timefmt '+%s'
-
-if [[ "$KUBERNETES_SERVICE_HOST" ]];then
-	#kubernetes treats node names as lower case.
-	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()" > /var/opt/microsoft/docker-cimprov/state/containerhostname
-else
-	curl --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']" > /var/opt/microsoft/docker-cimprov/state/containerhostname
-fi
-#check if file was written successfully.
-cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 
 #resourceid override for loganalytics data.
 if [ -z $AKS_RESOURCE_ID ]; then
@@ -186,9 +164,13 @@ echo "Making wget request to cadvisor endpoint with port 10250"
 #Defaults to use port 10255
 cAdvisorIsSecure=false
 RET_CODE=`wget --server-response https://$NODE_IP:10250/stats/summary --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" 2>&1 | awk '/^  HTTP/{print $2}'`
-if [ $RET_CODE -eq 200 ]; then 
+if [ $RET_CODE -eq 200 ]; then
       cAdvisorIsSecure=true
 fi
+
+# default to docker since this is default in AKS as of now and change to containerd once this becomes default in AKS
+export CONTAINER_RUNTIME="docker"
+export NODE_NAME=""
 
 if [ "$cAdvisorIsSecure" = true ] ; then
       echo "Wget request using port 10250 succeeded. Using 10250"
@@ -196,15 +178,103 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
+      echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
+      IS_GET_PODS_API_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')           
+
 else
       echo "Wget request using port 10250 failed. Using port 10255"
       export IS_SECURE_CADVISOR_PORT=false
       echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
+      echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
+      IS_GET_PODS_API_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')   
 fi
 
+if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
+      podsResponse=$(cat podsResponseFile)
+      ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
+      echo "found items count: $ITEMS_COUNT"
+      if [ $ITEMS_COUNT -gt 0 ]; then 
+            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
+            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
+            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
+            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
+                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
+                  # convert to lower case so that everywhere else can be used in lowercase
+                  containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
+                  nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
+                  # update runtime only if its not empty and not startswith docker
+                  if [ -z $containerRuntime ]; then
+                      echo "using default container runtime as docker since got containeRuntime as empty string"                              
+                  elif [[ $containerRuntime != docker* ]]; then                     
+                       export CONTAINER_RUNTIME=$containerRuntime                       
+                  fi
+
+                  if [ -z $nodeName ]; then
+                    echo "-e error nodeName in /pods API response is empty"
+                  else
+                     export NODE_NAME=$nodeName   
+                  fi           
+            else
+              echo "-e error  none of the pods in the /pods response has valid containerID"                           
+            fi   
+      else
+            echo "-e error  items in the /pods response is 0"           
+      fi
+            
+else
+    echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"                     
+fi 
+      
+echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
+echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
+echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
+
+# _total metrics will be available starting from k8s version 1.18 and current _docker_* and _runtime metrics will be deprecated
+# enable these when we add support for 1.18
+# export KUBELET_RUNTIME_OPERATIONS_TOTAL_METRIC="kubelet_runtime_operations_total"
+# echo "export KUBELET_RUNTIME_OPERATIONS_TOTAL_METRIC="$KUBELET_RUNTIME_OPERATIONS_TOTAL_METRIC >> ~/.bashrc
+# export KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC="kubelet_runtime_operations_errors_total"
+# echo "export KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC="$KUBELET_RUNTIME_OPERATIONS_ERRORS_TOTAL_METRIC >> ~/.bashrc
+
+# default to docker metrics
+export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
+export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
+
+if [ "$CONTAINER_RUNTIME" != "docker" ]; then          
+   # these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
+   export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
+   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"    
+else
+   #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
+   # docker.sock only use for the telemetry to get the docker version
+   DOCKER_SOCKET=/var/run/host/docker.sock
+   DOCKER_GROUP=docker
+   REGULAR_USER=omsagent
+   if [ -S ${DOCKER_SOCKET} ]; then
+      echo "getting gid for docker.sock"
+      DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
+      echo "creating a local docker group"
+      groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
+      echo "adding omsagent user to local docker group"
+      usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
+   fi          
+fi
+
+echo "set caps for ruby process to read container env from proc"
+sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
+
+echo "export KUBELET_RUNTIME_OPERATIONS_METRIC="$KUBELET_RUNTIME_OPERATIONS_METRIC >> ~/.bashrc
+echo "export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="$KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC >> ~/.bashrc
+
 source ~/.bashrc
+
+echo $NODE_NAME > /var/opt/microsoft/docker-cimprov/state/containerhostname
+#check if file was written successfully.
+cat /var/opt/microsoft/docker-cimprov/state/containerhostname
+
 
 #Commenting it for test. We do this in the installer now
 #Setup sudo permission for containerlogtailfilereader
@@ -257,8 +327,15 @@ echo "export DOCKER_CIMPROV_VERSION=$DOCKER_CIMPROV_VERSION" >> ~/.bashrc
 
 #telegraf & fluentbit requirements
 if [ ! -e "/etc/config/kube.conf" ]; then
-      /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
-      telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      if [ "$CONTAINER_RUNTIME" == "docker" ]; then
+            /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+            telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      else
+            echo "since container run time is $CONTAINER_RUNTIME update the container log fluentbit Parser to cri from docker"
+            sed -i 's/Parser.docker*/Parser cri/' /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf
+            /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit.conf -e /opt/td-agent-bit/bin/out_oms.so &
+            telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf.conf"
+      fi
 else
       /opt/td-agent-bit/bin/td-agent-bit -c /etc/opt/microsoft/docker-cimprov/td-agent-bit-rs.conf -e /opt/td-agent-bit/bin/out_oms.so &
       telegrafConfFile="/etc/opt/microsoft/docker-cimprov/telegraf-rs.conf"

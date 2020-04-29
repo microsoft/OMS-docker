@@ -18,6 +18,7 @@ rules:
         "nodes/stats",
         "nodes/metrics",
         "nodes/spec",
+        "nodes/proxy",
         "namespaces",
         "services",
       ]
@@ -320,13 +321,13 @@ spec:
         tier: node
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-3"
+        dockerProviderVersion: "9.0.0-1"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -452,13 +453,13 @@ spec:
         rsName: "omsagent-rs"
       annotations:
         agentVersion: "1.10.0.1"
-        dockerProviderVersion: "8.0.0-3"
+        dockerProviderVersion: "9.0.0-1"
         schema-versions: "v1"
     spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
