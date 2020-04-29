@@ -356,8 +356,8 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
-          imagePullPolicy: IfNotPresent
+          image: "microsoft/oms:ci-mdm-alerts-preview"
+          imagePullPolicy: Always
           resources:
             limits:
               cpu: 150m
@@ -488,8 +488,8 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
-          imagePullPolicy: IfNotPresent
+          image: "microsoft/oms:ci-mdm-alerts-preview"
+          imagePullPolicy: Always
           resources:
             limits:
               cpu: 1
