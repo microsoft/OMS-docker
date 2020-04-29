@@ -91,6 +91,13 @@ function Generate-Certificates
 }
 
 Start-Transcript -Path main.txt
+
+$aikey=[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:APPLICATIONINSIGHTS_AUTH))
+#set for current powershell session
+$env:TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
+#setx for other powershell sessions
+setx /M TELEMETRY_APPLICATIONINSIGHTS_KEY $aikey
+
 Remove-WindowsServiceIfItExists "fluentdwinaks"
 Set-EnvironmentVariables
 Start-FileSystemWatcher
