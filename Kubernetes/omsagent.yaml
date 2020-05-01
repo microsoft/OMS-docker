@@ -366,13 +366,10 @@ spec:
               cpu: 75m
               memory: 225Mi
           env:
-            #- name: AKS_RESOURCE_ID
-            #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            #- name: AKS_REGION
-            #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-            #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-            - name: ACS_RESOURCE_NAME
-              value: "my_acs_cluster_name"
+            - name: AKS_RESOURCE_ID
+              value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            - name: AKS_REGION
+              value: "VALUE_AKS_RESOURCE_REGION_VALUE"
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: NODE_IP
@@ -498,13 +495,10 @@ spec:
               cpu: 150m
               memory: 250Mi
           env:
-            #- name: AKS_RESOURCE_ID
-            #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            #- name: AKS_REGION
-            #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-            # Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
-            - name: ACS_RESOURCE_NAME
-              value: "my_acs_cluster_name"
+            - name: AKS_RESOURCE_ID
+              value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            - name: AKS_REGION
+              value: "VALUE_AKS_RESOURCE_REGION_VALUE"
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: NODE_IP
