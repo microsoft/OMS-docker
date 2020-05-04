@@ -51,7 +51,7 @@ namespace CertificateGenerator
 
             certificateGenerator.SetSerialNumber(serialNumber);
 
-            var dirName = string.Format("CN={0}, CN={1}, OU=Linux Monitoring Agent, O=Microsoft", logAnalyticsWorkspaceId, agentGuid);
+            var dirName = string.Format("CN={0}, CN={1}, OU=Microsoft Monitoring Agent, O=Microsoft", logAnalyticsWorkspaceId, agentGuid);
 
             X509Name certName = new X509Name(dirName);
 
@@ -105,9 +105,6 @@ namespace CertificateGenerator
 
             // Get the value.
             string resultsTrue = certificate.ToString(true);
-
-            // Display the value to the console.
-            Console.WriteLine(resultsTrue);
 
             //Get Certificate in PEM format
             StringBuilder builder = new StringBuilder();
