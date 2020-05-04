@@ -99,14 +99,11 @@ module OMS
             return req, http
         end
 
-        # Call dotnet exectuable here to request new certificate
+        # Create file which the livenessprobe is checking for to restart the container
         def renew_certs
-            systemCommandResult = system("C:\\opt\omsagentwindows\\certgenerator\\CertificateGenerator.exe")
-            if systemCommandResult == true
-                return 0;
-            elsif systemCommandResult == false
-                return OMS::ERROR_RENEWING_CERTS
-            else
+            filename = "C:\\etc\\omsagentwindows\\renewcertificate.txt"
+            File.open(filename, "w") {|f| f.write("Please renew the certificate") }
+            if File.file?(filename) == true
                 return OMS::ERROR_EXECUTING_RENEW_CERTS_COMMAND
             end
         end

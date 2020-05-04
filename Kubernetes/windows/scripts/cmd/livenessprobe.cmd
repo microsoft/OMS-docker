@@ -18,6 +18,15 @@ IF EXIST C:\etc\omsagentwindows\filesystemwatcher.txt (
     echo "Config Map not Updated since agent start"
 )
 
+echo "Checking if certificate needs to be renewed (aka agent restart required)"
+
+IF EXIST C:\etc\omsagentwindows\renewcertificate.txt (
+    echo "Certificate needs to be renewed"
+    exit /b  1
+) ELSE (
+    echo "Certificate does NOT need to be renewd"
+)
+
 echo "Checking if fluentd service is running"
 sc query fluentdwinaks | findstr /i STATE | findstr RUNNING
 
