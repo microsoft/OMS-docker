@@ -148,15 +148,6 @@ namespace CertificateGenerator
             return certificate;
         }
 
-
-        public static void SaveCertificate(X509Certificate2 certificate)
-        {
-            var userStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            userStore.Open(OpenFlags.ReadWrite);
-            userStore.Add(certificate);
-            userStore.Close();
-        }
-
         private static string Sign(string requestdate, string contenthash, string key)
         {
             var signatureBuilder = new StringBuilder();
