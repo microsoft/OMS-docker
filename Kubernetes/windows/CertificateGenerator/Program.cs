@@ -310,8 +310,6 @@ namespace CertificateGenerator
 
                 Console.WriteLine($"Successfully created self-signed certificate  for agentGuid : {agentGuid} and workspace: {logAnalyticsWorkspaceId}");
 
-                Console.WriteLine($"Agent Guid : {agentGuid}");
-
                 RegisterWithOmsWithBasicRetryAsync(agentCert, agentGuid,
                     logAnalyticsWorkspaceId,
                     logAnalyticsWorkspaceKey,
