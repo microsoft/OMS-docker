@@ -66,6 +66,11 @@ function Set-EnvironmentVariables
         $env:AZMON_AGENT_CFG_SCHEMA_VERSION
     }
 
+    # Set environment variable for TELEMETRY_APPLICATIONINSIGHTS_KEY
+    $aiKey = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:APPLICATIONINSIGHTS_AUTH))
+    [System.Environment]::SetEnvironmentVariable("TELEMETRY_APPLICATIONINSIGHTS_KEY", $aiKey, "Process")
+    [System.Environment]::SetEnvironmentVariable("TELEMETRY_APPLICATIONINSIGHTS_KEY", $aiKey, "Machine")
+
     # run config parser
     ruby /opt/omsagentwindows/scripts/ruby/tomlparser.rb
     .\setenv.ps1
@@ -90,18 +95,38 @@ function Generate-Certificates
     C:\\opt\\omsagentwindows\\certgenerator\\CertificateGenerator.exe
 }
 
-Start-Transcript -Path main.txt
+function Test-CertificatePath
+{
+    $certLocation = $env:CI_CRT_LOCATION
+    $keyLocation =  $env:CI_KEY_LOCATION
+    if  (!(Test-Path $certLocation))
+    {
+        Write-Host "Certificate file not found at $($certLocation). EXITING....."
+        exit 1
+    }
+    else 
+    {
+        Write-Host "Certificate file found at $($certLocation)"
+    }
 
-$aikey=[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:APPLICATIONINSIGHTS_AUTH))
-#set for current powershell session
-$env:TELEMETRY_APPLICATIONINSIGHTS_KEY=$aikey
-#setx for other powershell sessions
-setx /M TELEMETRY_APPLICATIONINSIGHTS_KEY $aikey
+    if (! (Test-Path $keyLocation))
+    {
+        Write-Host "Key file not found at $($keyLocation). EXITING....."
+        exit 1
+    }
+    else 
+    {
+        Write-Host "Key file found at $($keyLocation)"
+    }
+}
+
+Start-Transcript -Path main.txt
 
 Remove-WindowsServiceIfItExists "fluentdwinaks"
 Set-EnvironmentVariables
 Start-FileSystemWatcher
 Generate-Certificates
+Test-CertificatePath
 Start-Fluent
 
 # List all powershell processes running. This should have main.ps1 and filesystemwatcher.ps1
