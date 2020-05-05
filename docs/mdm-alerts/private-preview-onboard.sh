@@ -15,7 +15,7 @@
 
 if [ $# -le 5 ]
 then
-  echo "Error: This should be invoked with 6 arguments, clustersubscriptionId, workspaceSubscriptionId, clusterResourceId, clusterRegion, workspaceResourceId and kubeContext name"
+  echo "Error: This should be invoked with 6 arguments - clustersubscriptionId, workspaceSubscriptionId, clusterResourceId, clusterRegion, workspaceResourceId and kubeContext name"
   exit 1
 fi
 
@@ -40,6 +40,22 @@ az cloud set -n AzureCloud
 echo "login to the azure interactively"
 az login
 
+echo "setting the subscription id of the cluster: ${clusterSubscriptionId}"
+az account set -s ${clusterSubscriptionId}
+
+echo "getting cluster resource group"
+export clusterResourceGroup=$(az resource show --ids $clusterResourceId --query resourceGroup)
+clusterResourceGroup=$(echo $clusterResourceGroup | tr -d '"')
+echo $clusterResourceGroup
+
+echo "getting cluster name"
+export clusterName=$(az resource show --ids $clusterResourceId --query name)
+clusterName=$(echo $clusterName | tr -d '"')
+echo $clusterName
+
+echo "Disabling monitoring on the cluster"
+#az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
+
 echo "setting the subscription id of the workspace: ${workspaceSubscriptionId}"
 az account set -s ${workspaceSubscriptionId}
 
@@ -56,9 +72,23 @@ echo $workspaceKey
 echo "installing Azure Monitor for containers HELM chart for MDM alerts preview..."
 
 echo "adding azmon-preview repo"
-helm repo add azmon-preview https://ganga1980.github.io/azuremonitor-containers-helm-charts/
+# helm repo add ci-mdm-alert https://rashmichandrashekar.github.io/azure-monitor-containers-helm-chart-private/
+helm repo add ci-mdm-alert https://github.com/rashmichandrashekar/azure-monitor-containers-helm-charts-private/blob/master
 echo "updating helm repo to get latest charts"
 helm repo update
 
-helm upgrade --install azmon-containers-release-1 --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterName=${3} azmon-preview/azuremonitor-containers --kube-context ${4}
+helm upgrade azmon-containers-ci-mdm-alert ci-mdm-alert/azuremonitor-containers --install --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=${3},omsagent.env.clusterRegion=${4} --kubeconfig ${6}
 echo "chart installation completed."
+
+echo "setting the subscription id of the cluster: ${clusterSubscriptionId}"
+az account set -s ${clusterSubscriptionId}
+
+echo "getting cluster object"
+clusterGetResponse=$(az rest --method get --uri $clusterResourceId?api-version=2020-03-01)
+
+echo $clusterGetResponse | jq '.properties.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID=$workspaceResourceId'
+
+export jqquery=".properties.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID=$workspaceResourceId"
+echo $clusterGetResponse | jq $jqquery > putrequestbody.json
+
+az rest --method put --uri $clusterResourceId?api-version=2020-03-01 --body @putrequestbody.json --headers Content-Type=application/json
