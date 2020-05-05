@@ -1,8 +1,8 @@
 version: 1.0-preview-1
 steps:
-  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:win--{{.Run.Branch}}-{{.Run.Date}}-{{.Run.Commit | substr 0 7 }} .
+  - build: -t {{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:winakslog-private-preview .
     workingDirectory: Kubernetes/windows
   - push:
       [
-        "{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:win--{{.Run.Branch}}-{{.Run.Date}}-{{.Run.Commit | substr 0 7 }}",
+        "{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:winakslog-private-preview",
       ]
