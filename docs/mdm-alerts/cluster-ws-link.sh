@@ -58,12 +58,12 @@ az account set -s ${workspaceSubscriptionId}
 echo "getting workspace Guid"
 export workspaceGuid=$(az resource show --ids $workspaceResourceId --resource-type Microsoft.OperationalInsights/workspaces --query properties.customerId)
 workspaceGuid=$(echo $workspaceGuid | tr -d '"')
-echo $workspaceGuid | base64 > wsidencoded
+echo $workspaceGuid | base64
 
 echo "getting workspace primaryshared key"
 workspaceKey=$(az rest --method post --uri $workspaceResourceId/sharedKeys?api-version=2015-11-01-preview --query primarySharedKey)
 workspaceKey=$(echo $workspaceKey | tr -d '"')
-echo $workspaceKey | base 64 > wskeyencoded
+echo $workspaceKey | base 64
 
 # echo "installing Azure Monitor for containers HELM chart for MDM alerts preview..."
 
