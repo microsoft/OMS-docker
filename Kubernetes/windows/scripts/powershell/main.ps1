@@ -111,7 +111,7 @@ function Test-CertificatePath
 
     if (! (Test-Path $keyLocation))
     {
-        Write-Host "Key file not found at $($keyLocation). EXITING....."
+        Write-Host "Key file not found at $($keyLocation). EXITING...."
         exit 1
     }
     else 
