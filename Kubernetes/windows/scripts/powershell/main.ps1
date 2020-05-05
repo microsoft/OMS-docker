@@ -97,7 +97,7 @@ function Generate-Certificates
 
 function Test-CertificatePath
 {
-    $certLocation = $env:CI_CRT_LOCATION
+    $certLocation = $env:CI_CERT_LOCATION
     $keyLocation =  $env:CI_KEY_LOCATION
     if  (!(Test-Path $certLocation))
     {
