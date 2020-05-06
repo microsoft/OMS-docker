@@ -148,6 +148,13 @@ namespace CertificateGenerator
             return certificate;
         }
 
+        // Delete the certificate and key files
+        private static DeleteCertificateAndKeyFile()
+        {
+            File.Delete(Environment.GetEnvironmentVariable("CI_CERT_LOCATION"));
+            File.Delete(Environment.GetEnvironmentVariable("CI_KEY_LOCATION"));
+        }
+
         private static string Sign(string requestdate, string contenthash, string key)
         {
             var signatureBuilder = new StringBuilder();
@@ -233,6 +240,11 @@ namespace CertificateGenerator
             Console.WriteLine("Return Result: " + result);
 
             Console.WriteLine(response.Result);
+
+            if (response.Result.StatusCode != HttpStatusCode.OK)
+            {
+                DeleteCertificateAndKeyFile();
+            }
         }
 
         public static void RegisterWithOmsWithBasicRetryAsync(X509Certificate2 cert, string AgentGuid, string logAnalyticsWorkspaceId, string logAnalyticsWorkspaceKey, string logAnalyticsWorkspaceDomain)
