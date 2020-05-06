@@ -1,8 +1,6 @@
-FROM mcr.microsoft.com/azuremonitor/containerinsights/cidev:winakslogbase-04212020
+FROM mcr.microsoft.com/azuremonitor/containerinsights/ciprod:winakslogbase-04212020
 
 SHELL ["powershell"]
-
-#EXPOSE 24224 5140
 
 ENV tmpdir /opt/omsagentwindows/scripts/powershell
 
