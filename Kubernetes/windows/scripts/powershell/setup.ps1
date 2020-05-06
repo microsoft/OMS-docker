@@ -15,18 +15,6 @@ Write-Host ('Creating folder structure')
 
     New-Item -Type Directory -Path /etc/config/settings/
 
-Write-Host('Downloading windows fluentbit package')
-    $windowsLogPackageUri = "https://github.com/r-dilip/goPlugins-fluentbit/releases/download/windowsakslog/windows-log-aks-package.zip" 
-    $windowsLogAksPackageLocation = "\installation\windows-log-aks-package.zip"
-    Invoke-WebRequest -Uri $windowsLogPackageUri -OutFile $windowsLogAksPackageLocation
-Write-Host ("Finished downloading fluentbit package for windows logs")
-
-Write-Host ("Extracting windows fluentbit container package")
-    $omsAgentPath = "/opt/omsagentwindows"
-    Expand-Archive -Path $windowsLogAksPackageLocation -Destination $omsAgentPath -ErrorAction SilentlyContinue
-Write-Host ("Finished Extracting windows fluentbit package")
-
-
 Write-Host ('Installing Fluent Bit'); 
     $fluentBitUri='https://github.com/bragi92/windowslog/raw/master/td-agent-bit-1.4.0-win64.zip'
     Invoke-WebRequest -Uri $fluentBitUri -OutFile /installation/td-agent-bit.zip

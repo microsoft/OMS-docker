@@ -97,7 +97,7 @@ function Generate-Certificates
 
 function Test-CertificatePath
 {
-    $certLocation = $env:CI_CRT_LOCATION
+    $certLocation = $env:CI_CERT_LOCATION
     $keyLocation =  $env:CI_KEY_LOCATION
     if  (!(Test-Path $certLocation))
     {
@@ -111,7 +111,7 @@ function Test-CertificatePath
 
     if (! (Test-Path $keyLocation))
     {
-        Write-Host "Key file not found at $($keyLocation). EXITING....."
+        Write-Host "Key file not found at $($keyLocation). EXITING...."
         exit 1
     }
     else 
