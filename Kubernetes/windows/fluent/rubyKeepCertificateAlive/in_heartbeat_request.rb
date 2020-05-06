@@ -36,14 +36,20 @@ module Fluent
         end
 
         def enumerate
-            puts "Calling certificate renewal code..."
-            maintenance = OMS::OnboardingHelper.new(
-                ENV["WSID"],
-                ENV["DOMAIN"],
-                ENV["CI_AGENT_GUID"]
-            )
-            ret_code = maintenance.register_certs()
-            puts "Return code from register certs : #{ret_code}"
+            begin
+                puts "Calling certificate renewal code..."
+                maintenance = OMS::OnboardingHelper.new(
+                    ENV["WSID"],
+                    ENV["DOMAIN"],
+                    ENV["CI_AGENT_GUID"]
+                )
+                ret_code = maintenance.register_certs()
+                puts "Return code from register certs : #{ret_code}"
+            rescue => errorStr
+                puts "in_heartbeat_request::enumerate:Failed in enumerate: #{errorStr}"
+                # STDOUT telemetry should alredy be going to Traces in AI.
+                # ApplicationInsightsUtility.sendExceptionTelemetry(errorStr)
+            end
         end
 
         def shutdown
