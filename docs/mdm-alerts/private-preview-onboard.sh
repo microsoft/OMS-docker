@@ -21,7 +21,6 @@ fi
 
 echo "clusterResourceId:"${1}
 echo "workspaceResourceId:" ${2}
-echo "kubeconfig context:"${3}
 
 clusterResourceId=${1}
 workspaceResourceId=${2}
