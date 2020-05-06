@@ -1,8 +1,6 @@
-FROM mcr.microsoft.com/azuremonitor/containerinsights/cidev:winakslogbase-04212020
+FROM mcr.microsoft.com/azuremonitor/containerinsights/ciprod:winakslogbase-04212020
 
 SHELL ["powershell"]
-
-EXPOSE 24224 5140
 
 ENV tmpdir /opt/omsagentwindows/scripts/powershell
 
@@ -32,4 +30,3 @@ ENV APPLICATIONINSIGHTS_AUTH "OTQzNWI0M2YtOTdkNS00ZGVkLThkOTAtYjA0Nzk1OGU2ZTg3"
 ENV AZMON_COLLECT_ENV False
 
 ENTRYPOINT ["powershell", "C:\\opt\\omsagentwindows\\scripts\\powershell\\main.ps1"]
-#ENTRYPOINT ["powershell"]
