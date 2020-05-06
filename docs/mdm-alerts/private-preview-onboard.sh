@@ -82,7 +82,7 @@ helm repo add azmon-preview-mdm-alert https://rashmichandrashekar.github.io/azur
 echo "updating helm repo to get latest charts"
 helm repo update
 
-echo "uninstall existing release"
+echo "uninstalling existing release if any for azmon-containers-ci-mdm-alert-release"
 helm uninstall azmon-containers-ci-mdm-alert-release
 
 helm upgrade --install azmon-containers-ci-mdm-alert-release --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=$clusterResourceId,omsagent.env.clusterRegion=$clusterRegion azmon-preview-mdm-alert/azuremonitor-containers --kube-context $kubecontext
