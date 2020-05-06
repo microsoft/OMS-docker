@@ -59,7 +59,7 @@ echo $clusterRegion
 # echo $clusterName
 
 echo "Disabling monitoring on the cluster"
-#az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
+az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
 
 echo "setting the subscription id of the workspace: ${workspaceSubscriptionId}"
 az account set -s ${workspaceSubscriptionId}
