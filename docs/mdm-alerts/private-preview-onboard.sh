@@ -11,11 +11,11 @@
 #     Helm3 : https://helm.sh/docs/intro/install/
 #
 # For example:
-# bash private-preview-onboard.sh <clusterResourceId> <workspaceResourceId> <kubeConfigContextNameOfCluster>
+# bash private-preview-onboard.sh <clusterResourceId> <workspaceResourceId>
 
-if [ $# -le 2 ]
+if [ $# -le 1 ]
 then
-  echo "Error: This should be invoked with 3 arguments - clusterResourceId, workspaceResourceId and kubeContext name"
+  echo "Error: This should be invoked with 2 arguments - clusterResourceId, workspaceResourceId"
   exit 1
 fi
 
@@ -25,7 +25,6 @@ echo "kubeconfig context:"${3}
 
 clusterResourceId=${1}
 workspaceResourceId=${2}
-kubecontext=${3}
 
 clusterSubscriptionId="$(cut -d'/' -f3 <<<$clusterResourceId)"
 clusterResourceGroup="$(cut -d'/' -f5 <<<$clusterResourceId)"
@@ -38,6 +37,9 @@ az cloud set -n AzureCloud
 
 echo "setting the subscription id of the cluster: ${clusterSubscriptionId}"
 az account set -s ${clusterSubscriptionId}
+
+echo "getting aks cluster credentials"
+az aks get-credentials -g $clusterResourceGroup -n $clusterName
 
 echo "getting cluster region"
 export clusterRegion=$(az resource show --ids $clusterResourceId --query location)
@@ -53,7 +55,7 @@ echo "Disabling monitoring on the cluster"
 az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
 
 echo "Cleaning up resources that are not cleaned up by disable monitoring"
-kubectl config use-context $kubecontext
+kubectl config use-context $clusterName
 kubectl delete serviceaccount omsagent -n kube-system
 kubectl delete clusterrole omsagent-reader
 kubectl delete clusterrolebinding omsagentclusterrolebinding
@@ -85,7 +87,7 @@ helm repo update
 echo "uninstalling existing release if any for azmon-containers-ci-mdm-alert-release"
 helm uninstall azmon-containers-ci-mdm-alert-release
 
-helm upgrade --install azmon-containers-ci-mdm-alert-release --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=$clusterResourceId,omsagent.env.clusterRegion=$clusterRegion azmon-preview-mdm-alert/azuremonitor-containers --kube-context $kubecontext
+helm upgrade --install azmon-containers-ci-mdm-alert-release --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=$clusterResourceId,omsagent.env.clusterRegion=$clusterRegion azmon-preview-mdm-alert/azuremonitor-containers --kube-context $clusterName
 echo "chart installation completed."
 
 echo "setting the subscription id of the cluster: ${clusterSubscriptionId}"
