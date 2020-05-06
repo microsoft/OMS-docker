@@ -41,7 +41,7 @@ az account set -s ${clusterSubscriptionId}
 
 echo "getting cluster region"
 export clusterRegion=$(az resource show --ids $clusterResourceId --query location)
-clusterRegion=$(echo $clusterName | tr -d '"')
+clusterRegion=$(echo $clusterRegion | tr -d '"')
 echo $clusterRegion
 
 echo "getting cluster service principal"
@@ -82,7 +82,7 @@ helm repo add azmon-preview-mdm-alert https://rashmichandrashekar.github.io/azur
 echo "updating helm repo to get latest charts"
 helm repo update
 
-helm upgrade --install azmon-containers-ci-mdm-alert-release --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=${1},omsagent.env.clusterRegion=$clusterRegion azmon-preview-mdm-alert/azuremonitor-containers --kube-context $kubecontext
+helm upgrade --install azmon-containers-ci-mdm-alert-release --set omsagent.secret.wsid=$workspaceGuid,omsagent.secret.key=$workspaceKey,omsagent.env.clusterId=$clusterResourceId,omsagent.env.clusterRegion=$clusterRegion azmon-preview-mdm-alert/azuremonitor-containers --kube-context $kubecontext
 echo "chart installation completed."
 
 echo "setting the subscription id of the cluster: ${clusterSubscriptionId}"
