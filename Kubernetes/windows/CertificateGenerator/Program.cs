@@ -149,7 +149,7 @@ namespace CertificateGenerator
         }
 
         // Delete the certificate and key files
-        private static DeleteCertificateAndKeyFile()
+        private static void DeleteCertificateAndKeyFile()
         {
             File.Delete(Environment.GetEnvironmentVariable("CI_CERT_LOCATION"));
             File.Delete(Environment.GetEnvironmentVariable("CI_KEY_LOCATION"));
