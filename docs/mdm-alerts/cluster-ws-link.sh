@@ -63,7 +63,7 @@ echo $workspaceGuid | base64
 echo "getting workspace primaryshared key"
 workspaceKey=$(az rest --method post --uri $workspaceResourceId/sharedKeys?api-version=2015-11-01-preview --query primarySharedKey)
 workspaceKey=$(echo $workspaceKey | tr -d '"')
-echo $workspaceKey | base 64
+echo $workspaceKey | base64
 
 # echo "installing Azure Monitor for containers HELM chart for MDM alerts preview..."
 
@@ -86,3 +86,12 @@ export jqquery=".properties.addonProfiles.omsagent.config.logAnalyticsWorkspaceR
 echo $clusterGetResponse | jq $jqquery > putrequestbody.json
 
 az rest --method put --uri $clusterResourceId?api-version=2020-03-01 --body @putrequestbody.json --headers Content-Type=application/json
+
+
+# $clusterResourceId=""
+# $workspaceResourceId=""
+# clusterGetResponse=$(az rest --method get --uri $clusterResourceId?api-version=2019-11-01)
+# export jqquery=".properties.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID=\"$workspaceResourceId\""
+# echo $clusterGetResponse | jq $jqquery > putrequestbody.json
+
+# az rest --method put --uri $clusterResourceId?api-version=2019-11-01 --body @putrequestbody.json --headers Content-Type=application/json
