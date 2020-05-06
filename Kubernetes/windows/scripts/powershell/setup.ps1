@@ -16,10 +16,19 @@ Write-Host ('Creating folder structure')
     New-Item -Type Directory -Path /etc/config/settings/
 
 Write-Host ('Installing Fluent Bit'); 
-    $fluentBitUri='https://github.com/microsoft/OMS-docker/releases/download/winakslogagent/td-agent-bit-1.4.0-win64.zip'
-    Invoke-WebRequest -Uri $fluentBitUri -OutFile /installation/td-agent-bit.zip
-    Expand-Archive -Path /installation/td-agent-bit.zip -Destination /installation/fluent-bit
-    Move-Item -Path /installation/fluent-bit/*/* -Destination /opt/fluent-bit/ -ErrorAction SilentlyContinue
+    
+    try {
+        $fluentBitUri='https://github.com/microsoft/OMS-docker/releases/download/winakslogagent/td-agent-bit-1.4.0-win64.zip'
+        Invoke-WebRequest -Uri $fluentBitUri -OutFile /installation/td-agent-bit.zip
+        Expand-Archive -Path /installation/td-agent-bit.zip -Destination /installation/fluent-bit
+        Move-Item -Path /installation/fluent-bit/*/* -Destination /opt/fluent-bit/ -ErrorAction SilentlyContinue
+    }
+    catch {
+        $e = $_.Exception
+        Write-Host "exception when Installing fluent bit"
+        Write-Host $e
+        exit 1
+    }
 Write-Host ('Finished Installing Fluentbit')
 
 
