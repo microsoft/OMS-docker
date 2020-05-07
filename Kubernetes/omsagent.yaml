@@ -302,7 +302,7 @@ data:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: omsagent
+  name: omsagent-lin
   namespace: kube-system
   labels:
     component: oms-agent
@@ -326,7 +326,7 @@ spec:
     spec:
       serviceAccountName: omsagent
       containers:
-        - name: omsagent
+        - name: omsagent-lin
           image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
           imagePullPolicy: IfNotPresent
           resources:
@@ -337,13 +337,13 @@ spec:
               cpu: 75m
               memory: 225Mi
           env:
-            #- name: AKS_RESOURCE_ID
-            #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            #- name: AKS_REGION
-            #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            # - name: AKS_RESOURCE_ID
+            #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            # - name: AKS_REGION
+            #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
             #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
             - name: ACS_RESOURCE_NAME
-              value: "my_acs_cluster_name"
+             value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: NODE_IP
@@ -469,13 +469,13 @@ spec:
               cpu: 150m
               memory: 250Mi
           env:
-            #- name: AKS_RESOURCE_ID
-            #  value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            #- name: AKS_REGION
-            #  value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            # - name: AKS_RESOURCE_ID
+            #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            # - name: AKS_REGION
+            #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
             # Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
             - name: ACS_RESOURCE_NAME
-              value: "my_acs_cluster_name"
+             value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: NODE_IP
@@ -575,7 +575,7 @@ spec:
   apiVersion: apps/v1
   kind: DaemonSet
   metadata:
-   name: omsagent
+   name: omsagent-win
    namespace: kube-system
    labels:
     component: oms-agent
@@ -599,8 +599,8 @@ spec:
     spec:
      serviceAccountName: omsagent
      containers:
-       - name: omsagent
-         image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:windowsprivatepreview_04232020_v1
+       - name: omsagent-win
+         image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:win-20200507-062708z-7f95982
          imagePullPolicy: IfNotPresent
          resources:
           limits:
@@ -610,22 +610,22 @@ spec:
            cpu: 75m
            memory: 225Mi
          env:       
-        #  - name: AKS_RESOURCE_ID
-        #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
-        #  - name: AKS_REGION
-        #    value: "VALUE_AKS_RESOURCE_REGION_VALUE"
-         - name: ACS_RESOURCE_NAME
-           value: "my_acs_cluster_name"
-         - name: CONTROLLER_TYPE
-           value: "DaemonSet"
-         - name: CI_CERT_LOCATION
-           value: "C://oms.crt"
-         - name: CI_KEY_LOCATION
-           value: "C://oms.key"
-         - name: HOSTNAME
-           valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
+          # - name: AKS_RESOURCE_ID
+          #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+          # - name: AKS_REGION
+          #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+          - name: ACS_RESOURCE_NAME
+          value: "my_acs_cluster_name"
+          - name: CONTROLLER_TYPE
+            value: "DaemonSet"
+          - name: CI_CERT_LOCATION
+            value: "C://oms.crt"
+          - name: CI_KEY_LOCATION
+            value: "C://oms.key"
+          - name: HOSTNAME
+            valueFrom:
+               fieldRef:
+                 fieldPath: spec.nodeName
          volumeMounts:
           - mountPath: C:\ProgramData\docker\containers
             name: docker-windows-docker-containers
