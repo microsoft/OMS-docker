@@ -6,6 +6,6 @@ steps:
     timeout: 1200
   - push:
       [
-        "{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:win-{{.Run.Date}}-{{.Run.Commit | substr 0 7 }} .",
+        "{{.Run.Registry}}/public/azuremonitor/containerinsights/cidev:win-{{.Run.Date}}-{{.Run.Commit | substr 0 7 }}"
       ]
     timeout: 1200
