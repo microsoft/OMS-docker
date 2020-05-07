@@ -59,6 +59,12 @@ export msiClientId=$(az identity create -g $mcResourceGroup -n omsagent-mdm-aler
 msiClientId=$(echo $msiClientId | tr -d '"')
 echo $msiClientId
 
+echo "sleeping for 10 seconds for msi creation to complete"
+sleep 10
+
+echo "Adding permissions to the User Assigned MSI"
+az role assignment create --assignee $msiClientId --scope $clusterResourceId --role "Monitoring Metrics Publisher"
+
 echo "Disabling monitoring on the cluster"
 az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
 
@@ -68,9 +74,6 @@ kubectl delete serviceaccount omsagent -n kube-system
 kubectl delete clusterrole omsagent-reader
 kubectl delete clusterrolebinding omsagentclusterrolebinding
 kubectl delete customresourcedefinition healthstates.azmon.container.insights
-
-echo "Adding permissions to the User Assigned MSI"
-az role assignment create --assignee $msiClientId --scope $clusterResourceId --role "Monitoring Metrics Publisher"
 
 echo "setting the subscription id of the workspace: ${workspaceSubscriptionId}"
 az account set -s ${workspaceSubscriptionId}
