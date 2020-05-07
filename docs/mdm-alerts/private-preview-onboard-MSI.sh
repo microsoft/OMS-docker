@@ -65,6 +65,17 @@ sleep 10
 echo "Adding permissions to the User Assigned MSI"
 az role assignment create --assignee $msiClientId --scope $clusterResourceId --role "Monitoring Metrics Publisher"
 
+
+echo "Get all vmss in the resource group"
+vmssArray=$(az vmss list -g $mcResourceGroup --query [].name -o tsv)
+
+echo "Looping through vmss to associate msi with vmss"
+for scaleset in ${vmssArray}
+do
+  echo $scaleset
+  az vmss identity assign -g $mcResourceGroup -n $scaleset --identities omsagent-mdm-alert-msi
+done
+
 echo "Disabling monitoring on the cluster"
 az aks disable-addons -a monitoring -g $clusterResourceGroup -n $clusterName
 
