@@ -609,7 +609,7 @@ spec:
           requests:
            cpu: 75m
            memory: 225Mi
-         env:       
+         env:
           # - name: AKS_RESOURCE_ID
           #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
           # - name: AKS_REGION
@@ -654,10 +654,10 @@ spec:
       - name: settings-vol-config
         configMap:
           name: container-azm-ms-agentconfig
-          optional: true  
+          optional: true
       - name: omsagent-secret
         secret:
-         secretName: omsagent-secret            
+         secretName: omsagent-secret
 ---
 kind: Service
 apiVersion: v1
