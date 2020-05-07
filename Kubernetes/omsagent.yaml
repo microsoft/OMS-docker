@@ -572,6 +572,103 @@ spec:
             name: container-azm-ms-agentconfig
             optional: true
 ---
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+   name: omsagent
+   namespace: kube-system
+   labels:
+    component: oms-agent
+    tier: node
+  spec:
+   updateStrategy:
+    type: RollingUpdate
+   selector:
+    matchLabels:
+      component: oms-agent
+      tier: node
+   template:
+    metadata:
+      labels:
+        component: oms-agent
+        tier: node
+      annotations:
+        agentVersion: "1.10.0.1"
+        dockerProviderVersion: "9.0.0-1"
+        schema-versions: "v1"
+    spec:
+     serviceAccountName: omsagent
+     containers:
+       - name: omsagent
+         image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:windowsprivatepreview_04232020_v1
+         imagePullPolicy: IfNotPresent
+         resources:
+          limits:
+           cpu: 150m
+           memory: 600Mi
+          requests:
+           cpu: 75m
+           memory: 225Mi
+         env:       
+        #  - name: AKS_RESOURCE_ID
+        #    value: "VALUE_AKS_RESOURCE_ID_VALUE"
+        #  - name: AKS_REGION
+        #    value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+         - name: ACS_RESOURCE_NAME
+           value: "my_acs_cluster_name"
+         - name: CONTROLLER_TYPE
+           value: "DaemonSet"
+         - name: CI_CERT_LOCATION
+           value: "C://oms.crt"
+         - name: CI_KEY_LOCATION
+           value: "C://oms.key"
+         - name: HOSTNAME
+           valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+         volumeMounts:
+          - mountPath: C:\ProgramData\docker\containers
+            name: docker-windows-docker-containers
+            readOnly: true
+          - mountPath: C:\var #Read + Write access on this for position file
+            name: docker-windows-kuberenetes-container-logs
+          - mountPath: C:\etc\config\settings
+            name: settings-vol-config
+            readOnly: true
+          - mountPath: C:\etc\omsagent-secret
+            name: omsagent-secret
+            readOnly: true
+         livenessProbe:
+          exec:
+            command:
+              - cmd
+              - /c
+              - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+          periodSeconds: 60
+          initialDelaySeconds: 180
+     nodeSelector:
+      beta.kubernetes.io/os: windows    
+     # Tolerate a NoSchedule taint on master that ACS Engine sets.
+     tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+     volumes:
+      - name: docker-windows-kuberenetes-container-logs
+        hostPath:
+          path: C:\var
+      - name: docker-windows-docker-containers
+        hostPath:
+          path: C:\ProgramData\docker\containers
+      - name: settings-vol-config
+        configMap:
+          name: container-azm-ms-agentconfig
+          optional: true  
+      - name: omsagent-secret
+        secret:
+         secretName: omsagent-secret            
+---
 kind: Service
 apiVersion: v1
 metadata:
