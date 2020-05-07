@@ -192,7 +192,7 @@ data:
       max_retry_wait 5m
      </match>
 
-     <match oms.api.KubePerf**>	
+     <match oms.api.KubePerf**>
       type out_oms
       log_level debug
       num_threads 5
@@ -643,7 +643,7 @@ spec:
           periodSeconds: 60
           initialDelaySeconds: 180
      nodeSelector:
-      beta.kubernetes.io/os: windows    
+      beta.kubernetes.io/os: windows
      volumes:
       - name: docker-windows-kuberenetes-container-logs
         hostPath:
