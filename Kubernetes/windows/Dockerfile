@@ -28,5 +28,7 @@ ENV AGENT_VERSION "winakslogprivatepreview"
 ENV OS_TYPE "windows"
 ENV APPLICATIONINSIGHTS_AUTH "OTQzNWI0M2YtOTdkNS00ZGVkLThkOTAtYjA0Nzk1OGU2ZTg3"
 ENV AZMON_COLLECT_ENV False
+ENV CI_CERT_LOCATION "C://oms.crt"
+ENV CI_KEY_LOCATION "C://oms.key"
 
 ENTRYPOINT ["powershell", "C:\\opt\\omsagentwindows\\scripts\\powershell\\main.ps1"]
