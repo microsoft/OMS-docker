@@ -302,7 +302,7 @@ data:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: omsagent-lin
+  name: omsagent
   namespace: kube-system
   labels:
     component: oms-agent
@@ -326,7 +326,7 @@ spec:
     spec:
       serviceAccountName: omsagent
       containers:
-        - name: omsagent-lin
+        - name: omsagent
           image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
           imagePullPolicy: IfNotPresent
           resources:
