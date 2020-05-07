@@ -624,7 +624,7 @@ spec:
                  fieldPath: spec.nodeName
          volumeMounts:
           - mountPath: C:\ProgramData\docker\containers
-            name: docker-windows-docker-containers
+            name: docker-windows-containers
             readOnly: true
           - mountPath: C:\var #Read + Write access on this for position file
             name: docker-windows-kuberenetes-container-logs
