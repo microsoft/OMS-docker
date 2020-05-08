@@ -95,11 +95,11 @@ data:
     [mdm_metrics_configuration_settings.resource_utilization]
         # The threshold will be rounded off to 2 decimal points
         # Threshold for cpu, metric will be sent only when cpu utilization exceeds or becomes equal to the following percentage
-        percentage_cpu_utilization_threshold = 0.0
+        percentage_cpu_utilization_threshold = 95.0
         # Threshold for memoryRss, metric will be sent only when memory rss exceeds or becomes equal to the following percentage
-        percentage_memory_rss_threshold = 0.0
+        percentage_memory_rss_threshold = 95.0
         # Threshold for memoryWorkingSet, metric will be sent only when memory working set exceeds or becomes equal to the following percentage
-        percentage_memory_working_set_threshold = 0.0
+        percentage_memory_working_set_threshold = 95.0
 metadata:
   name: container-azm-ms-agentconfig
   namespace: kube-system
