@@ -59,12 +59,12 @@ data:
      </source>
 
     # MDM metrics forwarded from fluentbit
-     <source>
-      type forward
-      tag oms.mdm.telegraf.*
-      bind 0.0.0.0
-      port 25229
-     </source>
+    #  <source>
+    #   type forward
+    #   tag oms.mdm.telegraf.*
+    #   bind 0.0.0.0
+    #   port 25229
+    #  </source>
 
      #Kubernetes pod inventory
      <source>
@@ -126,26 +126,26 @@ data:
       type filter_health_model_builder
      </filter>
 
-     <filter oms.mdm.telegraf**>
-      type filter_telegraf2mdm
-      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-      log_level debug
-     </filter>
+    #  <filter oms.mdm.telegraf**>
+    #   type filter_telegraf2mdm
+    #   custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
+    #   log_level debug
+    #  </filter>
 
-     <match oms.mdm.telegraf**>
-      type out_mdm
-      log_level debug
-      num_threads 5
-      buffer_type file
-      buffer_path %STATE_DIR_WS%/out_mdm_telegraf*.buffer
-      buffer_queue_full_action drop_oldest_chunk
-      buffer_chunk_limit 4m
-      flush_interval 20s
-      retry_limit 10
-      retry_wait 5s
-      max_retry_wait 5m
-      retry_mdm_post_wait_minutes 30
-     </match>
+    #  <match oms.mdm.telegraf**>
+    #   type out_mdm
+    #   log_level debug
+    #   num_threads 5
+    #   buffer_type file
+    #   buffer_path %STATE_DIR_WS%/out_mdm_telegraf*.buffer
+    #   buffer_queue_full_action drop_oldest_chunk
+    #   buffer_chunk_limit 4m
+    #   flush_interval 20s
+    #   retry_limit 10
+    #   retry_wait 5s
+    #   max_retry_wait 5m
+    #   retry_mdm_post_wait_minutes 30
+    #  </match>
 
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
