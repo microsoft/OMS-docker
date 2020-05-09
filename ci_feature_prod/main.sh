@@ -68,6 +68,8 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
 fi
 
+export PROXY_ENDPOINT=""
+
 # Check for internet connectivity or workspace deletion
 if [ -e "/etc/omsagent-secret/WSID" ]; then
       workspaceId=$(cat /etc/omsagent-secret/WSID)
@@ -78,12 +80,12 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       fi
       proxy=""
       if [ -e "/etc/omsagent-secret/PROXY" ]; then
-            proxy=$(cat /etc/omsagent-secret/PROXY)
+            export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
       fi
 
-      if [ ! -z "$proxy" ]; then
-         echo "Making curl request to oms endpint with domain: $domain and proxy: $proxy"
-         curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $proxy
+      if [ ! -z "$PROXY_ENDPOINT" ]; then
+         echo "Making curl request to oms endpint with domain: $domain and proxy: $PROXY_ENDPOINT"
+         curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $PROXY_ENDPOINT
       else
          echo "Making curl request to oms endpint with domain: $domain"
          curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
@@ -96,8 +98,8 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
             else
                   # Retrying here to work around network timing issue
                   echo "ifconfig check succeeded, retrying oms endpoint..."
-                  if [ ! -z "$proxy" ]; then
-                    curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $proxy
+                  if [ ! -z "$PROXY_ENDPOINT" ]; then
+                    curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $PROXY_ENDPOINT
                   else
                     curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
                   fi
@@ -114,6 +116,18 @@ else
       echo "LA Onboarding:Workspace Id not mounted, skipping the telemetry check"
 fi
 
+# set http_proxy and https_proxy environment variables if the proxy configured
+if [ ! -z "$PROXY_ENDPOINT" ]; then
+      echo "setting http and https environment variables" 
+      echo "export http_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export HTTP_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc      
+      echo "export https_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export HTTPS_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc     
+      source ~/.bashrc
+      echo "proxy endpoint:$PROXY_ENDPOINT"
+else
+    echo "proxy endpoint not configured" 
+fi
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
@@ -305,7 +319,7 @@ if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/PROXY ]; then
      if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN` -p `cat /etc/omsagent-secret/PROXY`
-     else
+     else 
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -p `cat /etc/omsagent-secret/PROXY`
      fi
   elif [ -a /etc/omsagent-secret/DOMAIN ]; then

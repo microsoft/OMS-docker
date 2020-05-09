@@ -80,7 +80,7 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       fi
       
       if [ -e "/etc/omsagent-secret/PROXY" ]; then
-            PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
+            export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
       fi
 
       if [ ! -z "$PROXY_ENDPOINT" ]; then
@@ -118,10 +118,15 @@ fi
 
 # set http_proxy and https_proxy environment variables if the proxy configured
 if [ ! -z "$PROXY_ENDPOINT" ]; then
+      echo "setting http and https environment variables" 
       echo "export http_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export HTTP_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc      
       echo "export https_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export HTTPS_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc     
       source ~/.bashrc
       echo "proxy endpoint:$PROXY_ENDPOINT"
+else
+    echo "proxy endpoint not configured" 
 fi
  
 #Parse the configmap to set the right environment variables.
