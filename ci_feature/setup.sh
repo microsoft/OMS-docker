@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://dockerprovider.blob.core.windows.net/cifeatureprod/docker-cimprov-1.0.0-3.universal.x86_64.sh
+wget https://dockerprovider.blob.core.windows.net/mdsddockerprovider/docker-cimprov-8.0.0-2.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -34,7 +34,7 @@ mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
 
 #install oneagent
-wget https://dockerprovider.blob.core.windows.net/mdsdagent/azure-mdsd_1.5.122-build.dev_x86_64-05062020-2.deb
+wget https://dockerprovider.blob.core.windows.net/mdsdagent/azure-mdsd_1.5.122-build.develop.1087_x86_64.deb
 /usr/bin/dpkg -i $TMPDIR/azure-mdsd*.deb
 cp -f $TMPDIR/mdsd.xml /etc/mdsd.d
 cp -f $TMPDIR/envmdsd /etc/mdsd.d
@@ -66,7 +66,7 @@ wget https://github.com/microsoft/Docker-Provider/releases/download/5.0.0.0/tele
 
 chmod 777 /opt/telegraf
 
-/$TMPDIR/docker-cimprov-1.0.0-*.x86_64.sh --install
+/$TMPDIR/docker-cimprov-8.0.0-*.x86_64.sh --install
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
