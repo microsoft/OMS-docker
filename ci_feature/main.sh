@@ -78,7 +78,7 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       else
             domain="opinsights.azure.com"
       fi
-      
+
       if [ -e "/etc/omsagent-secret/PROXY" ]; then
             export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
       fi
@@ -96,7 +96,7 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
             if [ $RET -eq 000 ]; then
                   echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
             else
-                  # Retrying here to work around network timing issue                
+                  # Retrying here to work around network timing issue
                   if [ ! -z "$PROXY_ENDPOINT" ]; then
                     echo "ifconfig check succeeded, retrying oms endpoint with proxy..."
                     curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $PROXY_ENDPOINT
@@ -119,14 +119,16 @@ fi
 
 # set http_proxy and https_proxy environment variables if the proxy configured
 if [ ! -z "$PROXY_ENDPOINT" ]; then
-      echo "setting HTTP_PROXY and HTTPS_PROXY environment variables" 
-      echo "export HTTP_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc      
-      echo "export HTTPS_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc     
+      echo "setting HTTP_PROXY and HTTPS_PROXY environment variables"
+      echo "export HTTP_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export HTTPS_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc
+      # set lowercase ones as well since some httpclients look for these
+      echo "export http_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
+      echo "export https_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
       source ~/.bashrc
       echo "proxy endpoint:$PROXY_ENDPOINT"
-else
-    echo "proxy endpoint not configured" 
 fi
+
 #Parse the configmap to set the right environment variables.
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser.rb
 
@@ -318,7 +320,7 @@ if [ -z $INT ]; then
   if [ -a /etc/omsagent-secret/PROXY ]; then
      if [ -e "/etc/omsagent-secret/DOMAIN" ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN` -p `cat /etc/omsagent-secret/PROXY`
-     else 
+     else
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -p `cat /etc/omsagent-secret/PROXY`
      fi
   elif [ -a /etc/omsagent-secret/DOMAIN ]; then
