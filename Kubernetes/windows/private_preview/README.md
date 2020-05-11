@@ -6,6 +6,9 @@ Steps to onboard
 2.	Update AKS_RESOURCE_ID, AKS_REGION with the cluster resource id and region from the properties page in the cluster.
 4.	Do a ‘kubectl apply -f omsagent.yaml’ on the cluster you’re trying to onboard.
 
+Once onboarded you should see Daemonset pods running in all of your windows nodes on the AKS cluster in the kube-system namespace.
+
+You can see them running by doing a `kubectl get pods -n kube-system`.
 
 E.g. Values that are going to be replaced in the YAML file:
 

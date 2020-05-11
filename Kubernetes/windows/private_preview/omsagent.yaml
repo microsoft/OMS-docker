@@ -14,7 +14,7 @@ spec:
    serviceAccountName: omsagent
    containers:
      - name: omsagent-private-preview-windows
-       image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:windowsprivatepreview_04232020_v1
+       image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:win-20200507-062708z-7f95982
        imagePullPolicy: Always
        resources:
         limits:
@@ -63,12 +63,6 @@ spec:
         timeoutSeconds: 10
    nodeSelector:
     beta.kubernetes.io/os: windows
-   # Tolerate a NoSchedule taint on master that ACS Engine sets.
-   tolerations:
-    - key: "node-role.kubernetes.io/master"
-      operator: "Equal"
-      value: "true"
-      effect: "NoSchedule"
    volumes:
     - name: docker-windows-kuberenetes-container-logs
       hostPath:
