@@ -648,7 +648,7 @@ spec:
       - name: docker-windows-kuberenetes-container-logs
         hostPath:
           path: C:\var
-      - name: docker-windows-docker-containers
+      - name: docker-windows-containers
         hostPath:
           path: C:\ProgramData\docker\containers
       - name: settings-vol-config
