@@ -8,7 +8,7 @@ Please enable [Azure Monitor for containers](https://docs.microsoft.com/en-us/az
 
 ## Overview
 
-Azure monitor for containers is already collecting metrics and logs for linux nodes and metrics for windows nodes. This private preview works in conjunction with the aforementioned GA product. It is adding the capability to collect STDOUT and STDERR logs being produced within a container and sending it to the Log Analytics workspace that you've configured in the prerequisite.
+Azure monitor for containers is already collecting metrics and logs for linux nodes and metrics for windows nodes. This private preview feature works in conjunction with the aforementioned GA product. It is adding the capability to collect STDOUT and STDERR logs being produced within a container and sending it to the Log Analytics workspace that you've configured in the prerequisite.
 
 -----------
 
@@ -30,5 +30,3 @@ Values that are going to be replaced in the YAML file:
 
 1.  AKS_RESOURCE_ID: "/subscriptions/{subscription_id}/resourcegroups/{resource_group_name}/providers/Microsoft.ContainerService/managedClusters/{cluster_name}"
 2.  AKS_REGION: "West Europe"
-
-The values for AKS_RESOURCE_ID and AKS_REGION can be found in the Azure portal on the 'properties' page of an AKS cluster.
