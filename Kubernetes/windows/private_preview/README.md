@@ -2,13 +2,13 @@
 
 ## Prerequisite
 
-Please [enable Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard) on your AKS clusters.
+Please enable [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-onboard) on your AKS clusters.
 
 -----------
 
 ## Overview
 
-This private preview works in conjunction with the aforementioned GA product. It is adding the capability to collect STDOUT and STDERR logs being produced within a container and sending it to the Log Analytics workspace that you've configured
+Azure monitor for containers is already collecting metrics and logs for linux nodes and metrics for windows nodes. This private preview works in conjunction with the aforementioned GA product. It is adding the capability to collect STDOUT and STDERR logs being produced within a container and sending it to the Log Analytics workspace that you've configured in the prerequisite.
 
 -----------
 
