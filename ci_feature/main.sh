@@ -119,14 +119,17 @@ fi
 
 # set http_proxy and https_proxy environment variables if the proxy configured
 if [ ! -z "$PROXY_ENDPOINT" ]; then
-      echo "setting HTTP_PROXY and HTTPS_PROXY environment variables"
+      echo "setting PROXY (HTTP and HTTPS) environment variables"
+      export HTTP_PROXY=$PROXY_ENDPOINT
+      export HTTPS_PROXY=$PROXY_ENDPOINT
       echo "export HTTP_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc
       echo "export HTTPS_PROXY=$PROXY_ENDPOINT" >> ~/.bashrc
       # set lowercase ones as well since some httpclients look for these
+      export http_proxy=$PROXY_ENDPOINT
+      export https_proxy=$PROXY_ENDPOINT 
       echo "export http_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
       echo "export https_proxy=$PROXY_ENDPOINT" >> ~/.bashrc
       source ~/.bashrc
-      echo "proxy endpoint:$PROXY_ENDPOINT"
 fi
 
 #Parse the configmap to set the right environment variables.
