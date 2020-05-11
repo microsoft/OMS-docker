@@ -30,3 +30,5 @@ Example values that are going to be replaced in the YAML file:
 
 1.  AKS_RESOURCE_ID: "/subscriptions/{subscription_id}/resourcegroups/{resource_group_name}/providers/Microsoft.ContainerService/managedClusters/{cluster_name}"
 2.  AKS_REGION: "West Europe"
+
+![AKS Properties](./aks_properties.png)
