@@ -41,8 +41,6 @@ try
     do
     {
         Wait-Event -Timeout 60
-        Write-Host "." -NoNewline
-        
     } while ($true)
 }
 finally
