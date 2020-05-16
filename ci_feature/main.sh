@@ -68,6 +68,8 @@ if [  -e "/etc/config/settings/config-version" ] && [  -s "/etc/config/settings/
       echo "AZMON_AGENT_CFG_FILE_VERSION:$AZMON_AGENT_CFG_FILE_VERSION"
 fi
 
+export PROXY_ENDPOINT=""
+
 # Check for internet connectivity or workspace deletion
 if [ -e "/etc/omsagent-secret/WSID" ]; then
       workspaceId=$(cat /etc/omsagent-secret/WSID)
@@ -76,8 +78,19 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       else
             domain="opinsights.azure.com"
       fi
-      echo "Making curl request to oms endpint with domain: $domain"
-      curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+
+      if [ -e "/etc/omsagent-secret/PROXY" ]; then
+            export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
+      fi
+
+      if [ ! -z "$PROXY_ENDPOINT" ]; then
+         echo "Making curl request to oms endpint with domain: $domain and proxy: $PROXY_ENDPOINT"
+         curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $PROXY_ENDPOINT
+      else
+         echo "Making curl request to oms endpint with domain: $domain"
+         curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+      fi
+
       if [ $? -ne 0 ]; then
             echo "Making curl request to ifconfig"
             RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
@@ -85,8 +98,14 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
                   echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
             else
                   # Retrying here to work around network timing issue
-                  echo "ifconfig check succeeded, retrying oms endpoint..."
-                  curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+                  if [ ! -z "$PROXY_ENDPOINT" ]; then
+                    echo "ifconfig check succeeded, retrying oms endpoint with proxy..."
+                    curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest --proxy $PROXY_ENDPOINT
+                  else
+                    echo "ifconfig check succeeded, retrying oms endpoint..."
+                    curl --max-time 10 https://$workspaceId.oms.$domain/AgentService.svc/LinuxAgentTopologyRequest
+                  fi
+
                   if [ $? -ne 0 ]; then
                         echo "-e error    Error resolving host during the onboarding request. Workspace might be deleted."
                   else
@@ -179,7 +198,7 @@ if [ "$cAdvisorIsSecure" = true ] ; then
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      IS_GET_PODS_API_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')           
+      IS_GET_PODS_API_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')
 
 else
       echo "Wget request using port 10250 failed. Using port 10255"
@@ -188,18 +207,18 @@ else
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      IS_GET_PODS_API_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')   
+      IS_GET_PODS_API_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')
 fi
 
 if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
       podsResponse=$(cat podsResponseFile)
       ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
       echo "found items count: $ITEMS_COUNT"
-      if [ $ITEMS_COUNT -gt 0 ]; then 
+      if [ $ITEMS_COUNT -gt 0 ]; then
             # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
-            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')                         
+            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')
             ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
-            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then 
+            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then
                   containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
                   nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
                   # convert to lower case so that everywhere else can be used in lowercase
@@ -207,27 +226,27 @@ if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
                   # update runtime only if its not empty and not startswith docker
                   if [ -z $containerRuntime ]; then
-                      echo "using default container runtime as docker since got containeRuntime as empty string"                              
-                  elif [[ $containerRuntime != docker* ]]; then                     
-                       export CONTAINER_RUNTIME=$containerRuntime                       
+                      echo "using default container runtime as docker since got containeRuntime as empty string"
+                  elif [[ $containerRuntime != docker* ]]; then
+                       export CONTAINER_RUNTIME=$containerRuntime
                   fi
 
                   if [ -z $nodeName ]; then
                     echo "-e error nodeName in /pods API response is empty"
                   else
-                     export NODE_NAME=$nodeName   
-                  fi           
+                     export NODE_NAME=$nodeName
+                  fi
             else
-              echo "-e error  none of the pods in the /pods response has valid containerID"                           
-            fi   
+              echo "-e error  none of the pods in the /pods response has valid containerID"
+            fi
       else
-            echo "-e error  items in the /pods response is 0"           
+            echo "-e error  items in the /pods response is 0"
       fi
-            
+
 else
-    echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"                     
-fi 
-      
+    echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
+fi
+
 echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
 echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
 echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
@@ -243,10 +262,10 @@ echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_docker_operations"
 export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_docker_operations_errors"
 
-if [ "$CONTAINER_RUNTIME" != "docker" ]; then          
+if [ "$CONTAINER_RUNTIME" != "docker" ]; then
    # these metrics are avialble only on k8s versions <1.18 and will get deprecated from 1.18
    export KUBELET_RUNTIME_OPERATIONS_METRIC="kubelet_runtime_operations"
-   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"    
+   export KUBELET_RUNTIME_OPERATIONS_ERRORS_METRIC="kubelet_runtime_operations_errors"
 else
    #if container run time is docker then add omsagent user to local docker group to get access to docker.sock
    # docker.sock only use for the telemetry to get the docker version
@@ -260,7 +279,7 @@ else
       groupadd -for -g ${DOCKER_GID} ${DOCKER_GROUP}
       echo "adding omsagent user to local docker group"
       usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
-   fi          
+   fi
 fi
 
 echo "set caps for ruby process to read container env from proc"
@@ -288,7 +307,13 @@ cat /var/opt/microsoft/docker-cimprov/state/containerhostname
 rm -f /etc/opt/microsoft/omsagent/conf/omsagent.d/omsconfig.consistencyinvoker.conf
 
 if [ -z $INT ]; then
-  if [ -a /etc/omsagent-secret/DOMAIN ]; then
+  if [ -a /etc/omsagent-secret/PROXY ]; then
+     if [ -a /etc/omsagent-secret/DOMAIN ]; then
+        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN` -p `cat /etc/omsagent-secret/PROXY`
+     else
+        /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -p `cat /etc/omsagent-secret/PROXY`
+     fi
+  elif [ -a /etc/omsagent-secret/DOMAIN ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY` -d `cat /etc/omsagent-secret/DOMAIN`
   elif [ -a /etc/omsagent-secret/WSID ]; then
         /opt/microsoft/omsagent/bin/omsadmin.sh -w `cat /etc/omsagent-secret/WSID` -s `cat /etc/omsagent-secret/KEY`
