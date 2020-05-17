@@ -1,5 +1,5 @@
 function Confirm-WindowsServiceExists($name)
-{   
+{
     if (Get-Service $name -ErrorAction SilentlyContinue)
     {
         return $true
@@ -8,12 +8,12 @@ function Confirm-WindowsServiceExists($name)
 }
 
 function Remove-WindowsServiceIfItExists($name)
-{   
+{
     $exists = Confirm-WindowsServiceExists $name
     if ($exists)
-    {    
+    {
         sc.exe \\server delete $name
-    }       
+    }
 }
 
 function Start-FileSystemWatcher
@@ -29,8 +29,8 @@ function Set-EnvironmentVariables
     if (Test-Path /etc/omsagent-secret/DOMAIN) {
         # TODO: Change to omsagent-secret before merging
         $domain =  Get-Content /etc/omsagent-secret/DOMAIN
-    } 
-    
+    }
+
     # Set DOMAIN
     [System.Environment]::SetEnvironmentVariable("DOMAIN", $domain, "Process")
     [System.Environment]::SetEnvironmentVariable("DOMAIN", $domain, "Machine")
@@ -39,8 +39,8 @@ function Set-EnvironmentVariables
     if (Test-Path /etc/omsagent-secret/WSID) {
         # TODO: Change to omsagent-secret before merging
         $wsID =  Get-Content /etc/omsagent-secret/WSID
-    } 
-    
+    }
+
     # Set DOMAIN
     [System.Environment]::SetEnvironmentVariable("WSID", $wsID, "Process")
     [System.Environment]::SetEnvironmentVariable("WSID", $wsID, "Machine")
@@ -49,16 +49,26 @@ function Set-EnvironmentVariables
     if (Test-Path /etc/omsagent-secret/KEY) {
         # TODO: Change to omsagent-secret before merging
         $wsKey =  Get-Content /etc/omsagent-secret/KEY
-    } 
-    
+    }
+
     # Set KEY
     [System.Environment]::SetEnvironmentVariable("WSKEY", $wsKey, "Process")
     [System.Environment]::SetEnvironmentVariable("WSKEY", $wsKey, "Machine")
 
+    $proxy = ""
+    if (Test-Path /etc/omsagent-secret/PROXY) {
+        # TODO: Change to omsagent-secret before merging
+        $wsKey =  Get-Content /etc/omsagent-secret/PROXY
+    }
+
+    # Set KEY
+    [System.Environment]::SetEnvironmentVariable("PROXY", $proxy, "Process")
+    [System.Environment]::SetEnvironmentVariable("PROXY", $proxy, "Machine")
+
     #set agent config schema version
     $schemaVersionFile = '/etc/config/settings/schema-version'
     if (Test-Path $schemaVersionFile) {
-        $schemaVersion = Get-Content $schemaVersionFile | ForEach-Object { $_.TrimEnd() } 
+        $schemaVersion = Get-Content $schemaVersionFile | ForEach-Object { $_.TrimEnd() }
         if ($schemaVersion.GetType().Name -eq 'String') {
             [System.Environment]::SetEnvironmentVariable("AZMON_AGENT_CFG_SCHEMA_VERSION", $schemaVersion, "Process")
             [System.Environment]::SetEnvironmentVariable("AZMON_AGENT_CFG_SCHEMA_VERSION", $schemaVersion, "Machine")
@@ -76,13 +86,13 @@ function Set-EnvironmentVariables
     .\setenv.ps1
 }
 
-function Start-Fluent 
+function Start-Fluent
 {
     # Run fluent-bit service first so that we do not miss any logs being forwarded by the fluentd service.
     # Run fluent-bit as a background job. Switch this to a windows service once fluent-bit supports natively running as a windows service
     Start-Job -ScriptBlock { Start-Process -NoNewWindow -FilePath "C:\opt\fluent-bit\bin\fluent-bit.exe" -ArgumentList @("-c", "C:\etc\fluent-bit\fluent-bit.conf", "-e", "C:\opt\omsagentwindows\out_oms.so") }
 
-    #register fluentd as a service and start 
+    #register fluentd as a service and start
     # there is a known issues with win32-service https://github.com/chef/win32-service/issues/70
     fluentd --reg-winsvc i --reg-winsvc-auto-start --winsvc-name fluentdwinaks --reg-winsvc-fluentdopt '-c C:/etc/fluent/fluent.conf -o C:/etc/fluent/fluent.log'
 
@@ -104,7 +114,7 @@ function Test-CertificatePath
         Write-Host "Certificate file not found at $($certLocation). EXITING....."
         exit 1
     }
-    else 
+    else
     {
         Write-Host "Certificate file found at $($certLocation)"
     }
@@ -114,7 +124,7 @@ function Test-CertificatePath
         Write-Host "Key file not found at $($keyLocation). EXITING...."
         exit 1
     }
-    else 
+    else
     {
         Write-Host "Key file found at $($keyLocation)"
     }
