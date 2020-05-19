@@ -13,7 +13,7 @@
     .PARAMETER kubeContext
         kube-context of the k8 cluster to install Azure Monitor for containers HELM chart
     .PARAMETER logAnalyticsWorkspaceResourceId (optional)
-        Provide the azure resource id of the existing  Azure Log Analytics Workspace
+        Provide the azure resource id of the existing  Azure Log Analytics Workspace if you want to use existing one
 
 
      Pre-requisites:
@@ -242,7 +242,7 @@ if ($null -eq $clusterResource) {
 $clusterRegion = $clusterResource.Location.ToLower()
 
 if ([string]::IsNullOrEmpty($logAnalyticsWorkspaceResourceId)) {
-    Write-Host("Creating or using default Log Analytics Workspace since there is log analytics workspace resource id ...")
+    Write-Host("Using or creating default Log Analytics Workspace since logAnalyticsWorkspaceResourceId parameter not set...")
     # mapping fors for default Azure Log Analytics workspace
     $AzureCloudLocationToOmsRegionCodeMap = @{
         "australiasoutheast" = "ASE" ;
