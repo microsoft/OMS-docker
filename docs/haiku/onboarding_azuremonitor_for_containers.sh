@@ -49,7 +49,7 @@ echo "Set AzureCloud as active cloud for az cli"
 az cloud set -n AzureCloud
 
 if [ -z $logAnalyticsWorkspaceResourceId ]; then
-  Write-Host("Using or creating default Log Analytics Workspace since logAnalyticsWorkspaceResourceId parameter not set...")
+  echo "Using or creating default Log Analytics Workspace since logAnalyticsWorkspaceResourceId parameter not set..."
 
   echo "login to the azure interactively"
   az login
