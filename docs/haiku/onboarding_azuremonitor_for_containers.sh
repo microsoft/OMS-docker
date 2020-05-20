@@ -52,7 +52,7 @@ if [ -z $logAnalyticsWorkspaceResourceId ]; then
   echo "Using or creating default Log Analytics Workspace since logAnalyticsWorkspaceResourceId parameter not set..."
 
   echo "login to the azure interactively"
-  az login
+  az login --use-device-code
 
   echo "set the arc cluster subscription id: ${subscriptionId}"
   az account set -s ${subscriptionId}
@@ -181,7 +181,7 @@ echo "workspaceResourceId:"$workspaceResourceId
 echo "workspaceGuid:"$workspaceGuid
 
 echo "adding containerinsights solution to workspace"
-solution=$(az group deployment create -g $workspaceResourceGroup --template-uri https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/docs/templates/azuremonitor-containerSolution.json --parameters workspaceResourceId=$workspaceResourceId --parameters workspaceRegion=$workspaceRegion)
+solution=$(az deployment group create -g $workspaceResourceGroup --template-uri https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature_prod/docs/templates/azuremonitor-containerSolution.json --parameters workspaceResourceId=$workspaceResourceId --parameters workspaceRegion=$workspaceRegion)
 
 echo "getting workspace primaryshared key"
 workspaceKey=$(az rest --method post --uri $workspaceResourceId/sharedKeys?api-version=2015-11-01-preview --query primarySharedKey)
