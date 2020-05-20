@@ -45,6 +45,16 @@ echo "cluster ResourceGroup:" $resourceGroup
 echo "cluster ProviderName:" $providerName
 echo "cluster Name:" $clusterName
 
+if [ -z "$subscriptionId" -o -z "$resourceGroup" -o -z "$providerName" -o  -z "$clusterName" ]; then
+  echo "Error: invalid cluster resource id. Please try with valid fully qualified resource id of the cluster"
+  exit 1
+fi
+
+if [ -z "$kubeconfigContext" ]; then
+  echo "Error: kubeconfig context is empty. Please try with valid kube-context of the cluster"
+  exit 1
+fi
+
 echo "Set AzureCloud as active cloud for az cli"
 az cloud set -n AzureCloud
 
