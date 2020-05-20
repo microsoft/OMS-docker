@@ -186,7 +186,6 @@ solution=$(az deployment group create -g $workspaceResourceGroup --template-uri 
 echo "getting workspace primaryshared key"
 workspaceKey=$(az rest --method post --uri $workspaceResourceId/sharedKeys?api-version=2015-11-01-preview --query primarySharedKey)
 workspaceKey=$(echo $workspaceKey | tr -d '"')
-echo $workspaceKey
 
 echo "set the cluster subscription id: ${subscriptionId}"
 az account set -s ${subscriptionId}
