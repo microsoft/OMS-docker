@@ -198,7 +198,7 @@ echo "set the ARO v4 cluster subscription id: ${subscriptionId}"
 az account set -s ${subscriptionId}
 
 echo "attach loganalyticsworkspaceResourceId tag on to cluster resource"
-status=$(az resource tag --tags logAnalyticsWorkspaceResourceId=$workspaceResourceId -g $resourceGroup -n $clusterName --resource-type Microsoft.RedHatOpenShift/OpenShiftClusters)
+status=$(az  resource update --set tags.logAnalyticsWorkspaceResourceId=$workspaceResourceId -g $resourceGroup -n $clusterName --resource-type Microsoft.RedHatOpenShift/OpenShiftClusters)
 
 
 

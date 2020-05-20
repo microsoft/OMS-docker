@@ -192,7 +192,7 @@ echo "set the cluster subscription id: ${subscriptionId}"
 az account set -s ${subscriptionId}
 
 echo "attach loganalyticsworkspaceResourceId tag on to cluster resource"
-status=$(az resource tag --tags logAnalyticsWorkspaceResourceId=$workspaceResourceId -g $resourceGroup -n $clusterName --resource-type Microsoft.Kubernetes/connectedClusters)
+status=$(az  resource update --set tags.logAnalyticsWorkspaceResourceId=$workspaceResourceId -g $resourceGroup -n $clusterName --resource-type Microsoft.Kubernetes/connectedClusters)
 
 echo "installing Azure Monitor for containers HELM chart ..."
 
