@@ -92,8 +92,13 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       fi
 
       if [ $? -ne 0 ]; then
-            echo "Making curl request to ifconfig"
-            RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
+            if [ ! -z "$PROXY_ENDPOINT" ]; then
+               echo "Making curl request to ifconfig.co with proxy: $PROXY_ENDPOINT"
+               RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
+            else
+               echo "Making curl request to ifconfig.co"
+               RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
+            fi
             if [ $RET -eq 000 ]; then
                   echo "-e error    Error resolving host during the onboarding request. Check the internet connectivity and/or network policy on the cluster"
             else

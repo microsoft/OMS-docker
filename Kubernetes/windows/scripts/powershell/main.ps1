@@ -58,7 +58,7 @@ function Set-EnvironmentVariables
     $proxy = ""
     if (Test-Path /etc/omsagent-secret/PROXY) {
         # TODO: Change to omsagent-secret before merging
-        $wsKey =  Get-Content /etc/omsagent-secret/PROXY
+        $proxy =  Get-Content /etc/omsagent-secret/PROXY
     }
 
     # Set KEY
