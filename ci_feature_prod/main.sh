@@ -120,7 +120,7 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
       if [ $? -ne 0 ]; then
             if [ ! -z "$PROXY_ENDPOINT" ]; then
                echo "Making curl request to ifconfig.co with proxy: $PROXY_ENDPOINT"
-               RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
+               RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co --proxy $PROXY_ENDPOINT`
             else
                echo "Making curl request to ifconfig.co"
                RET=`curl --max-time 10 -s -o /dev/null -w "%{http_code}" ifconfig.co`
