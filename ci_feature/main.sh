@@ -81,6 +81,32 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
 
       if [ -e "/etc/omsagent-secret/PROXY" ]; then
             export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
+            # Validate Proxy Endpoint URL 
+            # extract the protocol://
+            proto="$(echo $PROXY_ENDPOINT | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+            # convert the protocol prefix in lowercase for validation
+            proxyprotocol=$(echo $proto | tr "[:upper:]" "[:lower:]")
+            if [ "$proxyprotocol" != "http://" -a "$proxyprotocol" != "https://" ]; then
+               echo "-e error proxy endpoint should be in this format http(s)://<user>:<pwd>@<hostOrIP>:<port>"           
+            fi
+            # remove the protocol
+            url="$(echo ${PROXY_ENDPOINT/$proto/})"
+            # extract the creds
+            creds="$(echo $url | grep @ | cut -d@ -f1)"
+            user="$(echo $creds | cut -d':' -f1)"
+            pwd="$(echo $creds | cut -d':' -f2)"
+            # extract the host and port
+            hostport="$(echo ${url/$creds@/} | cut -d/ -f1)"
+            # extract host without port    
+            host="$(echo $hostport | sed -e 's,:.*,,g')"
+            # extract the port
+            port="$(echo $hostport | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
+
+            if [ -z "$user" -o -z "$pwd" -o -z "$host" -o -z "$port" ]; then
+               echo "-e error proxy endpoint should be in this format http(s)://<user>:<pwd>@<hostOrIP>:<port>"
+            else
+               echo "successfully validated provided proxy endpoint is valid and expected format"
+            fi
       fi
 
       if [ ! -z "$PROXY_ENDPOINT" ]; then
