@@ -209,6 +209,14 @@ if [ -e "telemetry_prom_config_env_var" ]; then
       source telemetry_prom_config_env_var
 fi
 
+#Parse the configmap to set the right environment variables for MDM metrics configuration for Alerting.
+/opt/microsoft/omsagent/ruby/bin/ruby tomlparser-mdm-metrics-config.rb
+
+cat config_mdm_metrics_env_var | while read line; do
+    echo $line >> ~/.bashrc
+done
+source config_mdm_metrics_env_var
+
 #Setting environment variable for CAdvisor metrics to use port 10255/10250 based on curl request
 echo "Making wget request to cadvisor endpoint with port 10250"
 #Defaults to use port 10255
