@@ -58,14 +58,6 @@ data:
       chunk_size_limit 4m
      </source>
 
-    # MDM metrics forwarded from fluentbit
-    #  <source>
-    #   type forward
-    #   tag oms.mdm.telegraf.*
-    #   bind 0.0.0.0
-    #   port 25229
-    #  </source>
-
      #Kubernetes pod inventory
      <source>
       type kubepodinventory
@@ -125,27 +117,6 @@ data:
      <filter kubehealth**>
       type filter_health_model_builder
      </filter>
-
-    #  <filter oms.mdm.telegraf**>
-    #   type filter_telegraf2mdm
-    #   custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
-    #   log_level debug
-    #  </filter>
-
-    #  <match oms.mdm.telegraf**>
-    #   type out_mdm
-    #   log_level debug
-    #   num_threads 5
-    #   buffer_type file
-    #   buffer_path %STATE_DIR_WS%/out_mdm_telegraf*.buffer
-    #   buffer_queue_full_action drop_oldest_chunk
-    #   buffer_chunk_limit 4m
-    #   flush_interval 20s
-    #   retry_limit 10
-    #   retry_wait 5s
-    #   max_retry_wait 5m
-    #   retry_mdm_post_wait_minutes 30
-    #  </match>
 
      <match oms.containerinsights.KubePodInventory**>
       type out_oms
@@ -221,7 +192,7 @@ data:
       max_retry_wait 5m
      </match>
 
-     <match oms.api.KubePerf**>	
+     <match oms.api.KubePerf**>
       type out_oms
       log_level debug
       num_threads 5
@@ -356,8 +327,8 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "microsoft/oms:ci-mdm-alerts-preview"
-          imagePullPolicy: Always
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               cpu: 150m
@@ -366,10 +337,13 @@ spec:
               cpu: 75m
               memory: 225Mi
           env:
-            - name: AKS_RESOURCE_ID
-              value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            - name: AKS_REGION
-              value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            # - name: AKS_RESOURCE_ID
+            #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            # - name: AKS_REGION
+            #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            #Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+            - name: ACS_RESOURCE_NAME
+              value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "DaemonSet"
             - name: NODE_IP
@@ -485,8 +459,8 @@ spec:
       serviceAccountName: omsagent
       containers:
         - name: omsagent
-          image: "microsoft/oms:ci-mdm-alerts-preview"
-          imagePullPolicy: Always
+          image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod04162020"
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               cpu: 1
@@ -495,10 +469,13 @@ spec:
               cpu: 150m
               memory: 250Mi
           env:
-            - name: AKS_RESOURCE_ID
-              value: "VALUE_AKS_RESOURCE_ID_VALUE"
-            - name: AKS_REGION
-              value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            # - name: AKS_RESOURCE_ID
+            #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+            # - name: AKS_REGION
+            #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+            # Uncomment below two lines for ACS clusters and set the cluster names manually. Also comment out the above two lines for ACS clusters
+            - name: ACS_RESOURCE_NAME
+              value: "my_acs_cluster_name"
             - name: CONTROLLER_TYPE
               value: "ReplicaSet"
             - name: NODE_IP
@@ -594,6 +571,93 @@ spec:
           configMap:
             name: container-azm-ms-agentconfig
             optional: true
+---
+  apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+   name: omsagent-win
+   namespace: kube-system
+   labels:
+    component: oms-agent
+    tier: node
+  spec:
+   updateStrategy:
+    type: RollingUpdate
+   selector:
+    matchLabels:
+      component: oms-agent
+      tier: node
+   template:
+    metadata:
+      labels:
+        component: oms-agent
+        tier: node
+      annotations:
+        agentVersion: "1.10.0.1"
+        dockerProviderVersion: "9.0.0-1"
+        schema-versions: "v1"
+    spec:
+     serviceAccountName: omsagent
+     containers:
+       - name: omsagent-win
+         image:  mcr.microsoft.com/azuremonitor/containerinsights/cidev:win-20200507-062708z-7f95982
+         imagePullPolicy: IfNotPresent
+         resources:
+          limits:
+           cpu: 150m
+           memory: 600Mi
+          requests:
+           cpu: 75m
+           memory: 225Mi
+         env:
+          # - name: AKS_RESOURCE_ID
+          #   value: "VALUE_AKS_RESOURCE_ID_VALUE"
+          # - name: AKS_REGION
+          #   value: "VALUE_AKS_RESOURCE_REGION_VALUE"
+          - name: ACS_RESOURCE_NAME
+            value: "my_acs_cluster_name"
+          - name: CONTROLLER_TYPE
+            value: "DaemonSet"
+          - name: HOSTNAME
+            valueFrom:
+               fieldRef:
+                 fieldPath: spec.nodeName
+         volumeMounts:
+          - mountPath: C:\ProgramData\docker\containers
+            name: docker-windows-containers
+            readOnly: true
+          - mountPath: C:\var #Read + Write access on this for position file
+            name: docker-windows-kuberenetes-container-logs
+          - mountPath: C:\etc\config\settings
+            name: settings-vol-config
+            readOnly: true
+          - mountPath: C:\etc\omsagent-secret
+            name: omsagent-secret
+            readOnly: true
+         livenessProbe:
+          exec:
+            command:
+              - cmd
+              - /c
+              - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+          periodSeconds: 60
+          initialDelaySeconds: 180
+     nodeSelector:
+      beta.kubernetes.io/os: windows
+     volumes:
+      - name: docker-windows-kuberenetes-container-logs
+        hostPath:
+          path: C:\var
+      - name: docker-windows-containers
+        hostPath:
+          path: C:\ProgramData\docker\containers
+      - name: settings-vol-config
+        configMap:
+          name: container-azm-ms-agentconfig
+          optional: true
+      - name: omsagent-secret
+        secret:
+         secretName: omsagent-secret
 ---
 kind: Service
 apiVersion: v1
