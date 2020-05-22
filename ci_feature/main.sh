@@ -213,7 +213,6 @@ fi
 /opt/microsoft/omsagent/ruby/bin/ruby tomlparser-mdm-metrics-config.rb
 
 cat config_mdm_metrics_env_var | while read line; do
-    #echo $line
     echo $line >> ~/.bashrc
 done
 source config_mdm_metrics_env_var
