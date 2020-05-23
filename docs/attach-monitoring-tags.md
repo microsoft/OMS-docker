@@ -58,6 +58,6 @@ curl -sL https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/
 
 Example for AKS-Engine clusters in Azure China cloud
 
-curl -sL https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/aksengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "AzureChinaCloud" "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster
+curl -sL https://raw.githubusercontent.com/microsoft/OMS-docker/ci_feature/docs/aksengine/kubernetes/AddMonitoringOnboardingTags.sh | bash -s "AzureChinaCloud" "00000000-0000-0000-0000-000000000000"  "my-aks-engine-cluster-rg"  "/subscriptions/<SubscriptionId>/resourceGroups/workspaceRg/providers/Microsoft.OperationalInsights/workspaces/workspaceName" "my-aks-engine-cluster"
 
 ```

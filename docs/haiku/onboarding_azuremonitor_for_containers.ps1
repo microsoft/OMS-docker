@@ -3,7 +3,7 @@
 
      Onboards Azure Monitor for containers to Kubernetes cluster hosted outside and connected to Azure via Azure Arc cluster
 
-      1. Creates the Default Azure log analytics workspace if doesn't exist one in specified subscription
+      1. Creates or Use the Default Azure log analytics workspace if there is no specified Azure Log analytics workspace
       2. Adds the ContainerInsights solution to the Azure log analytics workspace
       3. Adds the logAnalyticsWorkspaceResourceId tag on the provided Azure Arc Cluster
       4. Installs Azure Monitor for containers HELM chart to the K8s cluster in Kubeconfig
@@ -12,6 +12,9 @@
         Id of the Azure Arc Cluster
     .PARAMETER kubeContext
         kube-context of the k8 cluster to install Azure Monitor for containers HELM chart
+    .PARAMETER logAnalyticsWorkspaceResourceId (optional)
+        Provide the azure resource id of the existing  Azure Log Analytics Workspace if you want to use existing one
+
 
      Pre-requisites:
       -  Azure Arc cluster Resource Id
@@ -25,7 +28,9 @@ param(
     [Parameter(mandatory = $true)]
     [string]$azureArcClusterResourceId,
     [Parameter(mandatory = $true)]
-    [string]$kubeContext
+    [string]$kubeContext,
+    [Parameter(mandatory = $false)]
+    [string]$logAnalyticsWorkspaceResourceId
 )
 
 # checks the required Powershell modules exist and if not exists, request the user permission to install
@@ -157,7 +162,18 @@ if ([string]::IsNullOrEmpty($azureArcClusterResourceId)) {
     exit
 }
 
-if (($azureArcClusterResourceId.Contains("Microsoft.Kubernetes/connectedClusters") -ne $true) -or ($azureArcClusterResourceId.Split("/").Length -ne 9)) {
+$azureArcClusterResourceId = $azureArcClusterResourceId.Trim()
+if ($azureArcClusterResourceId.EndsWith("/")) {
+    Write-Host("Trimming redundant / in tail end of cluster resource id")
+    $azureArcClusterResourceId = $azureArcClusterResourceId.TrimEnd("/")
+}
+
+if ($azureArcClusterResourceId.StartsWith("/") -eq $false) {
+    Write-Host("Prepending / to cluster resource id since this doesnt exist")
+    $azureArcClusterResourceId = "/" + $azureArcClusterResourceId
+}
+
+if (($azureArcClusterResourceId.ToLower().Contains("microsoft.kubernetes/connectedclusters") -ne $true) -or ($azureArcClusterResourceId.Split("/").Length -ne 9)) {
     Write-Host("Provided cluster resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.Kubernetes/connectedClusters/<clusterName>") -ForegroundColor Red
     exit
 }
@@ -223,101 +239,143 @@ if ($null -eq $clusterResource) {
     Write-Host("specified Azure Arc cluster resource id either you dont have access or doesnt exist") -ForegroundColor Red
     exit
 }
-$clusterRegion = $clusterResource.Location
+$clusterRegion = $clusterResource.Location.ToLower()
 
-# mapping fors for default Azure Log Analytics workspace
-$AzureCloudLocationToOmsRegionCodeMap = @{
-    "australiasoutheast" = "ASE" ;
-    "australiaeast"      = "EAU" ;
-    "australiacentral"   = "CAU" ;
-    "canadacentral"      = "CCA" ;
-    "centralindia"       = "CIN" ;
-    "centralus"          = "CUS" ;
-    "eastasia"           = "EA" ;
-    "eastus"             = "EUS" ;
-    "eastus2"            = "EUS2" ;
-    "eastus2euap"        = "EAP" ;
-    "francecentral"      = "PAR" ;
-    "japaneast"          = "EJP" ;
-    "koreacentral"       = "SE" ;
-    "northeurope"        = "NEU" ;
-    "southcentralus"     = "SCUS" ;
-    "southeastasia"      = "SEA" ;
-    "uksouth"            = "SUK" ;
-    "usgovvirginia"      = "USGV" ;
-    "westcentralus"      = "EUS" ;
-    "westeurope"         = "WEU" ;
-    "westus"             = "WUS" ;
-    "westus2"            = "WUS2"
-}
-$AzureCloudRegionToOmsRegionMap = @{
-    "australiacentral"   = "australiacentral" ;
-    "australiacentral2"  = "australiacentral" ;
-    "australiaeast"      = "australiaeast" ;
-    "australiasoutheast" = "australiasoutheast" ;
-    "brazilsouth"        = "southcentralus" ;
-    "canadacentral"      = "canadacentral" ;
-    "canadaeast"         = "canadacentral" ;
-    "centralus"          = "centralus" ;
-    "centralindia"       = "centralindia" ;
-    "eastasia"           = "eastasia" ;
-    "eastus"             = "eastus" ;
-    "eastus2"            = "eastus2" ;
-    "francecentral"      = "francecentral" ;
-    "francesouth"        = "francecentral" ;
-    "japaneast"          = "japaneast" ;
-    "japanwest"          = "japaneast" ;
-    "koreacentral"       = "koreacentral" ;
-    "koreasouth"         = "koreacentral" ;
-    "northcentralus"     = "eastus" ;
-    "northeurope"        = "northeurope" ;
-    "southafricanorth"   = "westeurope" ;
-    "southafricawest"    = "westeurope" ;
-    "southcentralus"     = "southcentralus" ;
-    "southeastasia"      = "southeastasia" ;
-    "southindia"         = "centralindia" ;
-    "uksouth"            = "uksouth" ;
-    "ukwest"             = "uksouth" ;
-    "westcentralus"      = "eastus" ;
-    "westeurope"         = "westeurope" ;
-    "westindia"          = "centralindia" ;
-    "westus"             = "westus" ;
-    "westus2"            = "westus2"
-}
+if ([string]::IsNullOrEmpty($logAnalyticsWorkspaceResourceId)) {
+    Write-Host("Using or creating default Log Analytics Workspace since logAnalyticsWorkspaceResourceId parameter not set...")
+    # mapping fors for default Azure Log Analytics workspace
+    $AzureCloudLocationToOmsRegionCodeMap = @{
+        "australiasoutheast" = "ASE" ;
+        "australiaeast"      = "EAU" ;
+        "australiacentral"   = "CAU" ;
+        "canadacentral"      = "CCA" ;
+        "centralindia"       = "CIN" ;
+        "centralus"          = "CUS" ;
+        "eastasia"           = "EA" ;
+        "eastus"             = "EUS" ;
+        "eastus2"            = "EUS2" ;
+        "eastus2euap"        = "EAP" ;
+        "francecentral"      = "PAR" ;
+        "japaneast"          = "EJP" ;
+        "koreacentral"       = "SE" ;
+        "northeurope"        = "NEU" ;
+        "southcentralus"     = "SCUS" ;
+        "southeastasia"      = "SEA" ;
+        "uksouth"            = "SUK" ;
+        "usgovvirginia"      = "USGV" ;
+        "westcentralus"      = "EUS" ;
+        "westeurope"         = "WEU" ;
+        "westus"             = "WUS" ;
+        "westus2"            = "WUS2"
+    }
+    $AzureCloudRegionToOmsRegionMap = @{
+        "australiacentral"   = "australiacentral" ;
+        "australiacentral2"  = "australiacentral" ;
+        "australiaeast"      = "australiaeast" ;
+        "australiasoutheast" = "australiasoutheast" ;
+        "brazilsouth"        = "southcentralus" ;
+        "canadacentral"      = "canadacentral" ;
+        "canadaeast"         = "canadacentral" ;
+        "centralus"          = "centralus" ;
+        "centralindia"       = "centralindia" ;
+        "eastasia"           = "eastasia" ;
+        "eastus"             = "eastus" ;
+        "eastus2"            = "eastus2" ;
+        "francecentral"      = "francecentral" ;
+        "francesouth"        = "francecentral" ;
+        "japaneast"          = "japaneast" ;
+        "japanwest"          = "japaneast" ;
+        "koreacentral"       = "koreacentral" ;
+        "koreasouth"         = "koreacentral" ;
+        "northcentralus"     = "eastus" ;
+        "northeurope"        = "northeurope" ;
+        "southafricanorth"   = "westeurope" ;
+        "southafricawest"    = "westeurope" ;
+        "southcentralus"     = "southcentralus" ;
+        "southeastasia"      = "southeastasia" ;
+        "southindia"         = "centralindia" ;
+        "uksouth"            = "uksouth" ;
+        "ukwest"             = "uksouth" ;
+        "westcentralus"      = "eastus" ;
+        "westeurope"         = "westeurope" ;
+        "westindia"          = "centralindia" ;
+        "westus"             = "westus" ;
+        "westus2"            = "westus2"
+    }
 
-$workspaceRegionCode = "EUS"
-$workspaceRegion = "eastus"
-if ($AzureCloudRegionToOmsRegionMap.Contains($clusterRegion)) {
-    $workspaceRegion = $AzureCloudRegionToOmsRegionMap[$clusterRegion]
+    $workspaceRegionCode = "EUS"
+    $workspaceRegion = "eastus"
+    if ($AzureCloudRegionToOmsRegionMap.Contains($clusterRegion)) {
+        $workspaceRegion = $AzureCloudRegionToOmsRegionMap[$clusterRegion]
 
-    if ($AzureCloudLocationToOmsRegionCodeMap.Contains($workspaceRegion)) {
-        $workspaceRegionCode = $AzureCloudLocationToOmsRegionCodeMap[$workspaceRegion]
+        if ($AzureCloudLocationToOmsRegionCodeMap.Contains($workspaceRegion)) {
+            $workspaceRegionCode = $AzureCloudLocationToOmsRegionCodeMap[$workspaceRegion]
+        }
+    }
+
+    $workspaceResourceGroup = "DefaultResourceGroup-" + $workspaceRegionCode
+    $workspaceName = "DefaultWorkspace-" + $clusterSubscriptionId + "-" + $workspaceRegionCode
+
+    # validate specified logAnalytics workspace exists and got access permissions
+    Write-Host("Checking default Log Analytics Workspace Resource Group exists and got access...")
+    $rg = Get-AzResourceGroup -ResourceGroupName $workspaceResourceGroup -ErrorAction SilentlyContinue
+    if ($null -eq $rg) {
+        Write-Host("Creating Default Workspace Resource Group: '" + $workspaceResourceGroup + "' since this does not exist")
+        New-AzResourceGroup -Name $workspaceResourceGroup -Location $workspaceRegion -ErrorAction Stop
+    }
+    else {
+        Write-Host("Resource Group : '" + $workspaceResourceGroup + "' exists")
+    }
+
+    Write-Host("Checking default Log Analytics Workspace exists and got access...")
+    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroup -Name $workspaceName -ErrorAction SilentlyContinue
+    if ($null -eq $WorkspaceInformation) {
+        Write-Host("Creating Log Analytics Workspace: '" + $workspaceName + "'  in Resource Group: '" + $workspaceResourceGroup + "' since this workspace does not exist")
+        $WorkspaceInformation = New-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroup -Name $workspaceName -Location $workspaceRegion -ErrorAction Stop
+    }
+    else {
+        Write-Host("Azure Log Workspace: '" + $workspaceName + "' exists in WorkspaceResourceGroup : '" + $workspaceResourceGroup + "'  ")
     }
 }
-
-$defaultWorkspaceResourceGroup = "DefaultResourceGroup-" + $workspaceRegionCode
-$defaultWorkspaceName = "DefaultWorkspace-" + $clusterSubscriptionId + "-" + $workspaceRegionCode
-
-# validate specified logAnalytics workspace exists and got access permissions
-Write-Host("Checking default Log Analytics Workspace Resource Group exists and got access...")
-$rg = Get-AzResourceGroup -ResourceGroupName $defaultWorkspaceResourceGroup -ErrorAction SilentlyContinue
-if ($null -eq $rg) {
-    Write-Host("Creating Default Workspace Resource Group: '" + $defaultWorkspaceResourceGroup + "' since this does not exist")
-    New-AzResourceGroup -Name $defaultWorkspaceResourceGroup -Location $workspaceRegion -ErrorAction Stop
-}
 else {
-    Write-Host("Resource Group : '" + $defaultWorkspaceResourceGroup + "' exists")
-}
 
+    Write-Host("using specified Log Analytics Workspace ResourceId: '" + $logAnalyticsWorkspaceResourceId + "' ")
+    if ([string]::IsNullOrEmpty($logAnalyticsWorkspaceResourceId)) {
+        Write-Host("Specified logAnalyticsWorkspaceResourceId should not be NULL or empty") -ForegroundColor Red
+        exit
+    }
+    $logAnalyticsWorkspaceResourceId = $logAnalyticsWorkspaceResourceId.Trim()
+    if ($logAnalyticsWorkspaceResourceId.EndsWith("/")) {
+        Write-Host("Trimming redundant / in tail end of the log analytics workspace resource id")
+        $logAnalyticsWorkspaceResourceId = $logAnalyticsWorkspaceResourceId.TrimEnd("/")
+    }
 
-Write-Host("Checking default Log Analytics Workspace exists and got access...")
-$WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $defaultWorkspaceResourceGroup -Name $defaultWorkspaceName -ErrorAction SilentlyContinue
-if ($null -eq $WorkspaceInformation) {
-    Write-Host("Creating Log Analytics Workspace: '" + $defaultWorkspaceName + "'  in Resource Group: '" + $defaultWorkspaceResourceGroup + "' since this workspace does not exist")
-    $WorkspaceInformation = New-AzOperationalInsightsWorkspace -ResourceGroupName $defaultWorkspaceResourceGroup -Name $defaultWorkspaceName -Location $workspaceRegion -ErrorAction Stop
-}
-else {
-    Write-Host("Azure Log Workspace: '" + $defaultWorkspaceName + "' exists in WorkspaceResourceGroup : '" + $defaultWorkspaceResourceGroup + "'  ")
+    if ($logAnalyticsWorkspaceResourceId.StartsWith("/") -eq $false) {
+        Write-Host("Prepending / to log analytics resource id since this doesnt exist")
+        $logAnalyticsWorkspaceResourceId = "/" + $logAnalyticsWorkspaceResourceId
+    }
+
+    if (($logAnalyticsWorkspaceResourceId.ToLower().Contains("microsoft.operationalinsights/workspaces") -ne $true) -or ($logAnalyticsWorkspaceResourceId.Split("/").Length -ne 9)) {
+        Write-Host("Provided cluster resource id should be in this format /subscriptions/<subId>/resourceGroups/<rgName>/providers/Microsoft.OperationalInsights/workspaces/<workspaceName>") -ForegroundColor Red
+        exit
+    }
+
+    $workspaceResourceParts = $logAnalyticsWorkspaceResourceId.Split("/")
+    $workspaceSubscriptionId = $workspaceResourceParts[2]
+    $workspaceResourceGroup = $workspaceResourceParts[4]
+    $workspaceName = $workspaceResourceParts[8]
+
+    if (($workspaceSubscriptionId.ToLower() -eq $clusterSubscriptionId.ToLower()) -eq $false) {
+        Write-Host("Changing context to workspace subscription: $workspaceSubscriptionId since workspace and cluster in different subscription")
+        Set-AzContext -SubscriptionId $workspaceSubscriptionId
+    }
+
+    Write-Host("Checking specified Log Analytics Workspace exists and got access...")
+    $WorkspaceInformation = Get-AzOperationalInsightsWorkspace -ResourceGroupName $workspaceResourceGroup -Name $workspaceName -ErrorAction SilentlyContinue
+    if ($null -eq $WorkspaceInformation) {
+        Write-Host("Specified Log Analytics Workspace: '" + $workspaceName + "'  in Resource Group: '" + $workspaceResourceGroup + "' in Subscription: '" + $workspaceSubscriptionId + "' does not exist") -ForegroundColor Red
+        exit
+    }
 }
 
 Write-Host("Deploying template to onboard Container Insights solution : Please wait...")
@@ -329,7 +387,7 @@ $Parameters.Add("workspaceRegion", $WorkspaceInformation.Location)
 $Parameters
 try {
     New-AzResourceGroupDeployment -Name $DeploymentName `
-        -ResourceGroupName $defaultWorkspaceResourceGroup `
+        -ResourceGroupName $workspaceResourceGroup `
         -TemplateUri  https://raw.githubusercontent.com/Microsoft/OMS-docker/ci_feature/docs/templates/azuremonitor-containerSolution.json `
         -TemplateParameterObject $Parameters -ErrorAction Stop`
 
@@ -342,11 +400,6 @@ catch {
     Write-Host ("Template deployment failed with an error: '" + $Error[0] + "' ") -ForegroundColor Red
     Write-Host("Please contact us by emailing askcoin@microsoft.com for help") -ForegroundColor Red
 }
-
-
-Write-Host("Attaching logAnalyticsWorkspaceResourceId tag on the cluster ResourceId")
-$clusterResource.Tags["logAnalyticsWorkspaceResourceId"] = $WorkspaceInformation.ResourceId
-Set-AzResource -Tag $clusterResource.Tags -ResourceId $clusterResource.ResourceId -Force
 
 $workspaceGUID = "";
 $workspacePrimarySharedKey = "";
@@ -362,6 +415,17 @@ catch {
     exit
 }
 
+
+$account = Get-AzContext -ErrorAction Stop
+if ($account.Subscription.Id -eq $clusterSubscriptionId) {
+    Write-Host("Changing back context to cluster subscription: $clusterSubscriptionId")
+    Set-AzContext -SubscriptionId $clusterSubscriptionId
+}
+
+Write-Host("Attaching logAnalyticsWorkspaceResourceId tag on the cluster ResourceId")
+$clusterResource.Tags["logAnalyticsWorkspaceResourceId"] = $WorkspaceInformation.ResourceId
+Set-AzResource -Tag $clusterResource.Tags -ResourceId $clusterResource.ResourceId -Force
+
 $helmVersion = helm version
 Write-Host "Helm version" : $helmVersion
 
@@ -371,13 +435,13 @@ helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.c
 Write-Host("updating helm repo to get latest version of charts")
 helm repo update
 
-Write-Host("Installing Azure Monitor for containers HELM chart ...")
+Write-Host("Installing or upgrading if exists, Azure Monitor for containers HELM chart ...")
 try {
 
     helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
     helm repo update
     $helmParameters = "omsagent.secret.wsid=$workspaceGUID,omsagent.secret.key=$workspacePrimarySharedKey,omsagent.env.clusterId=$azureArcClusterResourceId"
-    helm install azmon-containers-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
+    helm upgrade --install azmon-containers-release-1 --set $helmParameters incubator/azuremonitor-containers --kube-context $kubeContext
 }
 catch {
     Write-Host ("Failed to Install Azure Monitor for containers HELM chart : '" + $Error[0] + "' ") -ForegroundColor Red
