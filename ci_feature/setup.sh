@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/microsoft/Docker-Provider/releases/download/10.0.0.0/docker-cimprov-10.0.0-0.universal.x86_64.sh
+https://github.com/microsoft/Docker-Provider/releases/download/10.0.0-1/docker-cimprov-10.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -43,7 +43,7 @@ sudo apt-get install inotify-tools -y
 #used to parse response of kubelet apis
 sudo apt-get install jq -y
 
-#used to setcaps for ruby process to read /proc/env 
+#used to setcaps for ruby process to read /proc/env
 echo "installing libcap2-bin"
 sudo apt-get install libcap2-bin -y
 
