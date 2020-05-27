@@ -94,7 +94,9 @@ function Start-Fluent
 
     #register fluentd as a service and start
     # there is a known issues with win32-service https://github.com/chef/win32-service/issues/70
-    fluentd --reg-winsvc i --reg-winsvc-auto-start --winsvc-name fluentdwinaks --reg-winsvc-fluentdopt '-c C:/etc/fluent/fluent.conf -o C:/etc/fluent/fluent.log'
+    # log-rotate-age -- keep 1 generation
+    # log-rotate-size 10 MB
+    fluentd --reg-winsvc i --reg-winsvc-auto-start --winsvc-name fluentdwinaks --reg-winsvc-fluentdopt '-c C:/etc/fluent/fluent.conf -o C:/etc/fluent/fluent.log --log-rotate-age 1 --log-rotate-size 10485760'
 
     Notepad.exe | Out-Null
 }

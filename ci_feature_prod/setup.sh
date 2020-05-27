@@ -14,7 +14,7 @@ wget https://github.com/Microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
 
-wget https://github.com/microsoft/Docker-Provider/releases/download/10.0.0.0/docker-cimprov-10.0.0-0.universal.x86_64.sh
+wget https://github.com/microsoft/Docker-Provider/releases/download/10.0.0-1/docker-cimprov-10.0.0-1.universal.x86_64.sh
 
 chmod 775 $TMPDIR/*.sh
 
@@ -43,7 +43,7 @@ sudo apt-get install inotify-tools -y
 #used to parse response of kubelet apis
 sudo apt-get install jq -y
 
-#used to setcaps for ruby process to read /proc/env 
+#used to setcaps for ruby process to read /proc/env
 echo "installing libcap2-bin"
 sudo apt-get install libcap2-bin -y
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
@@ -63,7 +63,7 @@ chmod 777 /opt/telegraf
 
 #download and install fluent-bit(td-agent-bit)
 wget -qO - https://packages.fluentbit.io/fluentbit.key | sudo apt-key add -
-sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list  
+sudo echo "deb https://packages.fluentbit.io/ubuntu/xenial xenial main" >> /etc/apt/sources.list
 sudo apt-get update
 sudo apt-get install td-agent-bit=1.4.2 -y
 
