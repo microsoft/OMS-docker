@@ -24,7 +24,7 @@ COPY ./fluent/rubyKeepCertificateAlive/*.rb /etc/fluent/plugin/
 COPY ./fluent-bit/fluent-bit.conf /etc/fluent-bit
 COPY ./omsagentwindows/out_oms.conf /etc/omsagentwindows
 
-ENV AGENT_VERSION "win-ciprod05262020"
+ENV AGENT_VERSION "win-ciprod05262020-2"
 ENV OS_TYPE "windows"
 ENV APPLICATIONINSIGHTS_AUTH "NzAwZGM5OGYtYTdhZC00NThkLWI5NWMtMjA3ZjM3NmM3YmRi"
 ENV AZMON_COLLECT_ENV False
