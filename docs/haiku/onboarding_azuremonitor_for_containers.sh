@@ -23,7 +23,7 @@
 
 if [ $# -le 1 ]
 then
-  echo "Error: This should be invoked with at least 2 arguments, clusterResourceId and kubeContext and logAnalyticsWorkspaceResourceId(optional)"
+  echo "-e This should be invoked with at least 2 arguments, clusterResourceId and kubeContext and logAnalyticsWorkspaceResourceId(optional)"
   exit 1
 fi
 
@@ -31,8 +31,8 @@ echo "clusterResourceId:"${1}
 echo "kubeconfig context:"${2}
 echo "logAnalyticsWorkspaceResourceId":${3}
 
-export kubeconfigContext="$(echo ${1})"
-export clusterResourceId="$(echo ${2})"
+export clusterResourceId="$(echo ${1})"
+export kubeconfigContext="$(echo ${2})"
 export logAnalyticsWorkspaceResourceId="$(echo ${3})"
 
 subscriptionId="$(echo ${1} | cut -d'/' -f3)"
@@ -46,12 +46,12 @@ echo "cluster ProviderName:" $providerName
 echo "cluster Name:" $clusterName
 
 if [ -z "$subscriptionId" -o -z "$resourceGroup" -o -z "$providerName" -o  -z "$clusterName" ]; then
-  echo "Error: invalid cluster resource id. Please try with valid fully qualified resource id of the cluster"
+  echo "-e invalid cluster resource id. Please try with valid fully qualified resource id of the cluster"
   exit 1
 fi
 
 if [ -z "$kubeconfigContext" ]; then
-  echo "Error: kubeconfig context is empty. Please try with valid kube-context of the cluster"
+  echo "-e kubeconfig context is empty. Please try with valid kube-context of the cluster"
   exit 1
 fi
 
@@ -69,6 +69,10 @@ if [ -z $logAnalyticsWorkspaceResourceId ]; then
 
   export clusterRegion=$(az resource show --ids ${1} --query location)
   echo "cluster region:" $clusterRegion
+
+  export identitytype=$(az resource show -g ${resourceGroup} -n ${clusterName} --resource-type "Microsoft.Kubernetes/connectedClusters" --query identity.type)
+  identitytype=$(echo "$identitytype" | tr "[:upper:]" "[:lower:]")
+  echo "cluster identity type:" $identitytype
 
   # mapping fors for default Azure Log Analytics workspace
   declare -A AzureCloudLocationToOmsRegionCodeMap=(
@@ -173,7 +177,7 @@ else
   echo "using provied azure log analytics workspace:${logAnalyticsWorkspaceResourceId}"
   export workspaceResourceId=$(echo $logAnalyticsWorkspaceResourceId | tr -d '"')
   export workspaceSubscriptionId="$(echo ${logAnalyticsWorkspaceResourceId} | cut -d'/' -f3)"
-  export workspaceResourceGroup="$(echo ${logAnalyticsWorkspaceResourceId} | cut -d'/' -f5)" 
+  export workspaceResourceGroup="$(echo ${logAnalyticsWorkspaceResourceId} | cut -d'/' -f5)"
   export workspaceName="$(echo ${logAnalyticsWorkspaceResourceId} | cut -d'/' -f9)"
 
   echo "set the workspace subscription id: ${workspaceSubscriptionId}"
