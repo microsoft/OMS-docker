@@ -600,7 +600,7 @@ spec:
      serviceAccountName: omsagent
      containers:
        - name: omsagent-win
-         image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020"
+         image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:win-ciprod05262020-2"
          imagePullPolicy: IfNotPresent
          resources:
           limits:
