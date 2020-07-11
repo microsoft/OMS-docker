@@ -250,7 +250,7 @@ fi
 
 if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
       podsResponse=$(cat podsResponseFile)
-      ITEMS_COUNT=$(echo podsResponseFile | jq '.items | length')
+      ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
       echo "found items count: $ITEMS_COUNT"
       if [ $ITEMS_COUNT -gt 0 ]; then
             # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
