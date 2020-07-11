@@ -249,15 +249,16 @@ else
 fi
 
 if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
-      ITEMS_COUNT=$(cat podsResponseFile | jq '.items | length')
+      podsResponse=$(cat podsResponseFile)
+      ITEMS_COUNT=$(echo podsResponseFile | jq '.items | length')
       echo "found items count: $ITEMS_COUNT"
       if [ $ITEMS_COUNT -gt 0 ]; then
-            # select omsagent pods
-            omsagentPods=$(cat podsResponseFile | jq -r '[.items[] | select( any(.metadata.name; startswith("omsagent-")))]')
-            ITEMS_COUNT_WITH_OMS_AGENT=$(echo $omsagentPods | jq '. | length')
-            if [ $ITEMS_COUNT_WITH_OMS_AGENT -gt 0 ]; then
-                  containerRuntime=$(echo $omsagentPods | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-                  nodeName=$(echo $omsagentPods | jq -r '.[0].spec.nodeName')
+            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
+            podsWithValidContainerId=$(echo $podsResponse | jq -r '[ .items[] | select( any(.status.phase; contains("Running")) ) ]')
+            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
+            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then
+                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
                   # convert to lower case so that everywhere else can be used in lowercase
                   containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
                   nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
@@ -274,7 +275,7 @@ if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
                      export NODE_NAME=$nodeName
                   fi
             else
-              echo "-e error  none of the omsagent pods in the /pods response has valid containerID"
+              echo "-e error  none of the pods in the /pods response has valid containerID"
             fi
       else
             echo "-e error  items in the /pods response is 0"
