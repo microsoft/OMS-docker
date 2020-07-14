@@ -237,7 +237,7 @@ if [ "$cAdvisorIsSecure" = true ]; then
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making curl request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      podWithValidContainerId=$(curl -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$NODE_IP:10250/pods | jq '[ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
+      podWithValidContainerId=$(curl -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$NODE_IP:10250/pods | jq -R 'fromjson? | [ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 else
       echo "Wget request using port 10250 failed. Using port 10255"
       export IS_SECURE_CADVISOR_PORT=false
@@ -245,7 +245,7 @@ else
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making curl request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      podWithValidContainerId=$(curl -s http://$NODE_IP:10255/pods | jq '[ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
+      podWithValidContainerId=$(curl -s http://$NODE_IP:10255/pods | jq -R 'fromjson? | [ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 fi
 
 if [ ! -z "$podWithValidContainerId" ]; then
@@ -267,7 +267,7 @@ if [ ! -z "$podWithValidContainerId" ]; then
             export NODE_NAME=$nodeName
       fi
 else
-      echo "-e error  request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
+      echo "-e error either /pods API request failed or no running pods"
 fi
 
 echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
