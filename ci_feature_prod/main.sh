@@ -255,13 +255,13 @@ if [ ! -z "$podWithValidContainerId" ]; then
       containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
       nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
       # update runtime only if its not empty and not startswith docker
-      if [ -z $containerRuntime ]; then
-            echo "using default container runtime as docker since got containeRuntime as empty string"
+      if [ -z "$containerRuntime" -o "$containerRuntime" == null  ]; then
+            echo "using default container runtime as $CONTAINER_RUNTIME since got containeRuntime as empty or null"
       elif [[ $containerRuntime != docker* ]]; then
             export CONTAINER_RUNTIME=$containerRuntime
       fi
 
-      if [ -z $nodeName ]; then
+      if [ -z "$nodeName" -o "$nodeName" == null  ]; then
             echo "-e error nodeName in /pods API response is empty"
       else
             export NODE_NAME=$nodeName
