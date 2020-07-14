@@ -254,7 +254,7 @@ if [ ! -z "$podWithValidContainerId" ]; then
       # convert to lower case so that everywhere else can be used in lowercase
       containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
       nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-      # update runtime only if its not empty and not startswith docker
+      # update runtime only if its not empty, not null and not startswith docker
       if [ -z "$containerRuntime" -o "$containerRuntime" == null  ]; then
             echo "using default container runtime as $CONTAINER_RUNTIME since got containeRuntime as empty or null"
       elif [[ $containerRuntime != docker* ]]; then
