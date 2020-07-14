@@ -233,17 +233,17 @@ export NODE_NAME=""
 if [ "$cAdvisorIsSecure" = true ]; then
       echo "Wget request using port 10250 succeeded. Using 10250"
       export IS_SECURE_CADVISOR_PORT=true
-      echo "export IS_SECURE_CADVISOR_PORT=true" >>~/.bashrc
+      echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
-      echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >>~/.bashrc
+      echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
       echo "Making curl request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
       podWithValidContainerId=$(curl -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$NODE_IP:10250/pods | jq '[ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 else
       echo "Wget request using port 10250 failed. Using port 10255"
       export IS_SECURE_CADVISOR_PORT=false
-      echo "export IS_SECURE_CADVISOR_PORT=false" >>~/.bashrc
+      echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
-      echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >>~/.bashrc
+      echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
       echo "Making curl request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
       podWithValidContainerId=$(curl -s http://$NODE_IP:10255/pods | jq '[ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 fi
