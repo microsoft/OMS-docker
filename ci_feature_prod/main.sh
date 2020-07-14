@@ -272,7 +272,6 @@ fi
 
 echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
 echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
-echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 # _total metrics will be available starting from k8s version 1.18 and current _docker_* and _runtime metrics will be deprecated
 # enable these when we add support for 1.18
@@ -303,7 +302,16 @@ else
       echo "adding omsagent user to local docker group"
       usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
    fi
+
+   if [[ "$KUBERNETES_SERVICE_HOST" ]];then
+	#kubernetes treats node names as lower case.
+	export NODE_NAME=$(curl -s --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()")
+   else
+	export NODE_NAME=$(curl -s --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']")
+   fi
 fi
+
+echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 echo "set caps for ruby process to read container env from proc"
 sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
@@ -418,11 +426,11 @@ echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 #if [ ! -e "/etc/config/kube.conf" ]; then
 #   nodename=$(cat /hostfs/etc/hostname)
 #else
-nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+
 #fi
-echo "nodename: $nodename"
+echo "nodename: $NODE_NAME"
 echo "replacing nodename in telegraf config"
-sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
+sed -i -e "s/placeholder_hostname/$NODE_NAME/g" $telegrafConfFile
 
 export HOST_MOUNT_PREFIX=/hostfs
 echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
