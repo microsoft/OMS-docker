@@ -81,13 +81,13 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
 
       if [ -e "/etc/omsagent-secret/PROXY" ]; then
             export PROXY_ENDPOINT=$(cat /etc/omsagent-secret/PROXY)
-            # Validate Proxy Endpoint URL 
+            # Validate Proxy Endpoint URL
             # extract the protocol://
             proto="$(echo $PROXY_ENDPOINT | grep :// | sed -e's,^\(.*://\).*,\1,g')"
             # convert the protocol prefix in lowercase for validation
             proxyprotocol=$(echo $proto | tr "[:upper:]" "[:lower:]")
             if [ "$proxyprotocol" != "http://" -a "$proxyprotocol" != "https://" ]; then
-               echo "-e error proxy endpoint should be in this format http(s)://<user>:<pwd>@<hostOrIP>:<port>"           
+               echo "-e error proxy endpoint should be in this format http(s)://<user>:<pwd>@<hostOrIP>:<port>"
             fi
             # remove the protocol
             url="$(echo ${PROXY_ENDPOINT/$proto/})"
@@ -97,7 +97,7 @@ if [ -e "/etc/omsagent-secret/WSID" ]; then
             pwd="$(echo $creds | cut -d':' -f2)"
             # extract the host and port
             hostport="$(echo ${url/$creds@/} | cut -d/ -f1)"
-            # extract host without port    
+            # extract host without port
             host="$(echo $hostport | sed -e 's,:.*,,g')"
             # extract the port
             port="$(echo $hostport | sed -e 's,^.*:,:,g' -e 's,.*:\([0-9]*\).*,\1,g' -e 's,[^0-9],,g')"
@@ -230,65 +230,48 @@ fi
 export CONTAINER_RUNTIME="docker"
 export NODE_NAME=""
 
-if [ "$cAdvisorIsSecure" = true ] ; then
+if [ "$cAdvisorIsSecure" = true ]; then
       echo "Wget request using port 10250 succeeded. Using 10250"
       export IS_SECURE_CADVISOR_PORT=true
       echo "export IS_SECURE_CADVISOR_PORT=true" >> ~/.bashrc
       export CADVISOR_METRICS_URL="https://$NODE_IP:10250/metrics"
       echo "export CADVISOR_METRICS_URL=https://$NODE_IP:10250/metrics" >> ~/.bashrc
-      echo "Making wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
-      IS_GET_PODS_API_SUCCESS=$(wget --server-response https://$NODE_IP:10250/pods --no-check-certificate --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -O podsResponseFile 2>&1 | grep -c '200 OK')
-
+      echo "Making curl request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet"
+      podWithValidContainerId=$(curl -s -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$NODE_IP:10250/pods | jq -R 'fromjson? | [ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 else
       echo "Wget request using port 10250 failed. Using port 10255"
       export IS_SECURE_CADVISOR_PORT=false
       echo "export IS_SECURE_CADVISOR_PORT=false" >> ~/.bashrc
       export CADVISOR_METRICS_URL="http://$NODE_IP:10255/metrics"
       echo "export CADVISOR_METRICS_URL=http://$NODE_IP:10255/metrics" >> ~/.bashrc
-      echo "Making wget request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
-      IS_GET_PODS_API_SUCCESS=$(wget --server-response http://$NODE_IP:10255/pods -O podsResponseFile 2>&1 | grep -c '200 OK')
+      echo "Making curl request to cadvisor endpoint with port 10255 to get the configured container runtime on kubelet"
+      podWithValidContainerId=$(curl -s http://$NODE_IP:10255/pods | jq -R 'fromjson? | [ .items[] | select( any(.status.phase; contains("Running")) ) ] | .[0]')
 fi
 
-if [ $IS_GET_PODS_API_SUCCESS == 1 ]; then
-      podsResponse=$(cat podsResponseFile)
-      ITEMS_COUNT=$(echo $podsResponse | jq '.items | length')
-      echo "found items count: $ITEMS_COUNT"
-      if [ $ITEMS_COUNT -gt 0 ]; then
-            # exclude the pods which doesnt have containerId. could happen if the container fails to start because of bad image and tag etc..
-            podsWithValidContainerId=$(echo $podsResponse | jq -r '[.items[] | select( .status.containerStatuses != null and .status.containerStatuses[].containerID != null and  .status.containerStatuses[].containerID != "")]')
-            ITEMS_COUNT_WITH_CONTAINER_ID=$(echo $podsWithValidContainerId | jq '. | length')
-            if [ $ITEMS_COUNT_WITH_CONTAINER_ID -gt 0 ]; then
-                  containerRuntime=$(echo $podsWithValidContainerId | jq -r '.[0].status.containerStatuses[0].containerID' | cut -d ':' -f 1)
-                  nodeName=$(echo $podsWithValidContainerId | jq -r '.[0].spec.nodeName')
-                  # convert to lower case so that everywhere else can be used in lowercase
-                  containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
-                  nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
-                  # update runtime only if its not empty and not startswith docker
-                  if [ -z $containerRuntime ]; then
-                      echo "using default container runtime as docker since got containeRuntime as empty string"
-                  elif [[ $containerRuntime != docker* ]]; then
-                       export CONTAINER_RUNTIME=$containerRuntime
-                  fi
-
-                  if [ -z $nodeName ]; then
-                    echo "-e error nodeName in /pods API response is empty"
-                  else
-                     export NODE_NAME=$nodeName
-                  fi
-            else
-              echo "-e error  none of the pods in the /pods response has valid containerID"
-            fi
-      else
-            echo "-e error  items in the /pods response is 0"
+if [ ! -z "$podWithValidContainerId" ]; then
+      containerRuntime=$(echo $podWithValidContainerId | jq -r '.status.containerStatuses[0].containerID' | cut -d ':' -f 1)
+      nodeName=$(echo $podWithValidContainerId | jq -r '.spec.nodeName')
+      # convert to lower case so that everywhere else can be used in lowercase
+      containerRuntime=$(echo $containerRuntime | tr "[:upper:]" "[:lower:]")
+      nodeName=$(echo $nodeName | tr "[:upper:]" "[:lower:]")
+      # update runtime only if its not empty, not null and not startswith docker
+      if [ -z "$containerRuntime" -o "$containerRuntime" == null  ]; then
+            echo "using default container runtime as $CONTAINER_RUNTIME since got containeRuntime as empty or null"
+      elif [[ $containerRuntime != docker* ]]; then
+            export CONTAINER_RUNTIME=$containerRuntime
       fi
 
+      if [ -z "$nodeName" -o "$nodeName" == null  ]; then
+            echo "-e error nodeName in /pods API response is empty"
+      else
+            export NODE_NAME=$nodeName
+      fi
 else
-    echo "-e error  wget request to cadvisor endpoint /pods with port 10250 to get the configured container runtime on kubelet failed"
+      echo "-e error either /pods API request failed or no running pods"
 fi
 
 echo "configured container runtime on kubelet is : "$CONTAINER_RUNTIME
 echo "export CONTAINER_RUNTIME="$CONTAINER_RUNTIME >> ~/.bashrc
-echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 # _total metrics will be available starting from k8s version 1.18 and current _docker_* and _runtime metrics will be deprecated
 # enable these when we add support for 1.18
@@ -319,7 +302,16 @@ else
       echo "adding omsagent user to local docker group"
       usermod -aG ${DOCKER_GROUP} ${REGULAR_USER}
    fi
+
+   if [[ "$KUBERNETES_SERVICE_HOST" ]];then
+	#kubernetes treats node names as lower case.
+	export NODE_NAME=$(curl -s --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name'].lower()")
+   else
+	export NODE_NAME=$(curl -s --unix-socket /var/run/host/docker.sock "http:/docker/info" | python -c "import sys, json; print json.load(sys.stdin)['Name']")
+   fi
 fi
+
+echo "export NODE_NAME="$NODE_NAME >> ~/.bashrc
 
 echo "set caps for ruby process to read container env from proc"
 sudo setcap cap_sys_ptrace,cap_dac_read_search+ep /opt/microsoft/omsagent/ruby/bin/ruby
@@ -434,11 +426,11 @@ echo "export TELEMETRY_CLUSTER_TYPE=$telemetry_cluster_type" >> ~/.bashrc
 #if [ ! -e "/etc/config/kube.conf" ]; then
 #   nodename=$(cat /hostfs/etc/hostname)
 #else
-nodename=$(cat /var/opt/microsoft/docker-cimprov/state/containerhostname)
+
 #fi
-echo "nodename: $nodename"
+echo "nodename: $NODE_NAME"
 echo "replacing nodename in telegraf config"
-sed -i -e "s/placeholder_hostname/$nodename/g" $telegrafConfFile
+sed -i -e "s/placeholder_hostname/$NODE_NAME/g" $telegrafConfFile
 
 export HOST_MOUNT_PREFIX=/hostfs
 echo "export HOST_MOUNT_PREFIX=/hostfs" >> ~/.bashrc
