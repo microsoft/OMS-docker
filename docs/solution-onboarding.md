@@ -43,7 +43,7 @@ az cloud set --name <AzureCloud | AzureChinaCloud | AzureUSGovernment>
 az login
 az account set --subscription "<Subscription Id or name of your Log Analytics Workspace>"
 # execute deployment command to add container insights solution to the specified log analytics workspace
-az group deployment create --resource-group <resource group of log analytics workspace> --template-file ./azuremonitor-containerSolution.json --parameters @./azuremonitor-containerSolutionParams.json
+az deployment group create --resource-group <resource group of log analytics workspace> --template-file ./azuremonitor-containerSolution.json --parameters @./azuremonitor-containerSolutionParams.json
 ```
 
 The configuration change can take a few minutes to complete. When it finishes, you see a message similar to the following that includes the result:
