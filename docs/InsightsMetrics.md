@@ -41,3 +41,8 @@ Following metrics are collected into `InsightsMetrics` by Azure monitor for Cont
 |--|--|--|
 | `kubelet_docker_operations`|`container.azm.ms/prometheus`  |Cumulative number of Docker operations by operation type|
 |`kubelet_docker_operations_errors`|`container.azm.ms/prometheus`|Cumulative number of Docker operation errors by operation type|
+
+### Persistent Volume metrics
+|Name|Namespace|Description|
+|--|--|--|
+| `pvUsedBytes`|`container.azm.ms/pv`|Used space in bytes for a specific persistent volume with a claim used by a specific pod. `pvCapacityBytes` is folded in as a dimension in the Tags field to reduce data ingestion cost and to simplify queries.|
