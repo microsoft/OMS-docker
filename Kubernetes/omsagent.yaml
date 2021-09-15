@@ -7,8 +7,8 @@ spec:
   metadata:
    labels:
     app: omsagent
-    agentVersion: 1.10.0-1
-    dockerProviderVersion: 1.0.0-37
+    agentVersion: 1.13.40-0
+    dockerProviderVersion: 1.0.0-39
   spec:
    containers:
      - name: omsagent 
