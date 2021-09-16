@@ -1,7 +1,7 @@
 TMPDIR="/opt"
 cd $TMPDIR
 
-wget https://github.com/microsoft/OMS-docker/releases/download/1.13.40.0/omsagent-1.13.40-0.universal.x64.sh
+wget https://github.com/microsoft/OMS-Agent-for-Linux/releases/download/OMSAgent_v1.13.40-0/omsagent-1.13.40-0.universal.x64.sh
 
 #create file to disable omi service startup script
 touch /etc/.omi_disable_service_control
