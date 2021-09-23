@@ -9,11 +9,11 @@ In this folder, you will have two daemon-set files:
 1. Run the following commands to create a project for OMS and set user account. 
 
 ```
-oadm new-project omslogging --node-selector='zone=default'
+oc adm new-project omslogging --node-selector='zone=default'
 oc project omslogging
 oc create serviceaccount omsagent
-oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:omslogging:omsagent
-oadm policy add-scc-to-user privileged system:serviceaccount:omslogging:omsagent
+oc adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:omslogging:omsagent
+oc adm policy add-scc-to-user privileged system:serviceaccount:omslogging:omsagent
 ```
 
 2. Log on to the OpenShift master node and copy `ocp-omsagent.yaml`. Replace `<WSID>` and `<KEY>` section of the daemon-set yaml file with your OMS Workspace ID and Primary Key. Deploy the daemon-set by runining the following command:
@@ -30,11 +30,11 @@ oc get pods
 1. Run the following commands to create a project for OMS and set user account. 
 
 ```
-oadm new-project omslogging --node-selector='zone=default'
+oc adm new-project omslogging --node-selector='zone=default'
 oc project omslogging
 oc create serviceaccount omsagent
-oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:omslogging:omsagent
-oadm policy add-scc-to-user privileged system:serviceaccount:omslogging:omsagent
+oc adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:omslogging:omsagent
+oc adm policy add-scc-to-user privileged system:serviceaccount:omslogging:omsagent
 ```
 
 2. Log on to the Openshift master node and copy the secret generating script and secret template file. Secret generating script will ask for your OMS Workspace ID `<WSID>` and Primary Key `<KEY>`. 
