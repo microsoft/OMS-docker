@@ -17,7 +17,7 @@ spec:
         zone: default
       serviceAccount: omsagent
       containers:
-      - image: "microsoft/oms"
+      - image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:microsoft-oms-latest"
         imagePullPolicy: Always
         name: omsagent
         securityContext:
