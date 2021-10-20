@@ -72,4 +72,4 @@ fi
 gunzip solutionimage.tar.gz
 
 echo "Pushing file solutionimage.tar.gz to public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-./crane push *.tar "public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
+./crane push *.tar "${ACR_NAME}.azurecr.io/public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
