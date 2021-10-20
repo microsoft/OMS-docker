@@ -13,20 +13,33 @@ if [ -z $IMAGE_TAG ]; then
   exit 1
 fi
 
-echo "installing podman"
-echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_'"$(lsb_release -sr)"'/ /' | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_"$(lsb_release -sr)"/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
-apt-get update -y
-apt-get upgrade -y
-apt-get install podman -y
-export podmanVersion="$(echo $( podman version --format '{{.Version}}'))"
+echo "Installing crane"
+#Install crane
+echo "Installing crane"
+wget -O crane.tar.gz https://github.com/google/go-containerregistry/releases/download/v0.4.0/go-containerregistry_Linux_x86_64.tar.gz
+if [ $? -eq 0 ]; then         
+   echo "crane downloaded successfully"
+else     
+   echo "-e error crane download failed"
+   exit 1
+fi 
+tar xzvf crane.tar.gz
+echo "Installed crane"
 
-if [ ! -z "$podmanVersion" ]; then
-   	echo "installing podman completed"
-else
-	echo "installing podman failed"
-    exit 1
-fi
+# echo "installing podman"
+# echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_'"$(lsb_release -sr)"'/ /' | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+# curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_"$(lsb_release -sr)"/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
+# apt-get update -y
+# apt-get upgrade -y
+# apt-get install podman -y
+# export podmanVersion="$(echo $( podman version --format '{{.Version}}'))"
+
+# if [ ! -z "$podmanVersion" ]; then
+#    	echo "installing podman completed"
+# else
+# 	echo "installing podman failed"
+#     exit 1
+# fi
 
 echo "az login using managed identity"
 az login --identity
@@ -37,43 +50,26 @@ else
   exit 1
 fi
 
+echo "Getting acr credentials"
+TOKEN_QUERY_RES=$(az acr login -n "$ACR_NAME" -t)
+TOKEN=$(echo "$TOKEN_QUERY_RES" | jq -r '.accessToken')
+if [ -z $TOKEN ]; then
+  echo "-e error failed to get az acr login token"
+  exit 1
+fi
 echo "az acr login"
-az acr login --name $ACR_NAME
-if [ $? -eq 0 ]; then
-  echo "Logged in successfully"
-else
-  echo "-e error failed to login to acr ${ACR_NAME}"
+
+
+DESTINATION_ACR=$(echo "$TOKEN_QUERY_RES" | jq -r '.loginServer')
+if [ -z $DESTINATION_ACR ]; then
+  echo "-e error value of DESTINATION_ACR shouldnt be empty"
   exit 1
 fi
 
-echo "loading image tarball"
-IMAGE_NAME=$(podman load -i solutionimage.tar.gz)
-echo IMAGE_NAME: $IMAGE_NAME
-if [ $? -ne 0 ]; then
-  echo "-e error, on loading tarball from solutionimage.tar.gz"
-  exit 1
-else
-  echo "successfully loaded image tarball"
-fi
+./crane auth login "$DESTINATION_ACR" -u "00000000-0000-0000-0000-000000000000" -p "$TOKEN"
 
-IMAGE_NAME=$(echo $IMAGE_NAME | tr -d '"' | tr -d "[:space:]")
-IMAGE_NAME=${IMAGE_NAME#$prefix}
-echo "*** trimmed image name-:${IMAGE_NAME}"
-echo "tagging the image $IMAGE_NAME as public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-podman tag $IMAGE_NAME public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}
+#Prepare tarball and push to acr
+gunzip solutionimage.tar.gz
 
-if [ $? -ne 0 ]; then
-  echo "-e error  tagging the image $IMAGE_NAME as public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-  exit 1
-else
-  echo "successfully tagged the image $IMAGE_NAME as public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-fi
-
-echo "pushing public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-podman push public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}
-if [ $? -ne 0 ]; then
-  echo "-e error  on pushing the image public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-  exit 1
-else
-  echo "Successfully pushed the image public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
-fi
+echo "Pushing file solutionimage.tar.gz to public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
+./crane push *.tar "public/azuremonitor/containerinsights/ciprod:${IMAGE_TAG}"
