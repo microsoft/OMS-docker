@@ -16,6 +16,10 @@
                 {
                     "find": "__MANAGED_IDENTITY__",
                     "replaceWith": "$(ManagedIdentity)"
+                },
+                {
+                    "find": "__IMAGE_TAR_FILE__",
+                    "replaceWith": "$(ImageTarName)"
                 }
             ]
         }                                                                                                                                                

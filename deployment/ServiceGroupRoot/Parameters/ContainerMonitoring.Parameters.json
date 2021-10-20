@@ -34,6 +34,10 @@
             {
               "name": "IMAGE_TAG",
               "value": "__IMAGE_TAG__"
+            },
+            {
+              "name": "IMAGE_TAR_FILE",
+              "value": "__IMAGE_TAR_FILE__"
             }
           ],
           "identity": {
