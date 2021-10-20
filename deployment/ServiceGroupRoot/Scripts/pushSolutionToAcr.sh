@@ -35,7 +35,7 @@ if [ $? -eq 0 ]; then
 else
   echo "-e error failed to login to az with managed identity credentials"
   exit 1
-fi     
+fi
 
 echo "az acr login"
 az acr login --name $ACR_NAME
@@ -44,7 +44,7 @@ if [ $? -eq 0 ]; then
 else
   echo "-e error failed to login to acr ${ACR_NAME}"
   exit 1
-fi  
+fi
 
 echo "loading image tarball"
 IMAGE_NAME=$(podman load -i image.tar.gz)
