@@ -15,7 +15,7 @@ fi
 
 echo "installing podman"
 echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_'"$(lsb_release -sr)"'/ /' | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_"$(lsb_release -sr)"/Release.key | gpg --dearmor |  tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
+curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_"$(lsb_release -sr)"/Release.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
 apt-get update -y
 apt-get upgrade -y
 apt-get install podman -y
@@ -47,10 +47,10 @@ else
 fi
 
 echo "loading image tarball"
-IMAGE_NAME=$(podman load -i image.tar.gz)
+IMAGE_NAME=$(podman load -i solutionimage.tar.gz)
 echo IMAGE_NAME: $IMAGE_NAME
 if [ $? -ne 0 ]; then
-  echo "-e error, on loading tarball from image.tar.gz"
+  echo "-e error, on loading tarball from solutionimage.tar.gz"
   exit 1
 else
   echo "successfully loaded image tarball"
