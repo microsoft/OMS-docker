@@ -7,12 +7,12 @@ spec:
   metadata:
    labels:
     app: omsagent
-    agentVersion: 1.13.40-0
+    agentVersion: 1.13.40-0a
     dockerProviderVersion: 1.0.0-39
   spec:
    containers:
      - name: omsagent 
-       image: "microsoft/oms"
+       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:microsoft-oms-latest"
        imagePullPolicy: Always
        env:
        - name: WSID
