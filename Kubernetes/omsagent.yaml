@@ -12,7 +12,7 @@ spec:
   spec:
    containers:
      - name: omsagent 
-       image: "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:microsoft-oms-latest"
+       image: "microsoft/oms"
        imagePullPolicy: Always
        env:
        - name: WSID
