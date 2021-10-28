@@ -12,16 +12,16 @@ chmod 775 $TMPDIR/*.sh
 $TMPDIR/omsagent-*.universal.x64.sh --extract
 mv $TMPDIR/omsbundle* $TMPDIR/omsbundle
 #Install omi
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omi*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/omi*.deb
 
 #Install scx
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/scx*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/scx*.deb
 #$TMPDIR/omsbundle/bundles/scx-1.6.*-*.universal.x64.sh --install
 
 #Install omsagent and omsconfig
 
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsagent*.deb
-/usr/bin/dpkg -i $TMPDIR/omsbundle/100/omsconfig*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/omsagent*.deb
+/usr/bin/dpkg -i $TMPDIR/omsbundle/110/omsconfig*.deb
 #/$TMPDIR/omsbundle/oss-kits/docker-cimprov-1.0.0-*.x86_64.sh --install
 #Use downloaded docker-provider instead of the bundled one
 
